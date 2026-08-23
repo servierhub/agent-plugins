@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { relative, resolve, sep } from "node:path";
+import { resolveContainedPath } from "./path_containment.js";
 const EXCLUDED_PARTS = new Set([".git", ".hg", ".svn", ".beads", "__pycache__", "node_modules"]);
 const ROOT_INCLUDED_HIDDEN_PARTS = new Set([".vscode"]);
 const ROOT_EXCLUDED_PARTS = new Set(["evaluations"]);
@@ -17,27 +18,64 @@ export function shouldExcludePackagePath(path, rootArg) {
         return true;
     return EXCLUDED_SUFFIXES.has(parts.at(-1)?.match(/\.[^.]+$/)?.[0] ?? "");
 }
+function containmentError(path, root, result, expected) {
+    const rel = relative(root, path) || ".";
+    if (!result.contained)
+        return new Error(`package path escapes plugin root (${result.status}): ${rel}`);
+    if (result.kindOutcome === "missing")
+        return new Error(`package path is missing: ${rel}`);
+    return new Error(`package path has wrong kind (expected ${expected}, found ${result.kind}): ${rel}`);
+}
+function requireContained(root, path, expected) {
+    const result = resolveContainedPath(root, path, { expectedKind: expected });
+    if (!result.contained || result.kindOutcome !== "match")
+        throw containmentError(path, root, result, expected);
+    return result;
+}
 export function collectPackageFiles(rootArg, omitted = []) {
-    const root = resolve(rootArg);
+    const lexicalRoot = resolve(rootArg);
+    const rootCheck = resolveContainedPath(lexicalRoot, lexicalRoot, { expectedKind: "directory" });
+    if (!rootCheck.contained || rootCheck.kindOutcome !== "match")
+        throw containmentError(lexicalRoot, lexicalRoot, rootCheck, "directory");
+    const root = rootCheck.resolvedPath;
     const omittedSet = new Set(omitted.map(path => resolve(path)));
     const files = [];
+    const visited = new Set();
     function walk(directory) {
-        for (const name of readdirSync(directory).sort()) {
-            const path = resolve(directory, name);
+        const directoryCheck = requireContained(root, directory, "directory");
+        const resolvedDirectory = directoryCheck.resolvedPath;
+        if (visited.has(resolvedDirectory))
+            throw new Error("package directory cycle detected: " + relative(root, directory));
+        visited.add(resolvedDirectory);
+        for (const name of readdirSync(resolvedDirectory).sort()) {
+            const path = resolve(resolvedDirectory, name);
             if (shouldExcludePackagePath(path, root) || omittedSet.has(path))
                 continue;
             const rel = relative(root, path);
             if (!rel || rel === ".." || rel.startsWith(".." + sep))
                 throw new Error("package path escapes plugin root: " + path);
+            // Containment is checked before inspecting or reading every discovered entry.
+            const containment = resolveContainedPath(root, path, { expectedKind: "any" });
             const stat = lstatSync(path);
+            // Packaging is intentionally stricter than validation: links are never release artifacts.
             if (stat.isSymbolicLink())
                 throw new Error("symbolic links are not allowed in packages: " + rel);
-            if (stat.isDirectory())
+            if (!containment.contained || containment.kindOutcome !== "match")
+                throw containmentError(path, root, containment, "any");
+            if (containment.kind === "directory") {
                 walk(path);
-            else if (stat.isFile())
-                files.push({ absolute: path, relative: rel.split(sep).join("/"), sha256: createHash("sha256").update(readFileSync(path)).digest("hex") });
-            else
+            }
+            else if (containment.kind === "file") {
+                const fileCheck = requireContained(root, path, "file");
+                files.push({
+                    absolute: fileCheck.resolvedPath,
+                    relative: rel.split(sep).join("/"),
+                    sha256: createHash("sha256").update(readFileSync(fileCheck.resolvedPath)).digest("hex"),
+                });
+            }
+            else {
                 throw new Error("unsupported filesystem entry in package: " + rel);
+            }
         }
     }
     walk(root);
