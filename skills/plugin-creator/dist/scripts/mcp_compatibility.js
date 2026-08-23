@@ -1,0 +1,29 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { MCP_SCHEMA_ID } from "./validate_agent_plugin_schema.js";
+const object = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+function json(path) { try {
+    return JSON.parse(readFileSync(path, "utf8"));
+}
+catch {
+    return undefined;
+} }
+function normalize(servers) { if (!object(servers))
+    return null; const out = {}; for (const [id, value] of Object.entries(servers)) {
+    if (!object(value))
+        return null;
+    if (typeof value.type === "string")
+        out[id] = value;
+    else if (typeof value.command === "string")
+        out[id] = { type: "stdio", ...value };
+    else
+        return null;
+} return out; }
+export function inspectLegacyMcp(root) { const manifest = json(join(root, "plugin.json")), portable = json(join(root, "mcp.json")), dot = json(join(root, ".mcp.json")); const inline = object(manifest) ? manifest.mcpServers : undefined, sources = []; if (dot !== undefined)
+    sources.push("dot-mcp"); if (inline !== undefined)
+    sources.push("inline-manifest"); if (portable !== undefined && sources.length)
+    return { status: "blocked", sources, diagnostics: ["Portable mcp.json conflicts with legacy MCP declarations; choose one source explicitly."] }; if (sources.length > 1)
+    return { status: "blocked", sources, diagnostics: ["Both .mcp.json and inline plugin.json:mcpServers exist; precedence is undefined."] }; if (portable !== undefined)
+    return { status: "portable", sources: [], diagnostics: [] }; if (!sources.length)
+    return { status: "absent", sources: [], diagnostics: [] }; const source = sources[0], raw = source === "dot-mcp" && object(dot) ? dot.mcpServers : inline, normalized = normalize(raw); if (!normalized)
+    return { status: "blocked", sources, diagnostics: ["Legacy MCP declaration cannot be mapped safely to portable closed server variants."] }; return { status: "migratable", sources, diagnostics: ["Legacy MCP is nonportable; write proposedMcp to root mcp.json after explicit approval and remove the legacy declaration."], proposedMcp: { $schema: MCP_SCHEMA_ID, mcpServers: normalized } }; }
