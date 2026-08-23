@@ -98,9 +98,9 @@ Hooks are client behavior, not portable core. New output uses:
 
 This namespace is the repository's Goose adapter contract, not an upstream-ratified identifier. Validate hooks against the selected Goose source. Use `${PLUGIN_ROOT}` in package-relative command paths. Treat commands as executable code; review blocking events and fail closed on unsupported semantics. Root `hooks/hooks.json` is an input-only migration alias. If both forms exist, stop as ambiguous.
 
-## Behavioral evaluation contract
+## Behavioral Evaluation Contract
 
-When asked to evaluate, test, benchmark, compare, or prove improvement, execute the official workflow. Freeze baseline provenance and fixtures. Require:
+When asked to evaluate, test, benchmark, compare, or prove improvement, execute the official workflow. Freeze baseline provenance and fixtures. Require a complete evaluation receipt for each behaviorally changed Skill and plugin-level integration scenarios. Aggregate the resulting evidence into a combined benchmark and generate a review viewer. Require:
 
 1. paired `with_skill` and `old_skill`/`without_skill` outputs;
 2. `grading.json` with `text`, `passed`, and `evidence` for every run;
