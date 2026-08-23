@@ -1,7 +1,7 @@
 // Shared validation for Goose/Open Plugins hooks.
 import { readFileSync, statSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { regularFile, safePluginPath } from "./containment.js";
+import { directoryOrMissing, regularFile } from "./containment.js";
 
 export const GOOSE_NAMESPACE = "io.github.block.goose";
 export const GOOSE_ENVELOPE_VERSION = 1;
@@ -28,22 +28,6 @@ export const BLOCKING_EVENTS = new Set(["PreToolUse", "Stop"]);
 export interface ValidationResult {
   errors: string[];
   warnings: string[];
-}
-
-function isFile(path: string): boolean {
-  try {
-    return statSync(path).isFile();
-  } catch {
-    return false;
-  }
-}
-
-function isDir(path: string): boolean {
-  try {
-    return statSync(path).isDirectory();
-  } catch {
-    return false;
-  }
 }
 
 function loadJson(path: string, errors: string[]): unknown {
@@ -197,8 +181,8 @@ export function validateHooks(pluginRoot: string): ValidationResult {
     });
   }
 
-  let scriptsDir: string | null=null; try { scriptsDir=safePluginPath(pluginRoot,"scripts","scripts directory"); } catch(error) { errors.push((error as Error).message); }
-  if (scriptsDir && isDir(scriptsDir)) {
+  let scriptsDir: string | null = null; try { const checked = directoryOrMissing(pluginRoot, "scripts", "scripts directory"); if (checked.exists) scriptsDir = checked.path; } catch(error) { errors.push((error as Error).message); }
+  if (scriptsDir) {
     for (const entry of readdirSync(scriptsDir)) {
       const scriptPath = join(scriptsDir, entry);
       let checked: string; try { const rf=regularFile(pluginRoot,"scripts/"+entry,"Hook script"); if(!rf.exists) continue; checked=rf.path; } catch(error) { errors.push((error as Error).message); continue; }

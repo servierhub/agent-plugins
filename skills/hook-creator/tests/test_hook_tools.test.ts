@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, statSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, statSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -124,3 +124,9 @@ test("legacy hooks warn and mixed canonical and legacy forms fail closed", () =>
     assert.ok(validateHooks(plugin).errors.some(e => e.includes("Ambiguous Goose hooks")));
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 });
+
+test("validator rejects hook and referenced-script symlinks", { skip: process.platform === "win32" }, () => {
+  const tmp=mkdtempSync(join(tmpdir(),"hook-test-")); try { const plugin=makePlugin(tmp),outside=join(tmp,"outside.json");mkdirSync(join(plugin,"extensions","io.github.block.goose"),{recursive:true});writeFileSync(outside,JSON.stringify({hooks:{PostToolUse:[{hooks:[{command:"echo ok"}]}]}}));symlinkSync(outside,join(plugin,"extensions","io.github.block.goose","hooks.json"));const manifest=JSON.parse(readFileSync(join(plugin,"plugin.json"),"utf8"));manifest.extensions={"io.github.block.goose":{version:1,hooks:"extensions/io.github.block.goose/hooks.json"}};writeFileSync(join(plugin,"plugin.json"),JSON.stringify(manifest));assert.ok(validateHooks(plugin).errors.some(e=>e.includes("symlink"))); } finally {rmSync(tmp,{recursive:true,force:true})}
+});
+
+test("init rejects a non-array existing event before changing the manifest",()=>{const tmp=mkdtempSync(join(tmpdir(),"hook-test-"));try{const plugin=makePlugin(tmp);mkdirSync(join(plugin,"extensions","io.github.block.goose"),{recursive:true});writeFileSync(join(plugin,"extensions","io.github.block.goose","hooks.json"),JSON.stringify({hooks:{PostToolUse:{bad:true}}}));const manifest=JSON.parse(readFileSync(join(plugin,"plugin.json"),"utf8"));manifest.extensions={"io.github.block.goose":{version:1,hooks:"extensions/io.github.block.goose/hooks.json"}};writeFileSync(join(plugin,"plugin.json"),JSON.stringify(manifest));const before=readFileSync(join(plugin,"plugin.json"),"utf8");assert.throws(()=>execFileSync("node",[join(DIST,"init_hook.js"),plugin,"PostToolUse","record-tool"]));assert.equal(readFileSync(join(plugin,"plugin.json"),"utf8"),before);assert.equal(existsSync(join(plugin,"scripts","record-tool.sh")),false)}finally{rmSync(tmp,{recursive:true,force:true})}});
