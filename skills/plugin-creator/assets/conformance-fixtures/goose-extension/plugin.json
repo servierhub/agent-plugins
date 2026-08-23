@@ -1,0 +1,1 @@
+{"$schema":"https://agent-plugins.org/schemas/1.0.0/plugin.schema.json","name":"goose-extension","version":"1.0.0","description":"Goose extension fixture","extensions":{"io.github.block.goose":{"version":1,"hooks":"extensions/io.github.block.goose/hooks.json"}}}
