@@ -125,7 +125,7 @@ Prefer the bundled **agent-creator** executable (or node <agent-creator>/dist/sc
 
 Evaluate the custom agent as a reusable role, not as a skill trigger. The key question is whether delegating the same realistic task to the specialized agent produces better, more consistent results than a controlled baseline.
 
-1. Create 2–3 realistic tasks covering the role's core responsibilities, boundaries, and likely failure modes. Ask the user to review them.
+1. Create 2–3 realistic tasks covering the role's core responsibilities, boundaries, and likely failure modes. Ask the user to review them. Make each task autonomous: name the current and baseline agent files, declare whether it must explain or execute, list immutable fixture paths and preconditions, and give it enough turns and tools to finish. Freeze assertions before runs; graders must not add hidden deliverables afterward.
 2. Save them in an eval JSON file:
 
    ```json
@@ -135,6 +135,21 @@ Evaluate the custom agent as a reusable role, not as a skill trigger. The key qu
        {
          "id": 1,
          "name": "security-sensitive-review",
+         "subject": "agent-behavioral-evaluation",
+         "language": "en",
+         "target": {
+           "kind": "agent-pair",
+           "execution": "execute",
+           "current": "assets/evaluation-fixtures/role-comparison/current/security-reviewer.md",
+           "baseline": "assets/evaluation-fixtures/role-comparison/baseline/security-reviewer.md"
+         },
+         "preconditions": [
+           "Copy immutable fixtures into isolated temporary projects"
+         ],
+         "files": [
+           "assets/evaluation-fixtures/role-comparison/current/security-reviewer.md",
+           "assets/evaluation-fixtures/role-comparison/baseline/security-reviewer.md"
+         ],
          "prompt": "Review this change and report correctness and security risks...",
          "assertions": [
            "Identifies the unsafe authorization bypass with specific evidence",
@@ -201,6 +216,10 @@ Evaluate the custom agent as a reusable role, not as a skill trigger. The key qu
 - Test non-goals and restraint, not only successful task completion.
 - Preserve transcripts and timing so regressions can be explained.
 - Treat the neutral baseline as a control, not as a claim that Goose has no general capabilities.
+- Freeze current/baseline provenance, model, tools, inputs, and budget before paired runs.
+- Copy declared fixtures into each isolated project; do not mutate packaged fixture sources.
+- Match assertions to the declared execution level: explanation is not execution, and execution scenarios must receive enough budget to complete.
+- Do not introduce hidden grading criteria. Add newly discovered criteria to the next iteration and rerun both configurations.
 
 ## Writing guidance
 
@@ -252,3 +271,5 @@ An agent is ready only when:
 - `dist/scripts/grade_agent_eval.js`: grade deterministic and semantic assertions.
 - `dist/scripts/aggregate_benchmark.js`: aggregate pass rate, timing, and token metrics.
 - `dist/eval-viewer/generate_review.js`: review qualitative outputs and benchmark results.
+- `evals/evals.json`: autonomous, target-backed creation, validation, routing, and paired-role scenarios.
+- `assets/evaluation-fixtures/`: immutable valid, invalid, current, baseline, and task fixtures used by those scenarios.

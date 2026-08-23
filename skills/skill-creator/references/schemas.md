@@ -25,7 +25,22 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
   "evals": [
     {
       "id": 1,
-      "prompt": "User's example prompt",
+      "name": "extract-pdf-with-missing-parser",
+      "subject": "behavioral-evaluation",
+      "language": "en",
+      "prompt": "Extract the supplied PDF into the canonical output format.",
+      "target": {
+        "kind": "existing-skill",
+        "execution": "execute",
+        "path": "assets/evaluation-fixtures/pdf-extractor"
+      },
+      "preconditions": [
+        "Copy the immutable target fixture into an isolated sandbox"
+      ],
+      "budget": {
+        "max_turns": 12,
+        "timeout_seconds": 600
+      },
       "expected_output": "Description of expected result",
       "files": ["evals/files/sample1.pdf"],
       "capabilities": {
@@ -54,7 +69,13 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
 - `skill_name`: Name matching the skill's frontmatter
 - `coverage_dimensions`: Optional top-level map of required `dimension` to values for a rule-rich deterministic domain; every declared `dimension:value` cell should appear in at least one scenario's `coverage_tags`
 - `evals[].id`: Unique integer identifier
-- `evals[].prompt`: The task to execute
+- `evals[].name`: Stable descriptive scenario name
+- `evals[].subject`: Creator responsibility or behavior under test
+- `evals[].language`: Prompt language code, paired with a `language:<code>` coverage tag
+- `evals[].prompt`: Autonomous task statement that names its target instead of relying on “this Skill” context
+- `evals[].target`: Structured target identity such as current/baseline Skill paths, a workspace, or a new output name; its `execution` is one of `explain`, `dry-run`, `execute`, or `resume`
+- `evals[].preconditions`: Fixture immutability, baseline, capability, and workspace assumptions
+- `evals[].budget`: Positive `max_turns` and `timeout_seconds` for executable agent scenarios, sized to the artifacts explicitly required
 - `evals[].expected_output`: Human-readable description of success
 - `evals[].files`: Optional list of input file paths (relative to skill root)
 - `evals[].capabilities`: Declared filesystem, runner, browser, network, and tool availability

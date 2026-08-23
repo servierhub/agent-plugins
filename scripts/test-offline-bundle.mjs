@@ -61,6 +61,14 @@ try {
     "skills/plugin-creator/vendor/node_modules/adm-zip/package.json",
     "skills/agent-creator/vendor/node_modules/js-yaml/package.json",
     "skills/hook-creator/vendor/manifest.json",
+    "skills/skill-creator/evals/evals.json",
+    "skills/skill-creator/assets/evaluation-fixtures/frontmatter-invalid/SKILL.md",
+    "skills/agent-creator/evals/evals.json",
+    "skills/agent-creator/assets/evaluation-fixtures/invalid-agent.md",
+    "skills/hook-creator/evals/evals.json",
+    "skills/hook-creator/assets/evaluation-fixtures/exact-rm-guard/hooks/hooks.json",
+    "skills/plugin-creator/evals/evals.json",
+    "skills/plugin-creator/assets/evaluation-fixtures/package-ready/plugin.json",
   ]) {
     if (!existsSync(path.join(plugin, required))) throw new Error(`Missing offline artifact: ${required}`);
   }
@@ -75,6 +83,12 @@ try {
   execFileSync("unzip", ["-q", standaloneArchive, "-d", standaloneExtract]);
   const standaloneSkill = path.join(standaloneExtract, "skill-creator");
   run(path.join(standaloneSkill, "dist", "scripts", "quick_validate.js"), [standaloneSkill], standaloneExtract);
+  for (const required of [
+    "assets/evaluation-fixtures/frontmatter-invalid/SKILL.md",
+    "assets/evaluation-fixtures/skill-comparison/current/invoice-normalizer/SKILL.md",
+  ]) {
+    if (!existsSync(path.join(standaloneSkill, required))) throw new Error(`Standalone Skill is missing evaluation fixture: ${required}`);
+  }
 
   const agent = path.join(tmp, "agent.md");
   writeFileSync(agent, "---\nname: offline-reviewer\ndescription: Reviews offline bundles\n---\n\nReview the bundle.\n");

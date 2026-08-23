@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Run paired custom-agent evaluations with Goose.
-import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, copyFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, copyFileSync, cpSync, rmSync, statSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { parseArgs } from "node:util";
@@ -28,7 +28,7 @@ function baselineAgent(agent, name) {
         "that are not present in the task itself.";
     return renderAgent(name, description, agent.model, body);
 }
-async function runCase(evalCase, configuration, agentPath, workspace, gooseCommand, model, timeoutMs, maxTurns) {
+async function runCase(evalCase, configuration, agentPath, workspace, gooseCommand, model, timeoutMs, maxTurns, fixtureRoot) {
     const evalId = evalCase.id;
     const runDir = join(workspace, `eval-${evalId}`, configuration);
     const outputs = join(runDir, "outputs");
@@ -41,9 +41,24 @@ async function runCase(evalCase, configuration, agentPath, workspace, gooseComma
         const installed = join(temporary, ".agents", "agents", `${agent.name}.md`);
         mkdirSync(dirname(installed), { recursive: true });
         copyFileSync(agentPath, installed);
+        for (const relative of evalCase.files ?? []) {
+            if (relative.startsWith("/") || relative.split(/[\\/]/).includes(".."))
+                throw new Error(`Eval ${evalId} fixture path must stay inside the creator: ${relative}`);
+            const source = resolve(fixtureRoot, relative), destination = join(temporary, relative);
+            let sourceStat;
+            try {
+                sourceStat = statSync(source);
+            }
+            catch {
+                throw new Error(`Eval ${evalId} fixture does not exist: ${relative}`);
+            }
+            mkdirSync(dirname(destination), { recursive: true });
+            sourceStat.isDirectory() ? cpSync(source, destination, { recursive: true }) : copyFileSync(source, destination);
+        }
+        const context = JSON.stringify({ subject: evalCase.subject ?? null, language: evalCase.language ?? null, target: evalCase.target ?? null, preconditions: evalCase.preconditions ?? [], capabilities: evalCase.capabilities ?? null });
         const prompt = `Delegate this task to the custom agent named ${agent.name}. ` +
             "Return only the delegated agent's final task result, without discussing the delegation.\n\n" +
-            `Task:\n${evalCase.prompt}`;
+            `Evaluation context:\n${context}\n\nTask:\n${evalCase.prompt}`;
         const args = [
             "run",
             "--no-session",
@@ -111,6 +126,15 @@ export function validateEvalSet(document) {
         if (typeof evalCase.prompt !== "string" || !evalCase.prompt.trim()) {
             throw new Error(`Eval ${evalCase.id} must have a non-empty prompt`);
         }
+        for (const field of ["subject", "language"])
+            if (typeof evalCase[field] !== "string" || !evalCase[field].trim())
+                throw new Error(`Eval ${evalCase.id} must have a non-empty ${field}`);
+        if (typeof evalCase.target !== "object" || evalCase.target === null || typeof evalCase.target.kind !== "string")
+            throw new Error(`Eval ${evalCase.id} must have a target with kind`);
+        if (!Array.isArray(evalCase.preconditions) || !evalCase.preconditions.every(item => typeof item === "string"))
+            throw new Error(`Eval ${evalCase.id} preconditions must be a list of strings`);
+        if (!Array.isArray(evalCase.files) || !evalCase.files.every(item => typeof item === "string"))
+            throw new Error(`Eval ${evalCase.id} files must be a list of strings`);
         const assertions = evalCase.assertions ?? [];
         if (!Array.isArray(assertions) || !assertions.every((item) => typeof item === "string")) {
             throw new Error(`Eval ${evalCase.id} assertions must be a list of strings`);
@@ -151,8 +175,10 @@ async function main() {
         process.exit(2);
     }
     const agentPath = resolve(values.agent);
+    const evalSetPath = resolve(values["eval-set"]);
+    const fixtureRoot = dirname(dirname(evalSetPath));
     const agent = parseAgent(agentPath);
-    const cases = validateEvalSet(JSON.parse(readFileSync(resolve(values["eval-set"]), "utf-8")));
+    const cases = validateEvalSet(JSON.parse(readFileSync(evalSetPath, "utf-8")));
     const workspace = resolve(values.workspace);
     mkdirSync(workspace, { recursive: true });
     for (const evalCase of cases) {
@@ -162,6 +188,13 @@ async function main() {
             eval_id: evalCase.id,
             eval_name: evalCase.name ?? String(evalCase.id),
             prompt: evalCase.prompt,
+            subject: evalCase.subject ?? "",
+            language: evalCase.language ?? "",
+            target: evalCase.target ?? {},
+            preconditions: evalCase.preconditions ?? [],
+            files: evalCase.files ?? [],
+            capabilities: evalCase.capabilities ?? {},
+            coverage_tags: evalCase.coverage_tags ?? [],
             assertions: evalCase.assertions ?? [],
         }, null, 2)}\n`);
     }
@@ -190,7 +223,7 @@ async function main() {
         const timeoutMs = Number(values.timeout) * 1000;
         const maxTurns = Number(values["max-turns"]);
         const results = await mapLimit(jobs, workers, async (job) => {
-            const result = await runCase(job.evalCase, job.configuration, job.path, workspace, gooseCommand, values.model, timeoutMs, maxTurns);
+            const result = await runCase(job.evalCase, job.configuration, job.path, workspace, gooseCommand, values.model, timeoutMs, maxTurns, fixtureRoot);
             console.log(`Completed eval ${result.eval_id} / ${result.configuration} (${result.total_duration_seconds}s)`);
             return result;
         });

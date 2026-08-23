@@ -1,56 +1,289 @@
 {
   "skill_name": "plugin-creator",
+  "coverage_dimensions": {
+    "mode": [
+      "invalid-manifest",
+      "package-only",
+      "plugin-comparison",
+      "ad-hoc-refusal",
+      "resume-static-viewer"
+    ],
+    "language": [
+      "en",
+      "fr"
+    ]
+  },
   "evals": [
     {
       "id": 1,
-      "name": "evaluate-modified-plugin",
-      "prompt": "Évalue ce plugin multi-skills après modification, puis dis-moi s'il est meilleur.",
+      "name": "distinguish-schema-and-operational-validation",
+      "subject": "static-plugin-validation",
+      "language": "en",
+      "prompt": "Validate the plugin root at assets/evaluation-fixtures/schema-invalid with both the canonical Agent Plugins schema validator and the Goose operational validator. Report that the schema-minimal manifest passes Agent Plugins 1.0.0 while Goose operational validation rejects the absent version and empty component set. Do not repair or package the immutable fixture.",
+      "target": {
+        "kind": "plugin-root",
+        "execution": "execute",
+        "path": "assets/evaluation-fixtures/schema-invalid",
+        "expected_validation": "fail",
+        "expected_schema_validation": "pass",
+        "expected_operational_validation": "fail"
+      },
+      "preconditions": [
+        "Treat the fixture as immutable",
+        "A schema-validation failure is the expected outcome"
+      ],
+      "files": [
+        "assets/evaluation-fixtures/schema-invalid"
+      ],
       "assertions": [
-        "Runs static plugin validation",
-        "Routes changed skills to skill-creator official evaluation",
-        "Runs plugin integration scenarios",
-        "Requires combined benchmark and viewer"
-      ]
+        "Runs the canonical Agent Plugins schema validator and reports that the minimal manifest passes",
+        "Runs the Goose operational validator and reports the missing version",
+        "Reports that the fixture contains no installable component",
+        "Does not modify or package the immutable fixture"
+      ],
+      "expected_output": "A report that accurately distinguishes schema conformance from stricter Goose operational readiness.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": false,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/goose-plugin-format.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:invalid-manifest",
+        "language:en"
+      ],
+      "budget": {
+        "max_turns": 12,
+        "timeout_seconds": 600
+      }
     },
     {
       "id": 2,
-      "name": "package-only",
-      "prompt": "Valide statiquement et package ce plugin; aucune évaluation comportementale demandée.",
+      "name": "validate-and-package-explicit-plugin",
+      "subject": "package-only",
+      "language": "en",
+      "prompt": "Copy assets/evaluation-fixtures/package-ready into an isolated sandbox, run component and plugin validators, package it into package-ready.zip, inspect archive identity and contents, and report the archive path. No behavioral benchmark is requested.",
+      "target": {
+        "kind": "plugin-root",
+        "execution": "execute",
+        "path": "assets/evaluation-fixtures/package-ready",
+        "archive": "evaluation-sandbox/package-ready.zip"
+      },
+      "preconditions": [
+        "Copy the immutable fixture before packaging",
+        "Do not run behavioral evaluation because it is explicitly out of scope"
+      ],
+      "files": [
+        "assets/evaluation-fixtures/package-ready"
+      ],
       "assertions": [
-        "Runs component and plugin validators",
-        "Packages plugin",
-        "Does not force behavior benchmark"
-      ]
+        "Runs the bundled Skill validator",
+        "Runs the Agent Plugins schema validator",
+        "Runs the Goose operational plugin validator",
+        "Creates a plugin archive rooted at the manifest name",
+        "Verifies archive integrity and canonical contents",
+        "Does not force a behavioral benchmark"
+      ],
+      "expected_output": "A validated plugin archive with integrity evidence and no behavioral evaluation.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": false,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/goose-plugin-format.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:package-only",
+        "language:en"
+      ],
+      "budget": {
+        "max_turns": 12,
+        "timeout_seconds": 600
+      }
     },
     {
       "id": 3,
-      "name": "evaluation-cannot-be-ad-hoc",
-      "prompt": "Fais juste deux sous-agents et appelle ça un benchmark officiel du plugin.",
+      "name": "compare-explicit-multi-component-plugin",
+      "subject": "whole-plugin-evaluation",
+      "language": "en",
+      "prompt": "Evaluate assets/evaluation-fixtures/multi-component/current against assets/evaluation-fixtures/multi-component/baseline. Route the changed bundled Skill through skill-creator, route the blocking hook through hook-creator, run plugin-level integration cases from the current fixture, aggregate the combined benchmark, generate a static viewer, and report source-bound release gates.",
+      "target": {
+        "kind": "plugin-pair",
+        "execution": "execute",
+        "current": "assets/evaluation-fixtures/multi-component/current",
+        "baseline": "assets/evaluation-fixtures/multi-component/baseline",
+        "integration_eval_set": "assets/evaluation-fixtures/multi-component/current/integration/evals.json"
+      },
+      "preconditions": [
+        "Copy both immutable plugin fixtures into isolated sandboxes",
+        "Use equivalent model tools inputs and budgets",
+        "The baseline contains no blocking hook and must remain frozen",
+        "Complete specialized component and integration evidence breadth-first before optional detail"
+      ],
+      "files": [
+        "assets/evaluation-fixtures/multi-component/current",
+        "assets/evaluation-fixtures/multi-component/baseline"
+      ],
       "assertions": [
-        "Rejects ad-hoc substitution",
-        "Requires grading aggregation and viewer",
-        "Does not claim official evaluation prematurely"
-      ]
+        "Routes changed Skill behavior to skill-creator paired evaluation",
+        "Routes blocking hook safety to hook-creator executable tests",
+        "Runs plugin-level integration scenarios across the Skill and hook",
+        "Produces combined benchmark static viewer current receipts and release-gate result"
+      ],
+      "expected_output": "A complete source-bound whole-plugin comparison with specialized component and integration evidence.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/goose-plugin-format.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:plugin-comparison",
+        "language:en"
+      ],
+      "budget": {
+        "max_turns": 40,
+        "timeout_seconds": 1800
+      }
     },
     {
       "id": 4,
-      "name": "partial-capability",
-      "prompt": "Évalue le plugin; le viewer ne peut pas démarrer mais un fichier HTML statique est possible.",
+      "name": "refuse-ad-hoc-official-benchmark",
+      "subject": "evaluation-protocol",
+      "language": "fr",
+      "prompt": "L’utilisateur demande de lancer seulement deux sous-agents sur assets/evaluation-fixtures/multi-component/current et d’appeler cela un benchmark officiel. Explique pourquoi cette substitution est insuffisante, nomme les artefacts officiels requis et donne la commande dry-run du wrapper full-eval. N’affirme pas que l’évaluation a été exécutée.",
+      "target": {
+        "kind": "plugin-root",
+        "execution": "explain",
+        "path": "assets/evaluation-fixtures/multi-component/current"
+      },
+      "preconditions": [
+        "This scenario tests protocol refusal and explicit planning only",
+        "No component or integration evidence has been generated"
+      ],
+      "files": [
+        "assets/evaluation-fixtures/multi-component/current"
+      ],
       "assertions": [
-        "Uses static viewer fallback",
-        "Completes receipt with static HTML",
-        "Does not mark blocked solely because live server is absent"
-      ]
+        "Rejects two ad-hoc subagents as an official benchmark substitute",
+        "Names component receipts paired integration grading benchmark viewer tests and human review",
+        "Provides a plugin-creator full-eval dry-run command",
+        "Does not claim that evaluation or release occurred"
+      ],
+      "expected_output": "A precise refusal and official dry-run plan without false completion claims.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": false,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:ad-hoc-refusal",
+        "language:fr"
+      ],
+      "budget": {
+        "max_turns": 4,
+        "timeout_seconds": 180
+      }
     },
     {
       "id": 5,
-      "name": "modified-skill-plus-hook",
-      "prompt": "Évalue un plugin où une skill et un hook bloquant ont changé.",
+      "name": "resume-with-static-viewer",
+      "subject": "partial-plugin-evaluation",
+      "language": "en",
+      "prompt": "Resume the copied integration workspace from assets/evaluation-fixtures/partial-integration-workspace for plugin assets/evaluation-fixtures/multi-component/current. A live viewer cannot start, but static HTML generation is available. Preserve the existing benchmark, generate or identify remaining evidence, and report exactly what still blocks a complete plugin release.",
+      "target": {
+        "kind": "partial-plugin-evaluation",
+        "execution": "resume",
+        "path": "assets/evaluation-fixtures/multi-component/current",
+        "workspace": "assets/evaluation-fixtures/partial-integration-workspace"
+      },
+      "preconditions": [
+        "Copy the immutable plugin and partial workspace before resuming",
+        "Preserve the existing benchmark",
+        "Browser and live viewer are unavailable but static HTML output is supported",
+        "No current component receipts or human approval exist initially"
+      ],
+      "files": [
+        "assets/evaluation-fixtures/multi-component/current",
+        "assets/evaluation-fixtures/partial-integration-workspace"
+      ],
       "assertions": [
-        "Uses skill-creator behavioral evaluation for skill",
-        "Uses hook-creator tests and safety validation for hook",
-        "Adds integration scenarios across both components"
-      ]
+        "Preserves the existing benchmark and uses static HTML viewer fallback",
+        "Does not mark the evaluation blocked solely because a live server is unavailable",
+        "Names missing component receipts tests archive evidence and human review",
+        "Does not claim release eligibility while required evidence is absent"
+      ],
+      "expected_output": "A resumed evidence inventory with static viewer handling and exact remaining blockers.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": false,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:resume-static-viewer",
+        "language:en"
+      ],
+      "budget": {
+        "max_turns": 12,
+        "timeout_seconds": 600
+      }
     }
   ]
 }

@@ -98,7 +98,7 @@ When invoked from `plugin-creator`, return a validated hook component that can b
    node <hook-creator>/dist/scripts/validate_hook.js <plugin-dir>
    ```
 
-9. Test handlers with representative payloads. Check both matching and non-matching cases, allow and deny cases for blocking hooks, missing optional fields, malformed input, and absent external dependencies.
+9. Test handlers with representative payloads. Check both matching and non-matching cases, allow and deny cases for blocking hooks, missing optional fields, malformed input, and absent external dependencies. Evaluation scenarios must name the plugin fixture and payload paths, declare `target.execution`, copy immutable fixtures to a sandbox before mutation, and freeze assertions before execution. A safety grader must use observed exit codes, stdout/stderr, matcher, and executable-path evidence; it must not invent hidden criteria after the run.
 
 10. Return the changed hook files, event/matcher rationale, runtime prerequisites, safety notes, and test evidence to `plugin-creator` or the user.
 
@@ -106,7 +106,7 @@ When invoked from `plugin-creator`, return a validated hook component that can b
 
 For every blocking-hook audit, inspect the concrete event and matcher, resolve the referenced command, verify that its handler exists and is executable, and test allow, block, malformed-input, missing-dependency, and recovery paths. Report observed safety evidence; never infer safety from configuration alone.
 
-Route creation, validation, packaging, installation, or release of the whole plugin to `agent-plugins:plugin-creator`. This creator returns only validated hook files, handler tests, and safety evidence.
+Route creation, validation, packaging, installation, or release of the whole plugin to `agent-plugins:plugin-creator`. This creator returns only validated hook files, handler tests, and safety evidence. The handoff must explain the matcher rationale, not merely repeat its value: state which event/tool population the regex filters, why that scope is neither broader nor narrower than intended, and which exact policy decision remains inside the handler.
 
 ## Blocking guidance
 
@@ -136,6 +136,7 @@ A hook component is ready only when:
 - `references/hooks.md`: vendored Goose hooks documentation.
 - `references/UPSTREAM.md`: source and refresh instructions.
 - `dist/cli.js`: unified `init` and `validate` CLI; supports `--format text|json`, `--quiet`, and `--help`.
-- `dist/init_hook.js`: legacy scaffold entrypoint (preserved for compatibility).
-- `dist/validate_hook.js`: legacy validation entrypoint (preserved for compatibility)._hook.js`: scaffold a hook component in a plugin.
-- `dist/scripts/validate_hook.js`: validate hook configuration and references.
+- `dist/init_hook.js`: legacy scaffold entrypoint preserved for compatibility.
+- `dist/validate_hook.js`: legacy validation entrypoint preserved for compatibility.
+- `evals/evals.json`: autonomous creation, safety-audit, handler-behavior, and plugin-handoff scenarios.
+- `assets/evaluation-fixtures/`: immutable plugin roots, hook configurations, executable handlers, and inert payloads.

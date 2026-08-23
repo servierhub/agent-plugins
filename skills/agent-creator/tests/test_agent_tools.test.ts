@@ -102,7 +102,7 @@ test("install refuses overwrite", () => {
 
 test("eval set validation and output extraction", () => {
   const cases = validateEvalSet({
-    evals: [{ id: 1, prompt: "Review this", assertions: ["contains: risk"] }],
+    evals: [{ id: 1, name: "review-risk", subject: "agent-behavior", language: "en", prompt: "Review this change for risk.", target: { kind: "delegated-task", execution: "execute" }, preconditions: ["Use an isolated project"], files: [], assertions: ["contains: risk"] }],
   });
   assert.equal(cases[0].id, 1);
   const text = extractAssistantText({

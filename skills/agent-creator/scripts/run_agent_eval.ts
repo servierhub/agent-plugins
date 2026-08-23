@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Run paired custom-agent evaluations with Goose.
-import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, copyFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, copyFileSync, cpSync, rmSync, statSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { parseArgs } from "node:util";
@@ -13,7 +13,14 @@ const execFileAsync = promisify(execFile);
 interface EvalCase {
   id: string | number;
   name?: string;
+  subject?: string;
+  language?: string;
   prompt: string;
+  target?: Record<string, unknown>;
+  preconditions?: string[];
+  files?: string[];
+  capabilities?: Record<string, unknown>;
+  coverage_tags?: string[];
   assertions?: string[];
 }
 
@@ -54,7 +61,8 @@ async function runCase(
   gooseCommand: string[],
   model: string | undefined,
   timeoutMs: number,
-  maxTurns: number
+  maxTurns: number,
+  fixtureRoot: string
 ): Promise<RunResult> {
   const evalId = evalCase.id;
   const runDir = join(workspace, `eval-${evalId}`, configuration);
@@ -69,11 +77,19 @@ async function runCase(
     const installed = join(temporary, ".agents", "agents", `${agent.name}.md`);
     mkdirSync(dirname(installed), { recursive: true });
     copyFileSync(agentPath, installed);
+    for (const relative of evalCase.files ?? []) {
+      if (relative.startsWith("/") || relative.split(/[\\/]/).includes("..")) throw new Error(`Eval ${evalId} fixture path must stay inside the creator: ${relative}`);
+      const source = resolve(fixtureRoot, relative), destination = join(temporary, relative);
+      let sourceStat; try { sourceStat = statSync(source); } catch { throw new Error(`Eval ${evalId} fixture does not exist: ${relative}`); }
+      mkdirSync(dirname(destination), { recursive: true });
+      sourceStat.isDirectory() ? cpSync(source, destination, { recursive: true }) : copyFileSync(source, destination);
+    }
 
+    const context = JSON.stringify({ subject: evalCase.subject ?? null, language: evalCase.language ?? null, target: evalCase.target ?? null, preconditions: evalCase.preconditions ?? [], capabilities: evalCase.capabilities ?? null });
     const prompt =
       `Delegate this task to the custom agent named ${agent.name}. ` +
       "Return only the delegated agent's final task result, without discussing the delegation.\n\n" +
-      `Task:\n${evalCase.prompt}`;
+      `Evaluation context:\n${context}\n\nTask:\n${evalCase.prompt}`;
 
     const args = [
       "run",
@@ -145,6 +161,10 @@ export function validateEvalSet(document: any): EvalCase[] {
     if (typeof evalCase.prompt !== "string" || !evalCase.prompt.trim()) {
       throw new Error(`Eval ${evalCase.id} must have a non-empty prompt`);
     }
+    for (const field of ["subject", "language"] as const) if (typeof evalCase[field] !== "string" || !evalCase[field]!.trim()) throw new Error(`Eval ${evalCase.id} must have a non-empty ${field}`);
+    if (typeof evalCase.target !== "object" || evalCase.target === null || typeof evalCase.target.kind !== "string") throw new Error(`Eval ${evalCase.id} must have a target with kind`);
+    if (!Array.isArray(evalCase.preconditions) || !evalCase.preconditions.every(item => typeof item === "string")) throw new Error(`Eval ${evalCase.id} preconditions must be a list of strings`);
+    if (!Array.isArray(evalCase.files) || !evalCase.files.every(item => typeof item === "string")) throw new Error(`Eval ${evalCase.id} files must be a list of strings`);
     const assertions = evalCase.assertions ?? [];
     if (!Array.isArray(assertions) || !assertions.every((item) => typeof item === "string")) {
       throw new Error(`Eval ${evalCase.id} assertions must be a list of strings`);
@@ -191,8 +211,10 @@ async function main() {
   }
 
   const agentPath = resolve(values.agent as string);
+  const evalSetPath = resolve(values["eval-set"] as string);
+  const fixtureRoot = dirname(dirname(evalSetPath));
   const agent = parseAgent(agentPath);
-  const cases = validateEvalSet(JSON.parse(readFileSync(resolve(values["eval-set"] as string), "utf-8")));
+  const cases = validateEvalSet(JSON.parse(readFileSync(evalSetPath, "utf-8")));
   const workspace = resolve(values.workspace as string);
   mkdirSync(workspace, { recursive: true });
 
@@ -206,6 +228,13 @@ async function main() {
           eval_id: evalCase.id,
           eval_name: evalCase.name ?? String(evalCase.id),
           prompt: evalCase.prompt,
+          subject: evalCase.subject ?? "",
+          language: evalCase.language ?? "",
+          target: evalCase.target ?? {},
+          preconditions: evalCase.preconditions ?? [],
+          files: evalCase.files ?? [],
+          capabilities: evalCase.capabilities ?? {},
+          coverage_tags: evalCase.coverage_tags ?? [],
           assertions: evalCase.assertions ?? [],
         },
         null,
@@ -249,7 +278,8 @@ async function main() {
         gooseCommand,
         values.model as string | undefined,
         timeoutMs,
-        maxTurns
+        maxTurns,
+        fixtureRoot
       );
       console.log(
         `Completed eval ${result.eval_id} / ${result.configuration} (${result.total_duration_seconds}s)`

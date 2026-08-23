@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -92,6 +93,29 @@ test("every creator ships a complete offline runtime bundle", () => {
     assert.ok(existsSync(join(skill, "THIRD_PARTY_NOTICES.md")), `${name}: notices`);
     for (const dependency of Object.keys(pkg.dependencies ?? {})) {
       assert.ok(existsSync(join(skill, "vendor", "node_modules", dependency, "package.json")), `${name}: ${dependency}`);
+    }
+  }
+});
+
+test("all creator evaluation sets are autonomous and fixture-backed", () => {
+  const designCli = join(SKILLS, "skill-creator", "dist", "scripts", "cli.js");
+  for (const name of EXPECTED_SKILLS) {
+    const skillRoot = join(SKILLS, name);
+    const evalSet = join(skillRoot, "evals", "evals.json");
+    assert.ok(existsSync(evalSet), `${name}: missing durable eval set`);
+    const result = spawnSync(process.execPath, [designCli, "design-evals", evalSet, "--skill-path", skillRoot, "--format", "json"], { encoding: "utf8" });
+    assert.equal(result.status, 0, `${name}: ${result.stderr || result.stdout}`);
+    const envelope = JSON.parse(result.stdout);
+    assert.equal(envelope.output.status, "pass", `${name}: ${JSON.stringify(envelope.output.findings)}`);
+    assert.equal(envelope.output.summary.warnings, 0, name);
+    const document = JSON.parse(readFileSync(evalSet, "utf8"));
+    for (const scenario of document.evals) {
+      assert.ok(scenario.subject, `${name}/${scenario.id}: subject`);
+      assert.ok(scenario.language, `${name}/${scenario.id}: language`);
+      assert.ok(scenario.target?.kind, `${name}/${scenario.id}: target.kind`);
+      assert.match(scenario.target.execution, /^(explain|dry-run|execute|resume)$/, `${name}/${scenario.id}: execution`);
+      assert.ok(scenario.preconditions?.length, `${name}/${scenario.id}: preconditions`);
+      assert.ok(scenario.coverage_tags?.includes(`language:${scenario.language}`), `${name}/${scenario.id}: language coverage`);
     }
   }
 });

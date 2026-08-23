@@ -37,12 +37,29 @@ export function designEvals(evalSetArg, skillPathArg) {
     }
     const seen = new Set(), scenarios = [];
     for (let index = 0; index < (Array.isArray(raw) ? raw.length : 0); index++) {
-        const item = raw[index] ?? {}, id = item.id ?? index + 1, key = String(id), prompt = String(item.prompt ?? item.query ?? "").trim(), name = String(item.name ?? "").trim(), assertions = asStrings(item.assertions ?? item.expectations), files = asStrings(item.files), coverageTags = asStrings(item.coverage_tags), caps = capabilities(item.capabilities), nav = navigation(item.navigation_expectations);
+        const item = raw[index] ?? {}, id = item.id ?? index + 1, key = String(id), prompt = String(item.prompt ?? item.query ?? "").trim(), name = String(item.name ?? "").trim(), subject = String(item.subject ?? "").trim(), language = String(item.language ?? "").trim(), target = item.target && typeof item.target === "object" && !Array.isArray(item.target) ? item.target : {}, preconditions = asStrings(item.preconditions), budget = { max_turns: Number(item.budget?.max_turns ?? 0), timeout_seconds: Number(item.budget?.timeout_seconds ?? 0) }, assertions = asStrings(item.assertions ?? item.expectations), files = asStrings(item.files), coverageTags = asStrings(item.coverage_tags), caps = capabilities(item.capabilities), nav = navigation(item.navigation_expectations);
         if (seen.has(key))
             add(findings, "error", "unique-id", `Duplicate scenario id: ${key}.`, id);
         seen.add(key);
         if (!name || /^(?:case|test|eval)[-_ ]?\d*$/i.test(name))
             add(findings, "warning", "descriptive-name", "Scenario name should identify the capability or risk under test.", id);
+        if (!subject)
+            add(findings, "warning", "scenario-subject", "Declare the creator responsibility or behavior under test in subject.", id);
+        if (!language)
+            add(findings, "warning", "scenario-language", "Declare the prompt language and include a matching language coverage tag.", id);
+        else if (!coverageTags.includes(`language:${language}`))
+            add(findings, "warning", "language-coverage", `Add coverage tag language:${language} for the declared prompt language.`, id);
+        if (!Object.keys(target).length || typeof target.kind !== "string")
+            add(findings, "error", "scenario-target", "Declare a target object with a concrete kind and paths or output identity.", id);
+        const execution = target.execution;
+        if (typeof execution !== "string" || !["explain", "dry-run", "execute", "resume"].includes(execution))
+            add(findings, "error", "execution-level", "Declare target.execution as explain, dry-run, execute, or resume.", id);
+        if (!preconditions.length)
+            add(findings, "warning", "scenario-preconditions", "Declare fixture mutability, baseline, capability, or workspace preconditions.", id);
+        if (["execute", "resume"].includes(String(execution)) && caps.agent_runner && (!Number.isInteger(budget.max_turns) || budget.max_turns <= 0 || !Number.isFinite(budget.timeout_seconds) || budget.timeout_seconds <= 0))
+            add(findings, "warning", "execution-budget", "Executable agent scenarios must declare positive budget.max_turns and budget.timeout_seconds.", id);
+        if (/\b(?:this|that) skill\b|\bcette skill\b/i.test(prompt) && !Object.keys(target).length)
+            add(findings, "error", "ambiguous-target", "Prompt refers to a Skill without an explicit target.", id);
         if (!prompt)
             add(findings, "error", "prompt", "Scenario prompt is required.", id);
         else if (vaguePrompts.test(prompt) || prompt.length < 20)
@@ -63,20 +80,22 @@ export function designEvals(evalSetArg, skillPathArg) {
             if (compoundAssertion.test(assertion))
                 add(findings, "warning", "atomic-assertion", `Split compound assertion into atomic outcomes: '${assertion}'.`, id);
         }
-        if (skillPath)
-            for (const file of files) {
+        if (skillPath) {
+            const targetPaths = Object.entries(target).filter(([field, value]) => typeof value === "string" && ["path", "current", "baseline", "eval_set", "trigger_eval_set", "behavior_eval_set", "integration_eval_set", "workspace", "allow_payload", "block_payload"].includes(field)).map(([, value]) => value);
+            for (const file of [...new Set([...files, ...targetPaths])]) {
                 if (isAbsolute(file) || file.startsWith("../"))
                     add(findings, "error", "fixture-path", `Fixture must stay inside the Skill: ${file}`, id);
                 else if (!existsSync(join(skillPath, file)))
                     add(findings, "error", "missing-fixture", `Fixture does not exist: ${file}`, id);
             }
+        }
         const mentionsReferences = /reference|progressive disclosure|provider|domain/i.test(prompt + " " + assertions.join(" "));
         if (mentionsReferences && !nav.must_read.length && !nav.read_when_relevant.length)
             add(findings, "warning", "navigation-expectations", "Progressive-disclosure scenario should declare required and conditional resource navigation.", id);
         for (const tag of coverageTags)
             if (!/^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9._-]*$/i.test(tag))
                 add(findings, "warning", "coverage-tag", `Use stable dimension:value coverage tags, got '${tag}'.`, id);
-        scenarios.push({ id, name: name || `eval-${key}`, prompt, expected_output: String(item.expected_output ?? ""), files, capabilities: caps, assertions, coverage_tags: coverageTags, navigation_expectations: nav });
+        scenarios.push({ id, name: name || `eval-${key}`, subject, language, prompt, expected_output: String(item.expected_output ?? ""), files, target, preconditions, budget, capabilities: caps, assertions, coverage_tags: coverageTags, navigation_expectations: nav });
     }
     const covered = [...new Set(scenarios.flatMap(s => s.coverage_tags))].sort();
     const requiredCoverage = Object.entries(declaredCoverage).flatMap(([dimension, values]) => values.map(value => `${dimension}:${value}`));

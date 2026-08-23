@@ -47,7 +47,7 @@ If a required creator is unavailable, state the limitation and follow its docume
 
 ## Behavioral Evaluation Contract
 
-When plugin evaluation is explicitly requested, static validation is necessary but insufficient. Require a complete evaluation receipt from `skill-creator` for every behaviorally changed skill, plus plugin-level integration scenarios.
+When plugin evaluation is explicitly requested, static validation is necessary but insufficient. Require a complete evaluation receipt from `skill-creator` for every behaviorally changed skill, plus plugin-level integration scenarios. Make every scenario autonomous: name the plugin current/baseline paths and integration eval set, declare `target.execution` as explain, dry-run, execute, or resume, copy immutable fixtures before mutation, freeze source provenance and assertions, and provide enough budget for all artifacts explicitly required. Graders must not fail outputs on hidden deliverables; add new criteria to the next iteration and rerun both variants.
 
 Completion requires:
 
@@ -208,5 +208,5 @@ For whole-plugin evaluation, run `plugin-creator full-eval <plugin> --workspace 
 - `dist/scripts/package_goose_plugin.js`: validate then create a distributable ZIP.
 - `references/goose-plugin-format.md`: canonical Goose plugin layout and installation model.
 - `references/goose-hooks.md`: lifecycle hooks format and safe patterns.
-d`: canonical Goose plugin layout and installation model.
-- `references/goose-hooks.md`: lifecycle hooks format and safe patterns.
+- `evals/evals.json`: autonomous validation, packaging, comparison, protocol-refusal, and resumable-evaluation scenarios.
+- `assets/evaluation-fixtures/`: immutable valid, operationally invalid, package-ready, multi-component, and partial-workspace fixtures.

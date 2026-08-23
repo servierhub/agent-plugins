@@ -87,7 +87,7 @@ export function fullEval(options) {
         if (!options.dryRun) {
             mkdirSync(ed, { recursive: true });
             if (!existsSync(metadata))
-                writeFileSync(metadata, JSON.stringify({ eval_id: id, eval_name: item.name ?? slug(item.prompt), prompt: item.prompt ?? item.query ?? "", expected_output: item.expected_output ?? "", assertions: item.assertions ?? [], files: item.files ?? [], capabilities: item.capabilities ?? { filesystem: true, agent_runner: true, browser: false, network: false, tools: [] }, coverage_tags: item.coverage_tags ?? [], navigation_expectations: item.navigation_expectations ?? { must_read: [], read_when_relevant: [], must_not_read: [] } }, null, 2) + "\n");
+                writeFileSync(metadata, JSON.stringify({ eval_id: id, eval_name: item.name ?? slug(item.prompt), subject: item.subject ?? "", language: item.language ?? "", target: item.target ?? {}, preconditions: item.preconditions ?? [], budget: item.budget ?? {}, prompt: item.prompt ?? item.query ?? "", expected_output: item.expected_output ?? "", assertions: item.assertions ?? [], files: item.files ?? [], capabilities: item.capabilities ?? { filesystem: true, agent_runner: true, browser: false, network: false, tools: [] }, coverage_tags: item.coverage_tags ?? [], navigation_expectations: item.navigation_expectations ?? { must_read: [], read_when_relevant: [], must_not_read: [] } }, null, 2) + "\n");
             for (const config of ["with_skill", baseline])
                 mkdirSync(join(ed, config, "run-1", "outputs"), { recursive: true });
         }
