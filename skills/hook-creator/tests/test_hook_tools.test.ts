@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, statSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, statSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -95,4 +95,32 @@ test("rejects missing plugin-relative script", () => {
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
+});
+
+test("scaffold writes the namespaced Goose extension envelope", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "hook-test-"));
+  try {
+    const plugin = makePlugin(tmp);
+    execFileSync("node", [join(DIST, "init_hook.js"), plugin, "PostToolUse", "record-tool"]);
+    const manifest = JSON.parse(readFileSync(join(plugin, "plugin.json"), "utf8"));
+    assert.deepEqual(manifest.extensions["io.github.block.goose"], {
+      version: 1,
+      hooks: "extensions/io.github.block.goose/hooks.json",
+    });
+    assert.equal(existsSync(join(plugin, "extensions", "io.github.block.goose", "hooks.json")), true);
+    assert.equal(existsSync(join(plugin, "hooks", "hooks.json")), false);
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test("legacy hooks warn and mixed canonical and legacy forms fail closed", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "hook-test-"));
+  try {
+    const plugin = makePlugin(tmp);
+    mkdirSync(join(plugin, "hooks"));
+    writeFileSync(join(plugin, "hooks", "hooks.json"), JSON.stringify({ hooks: { PostToolUse: [{ hooks: [{ command: "echo ok" }] }] } }));
+    assert.ok(validateHooks(plugin).warnings.some(w => w.includes("Legacy Goose hooks")));
+    mkdirSync(join(plugin, "extensions", "io.github.block.goose"), { recursive: true });
+    writeFileSync(join(plugin, "extensions", "io.github.block.goose", "hooks.json"), JSON.stringify({ hooks: { PostToolUse: [{ hooks: [{ command: "echo ok" }] }] } }));
+    assert.ok(validateHooks(plugin).errors.some(e => e.includes("Ambiguous Goose hooks")));
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
 });

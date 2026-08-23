@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Validate a Goose/Open Plugins directory without installing it.
-import { readFileSync, existsSync, statSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve, isAbsolute, sep } from "node:path";
+import { resolveContainedPath } from "./path_containment.js";
 import { fileURLToPath } from "node:url";
 const NAME_RE = /^[a-z0-9](?:[a-z0-9.-]{0,62}[a-z0-9])?$/;
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
@@ -11,31 +12,64 @@ const HOOK_EVENTS = new Set([
     "BeforeReadFile", "AfterFileEdit", "BeforeShellExecution", "AfterShellExecution",
 ]);
 const MANIFEST_KEYS = new Set(["$schema", "name", "version", "description", "author", "homepage", "repository", "license", "keywords", "extensions", "skills", "mcpServers"]);
+const GOOSE_NAMESPACE = "io.github.block.goose";
+const CANONICAL_HOOKS_PATH = "extensions/io.github.block.goose/hooks.json";
 const PLACEHOLDER_LINE_RE = /^(?:\s*(?:#|\/\/|\/\*|\*)\s*)?(?:TODO|FIXME|TBD)\b(?:\s*[:—-]|\s+\S)/i;
 const PLACEHOLDER_VALUE_RE = /^\s*(?:["']?[\w.-]+["']?\s*[:=]\s*["']?)(?:TODO|FIXME|TBD)\b/i;
 const PLACEHOLDER_LIST_RE = /^\s*[-*+]\s+(?:TODO|FIXME|TBD)\b/i;
 function containsUnresolvedPlaceholder(text) {
     return text.split(/\r?\n/).some((line) => PLACEHOLDER_LINE_RE.test(line) || PLACEHOLDER_VALUE_RE.test(line) || PLACEHOLDER_LIST_RE.test(line));
 }
-function isDir(path) {
-    try {
-        return statSync(path).isDirectory();
+function pushOnce(errors, message) {
+    if (!errors.includes(message))
+        errors.push(message);
+}
+function containmentDiagnostic(label, result, expectedKind) {
+    if (result.status === "unresolved-parent" && result.kind === "missing")
+        return `${label}: missing`;
+    if (!result.contained)
+        return `${label}: path escapes plugin root (${result.status})`;
+    if (result.kindOutcome === "missing")
+        return `${label}: missing`;
+    return `${label}: expected ${expectedKind} but found ${result.kind}`;
+}
+function discover(root, path, expectedKind, errors, label = path, reportMissing = false) {
+    const result = resolveContainedPath(root, path, { expectedKind });
+    const absent = result.kind === "missing" && (result.kindOutcome === "missing" || result.status === "unresolved-parent");
+    if (absent && !reportMissing)
+        return null;
+    if (!result.contained || result.kindOutcome === "mismatch" || (reportMissing && absent)) {
+        pushOnce(errors, containmentDiagnostic(label, result, expectedKind));
+        return null;
     }
-    catch {
-        return false;
+    return absent ? null : result;
+}
+function discoveredFile(root, path, errors, label = path, reportMissing = false) {
+    const result = discover(root, path, "file", errors, label, reportMissing);
+    return result?.resolvedPath ?? null;
+}
+function discoveredDirectory(root, path, errors, label = path, reportMissing = false) {
+    const result = discover(root, path, "directory", errors, label, reportMissing);
+    return result?.resolvedPath ?? null;
+}
+function readDiscoveredText(root, path, errors, label = path) {
+    const resolved = discoveredFile(root, path, errors, label, true);
+    if (!resolved)
+        return null;
+    try {
+        return readFileSync(resolved, "utf-8");
+    }
+    catch (error) {
+        pushOnce(errors, `${label}: could not read: ${error.message}`);
+        return null;
     }
 }
-function isFile(path) {
+function loadJson(root, path, errors, label = path) {
+    const text = readDiscoveredText(root, path, errors, label);
+    if (text === null)
+        return null;
     try {
-        return statSync(path).isFile();
-    }
-    catch {
-        return false;
-    }
-}
-function loadJson(path, errors) {
-    try {
-        return JSON.parse(readFileSync(path, "utf-8"));
+        return JSON.parse(text);
     }
     catch (error) {
         errors.push(`${path}: invalid JSON: ${error.message}`);
@@ -91,8 +125,10 @@ function componentPaths(value, context, errors) {
     }
     return values;
 }
-function parseFrontmatter(path, errors) {
-    const text = readFileSync(path, "utf-8");
+function parseFrontmatter(root, path, errors) {
+    const text = readDiscoveredText(root, path, errors);
+    if (text === null)
+        return {};
     const lines = text.split(/\r?\n/);
     if (!lines.length || lines[0].trim() !== "---") {
         errors.push(`${path}: missing YAML frontmatter`);
@@ -140,8 +176,8 @@ function parseFrontmatter(path, errors) {
     }
     return data;
 }
-function validateSkill(path, errors) {
-    const frontmatter = parseFrontmatter(path, errors);
+function validateSkill(root, path, errors) {
+    const frontmatter = parseFrontmatter(root, path, errors);
     const name = frontmatter.name ?? "";
     const description = frontmatter.description ?? "";
     const parentDir = path.split(sep).slice(-2, -1)[0];
@@ -157,7 +193,8 @@ function validateSkill(path, errors) {
     if (description.length > 1024) {
         errors.push(`${path}: description exceeds 1024 characters`);
     }
-    if (containsUnresolvedPlaceholder(readFileSync(path, "utf-8"))) {
+    const text = readDiscoveredText(root, path, errors);
+    if (text !== null && containsUnresolvedPlaceholder(text)) {
         errors.push(`${path}: unresolved placeholder (TODO, FIXME, or TBD)`);
     }
 }
@@ -183,7 +220,7 @@ function validateMcpServer(name, server, context, root, errors) {
             errors.push(`${context}: MCP server '${name}' cwd must be a string`);
         if (typeof command === "string" && command.startsWith("${PLUGIN_ROOT}/")) {
             const relative = command.slice("${PLUGIN_ROOT}/".length).split(/\s/)[0];
-            if (!existsSync(join(root, relative)))
+            if (!discoveredFile(root, join(root, relative), errors, `${context}: MCP server '${name}' command`))
                 errors.push(`${context}: MCP server '${name}' command does not exist: ${relative}`);
         }
         return;
@@ -228,7 +265,7 @@ function validateManifestMcp(value, root, errors) {
     componentPaths(value, "plugin.json:mcpServers", errors);
 }
 function validateHooks(path, root, errors) {
-    const document = loadJson(path, errors);
+    const document = loadJson(root, path, errors);
     if (!isPlainObject(document))
         return;
     const hooks = document.hooks;
@@ -287,7 +324,7 @@ function validateHooks(path, root, errors) {
                 }
                 else if (command.includes("${PLUGIN_ROOT}/")) {
                     const relative = command.split("${PLUGIN_ROOT}/")[1].split(/\s/)[0].replace(/^["']|["']$/g, "");
-                    if (!existsSync(join(root, relative))) {
+                    if (!discoveredFile(root, join(root, relative), errors, `${actionContext}: referenced file`)) {
                         errors.push(`${actionContext}: referenced file does not exist: ${relative}`);
                     }
                 }
@@ -299,44 +336,63 @@ function validateHooks(path, root, errors) {
         });
     }
 }
-function globSkillFiles(root) {
-    const skillsDir = join(root, "skills");
-    if (!isDir(skillsDir))
+function readDiscoveredDirectory(root, path, errors, label = path) {
+    const resolved = discoveredDirectory(root, path, errors, label);
+    if (!resolved)
+        return null;
+    try {
+        return { path: resolved, names: readdirSync(resolved).sort() };
+    }
+    catch (error) {
+        pushOnce(errors, `${label}: could not traverse: ${error.message}`);
+        return null;
+    }
+}
+function globSkillFiles(root, errors) {
+    const listing = readDiscoveredDirectory(root, join(root, "skills"), errors, "skills");
+    if (!listing)
         return [];
     const results = [];
-    for (const entry of readdirSync(skillsDir).sort()) {
-        const skillMd = join(skillsDir, entry, "SKILL.md");
-        if (isFile(skillMd))
+    for (const entry of listing.names) {
+        const skillMd = join(listing.path, entry, "SKILL.md");
+        if (discoveredFile(root, skillMd, errors, `skills/${entry}/SKILL.md`))
             results.push(skillMd);
     }
     return results;
 }
-function walkFiles(root, current, out) {
-    for (const entry of readdirSync(current).sort()) {
+function walkFiles(root, current, out, errors, visited = new Set()) {
+    const listing = readDiscoveredDirectory(root, current, errors);
+    if (!listing || visited.has(listing.path))
+        return;
+    visited.add(listing.path);
+    for (const entry of listing.names) {
         if ([".agents", ".beads", ".git", "__pycache__", "node_modules", "vendor", "evaluations"].includes(entry) || (entry.startsWith(".") && entry !== ".vscode"))
             continue;
-        const full = join(current, entry);
-        if (isDir(full)) {
-            walkFiles(root, full, out);
-        }
-        else if (isFile(full)) {
-            out.push(full);
-        }
+        const full = join(listing.path, entry);
+        const result = discover(root, full, "any", errors, full);
+        if (!result)
+            continue;
+        if (result.kind === "directory")
+            walkFiles(root, full, out, errors, visited);
+        else if (result.kind === "file" && result.resolvedPath)
+            out.push(result.resolvedPath);
     }
 }
 export function validate(root) {
     const errors = [];
     const warnings = [];
-    if (!isDir(root)) {
+    const rootCheck = resolveContainedPath(root, root, { expectedKind: "directory" });
+    if (!rootCheck.contained || rootCheck.kindOutcome !== "match") {
         return { errors: [`Not a directory: ${root}`], warnings };
     }
+    root = rootCheck.resolvedPath;
     const manifestPath = join(root, "plugin.json");
     let manifest = null;
-    if (!isFile(manifestPath)) {
+    if (!discoveredFile(root, manifestPath, errors, "plugin.json")) {
         errors.push("Missing plugin.json at plugin root");
     }
     else {
-        manifest = loadJson(manifestPath, errors);
+        manifest = loadJson(root, manifestPath, errors);
         if (isPlainObject(manifest)) {
             const unknown = Object.keys(manifest).filter((k) => !MANIFEST_KEYS.has(k));
             if (unknown.length) {
@@ -367,23 +423,36 @@ export function validate(root) {
             }
         }
     }
-    const skills = globSkillFiles(root);
+    const skills = globSkillFiles(root, errors);
     for (const skill of skills) {
-        validateSkill(skill, errors);
+        validateSkill(root, skill, errors);
     }
-    const hooksPath = join(root, "hooks", "hooks.json");
-    if (isFile(hooksPath)) {
-        validateHooks(hooksPath, root, errors);
+    const legacyHooksPath = join(root, "hooks", "hooks.json");
+    const canonicalHooksPath = join(root, ...CANONICAL_HOOKS_PATH.split("/"));
+    const hasLegacyHooks = Boolean(discoveredFile(root, legacyHooksPath, errors, "hooks/hooks.json"));
+    const hasCanonicalHooks = Boolean(discoveredFile(root, canonicalHooksPath, errors, CANONICAL_HOOKS_PATH));
+    if (hasLegacyHooks && hasCanonicalHooks)
+        errors.push(`Ambiguous Goose hooks: both ${CANONICAL_HOOKS_PATH} and legacy hooks/hooks.json exist`);
+    else if (hasCanonicalHooks) {
+        const extension = isPlainObject(manifest) && isPlainObject(manifest.extensions) ? manifest.extensions[GOOSE_NAMESPACE] : undefined;
+        if (!isPlainObject(extension) || Object.keys(extension).some(key => !["version", "hooks"].includes(key)) || extension.version !== 1 || extension.hooks !== CANONICAL_HOOKS_PATH)
+            errors.push(`plugin.json: invalid ${GOOSE_NAMESPACE} extension envelope`);
+        else
+            validateHooks(canonicalHooksPath, root, errors);
     }
-    const mcpPaths = [join(root, ".mcp.json"), join(root, "mcp.json")].filter(isFile);
+    else if (hasLegacyHooks) {
+        warnings.push(`Legacy Goose hooks detected at hooks/hooks.json; migrate to ${CANONICAL_HOOKS_PATH}`);
+        validateHooks(legacyHooksPath, root, errors);
+    }
+    const mcpPaths = [join(root, ".mcp.json"), join(root, "mcp.json")].filter((path) => discoveredFile(root, path, errors, path.slice(root.length + 1)));
     for (const mcpPath of mcpPaths)
-        validateMcpDocument(loadJson(mcpPath, errors), mcpPath.slice(root.length + 1), root, errors);
+        validateMcpDocument(loadJson(root, mcpPath, errors), mcpPath.slice(root.length + 1), root, errors);
     const manifestHasMcp = isPlainObject(manifest) && "mcpServers" in manifest;
-    if (!skills.length && !isFile(hooksPath) && !mcpPaths.length && !manifestHasMcp) {
+    if (!skills.length && !hasLegacyHooks && !hasCanonicalHooks && !mcpPaths.length && !manifestHasMcp) {
         errors.push("Plugin contains no skills, hooks, or MCP servers");
     }
     const allFiles = [];
-    walkFiles(root, root, allFiles);
+    walkFiles(root, root, allFiles, errors);
     const ignoredSuffixes = new Set([".png", ".jpg", ".jpeg", ".gif", ".zip", ".pyc"]);
     for (const path of allFiles) {
         const suffix = path.includes(".") ? path.slice(path.lastIndexOf(".")).toLowerCase() : "";
@@ -393,7 +462,10 @@ export function validate(root) {
             continue;
         let text = "";
         try {
-            text = readFileSync(path, "utf-8");
+            const discovered = readDiscoveredText(root, path, errors);
+            if (discovered === null)
+                continue;
+            text = discovered;
         }
         catch {
             continue;

@@ -3,7 +3,7 @@
 import { mkdirSync, existsSync, readFileSync, writeFileSync, chmodSync, statSync, realpathSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HOOK_EVENTS } from "./hook_format.js";
+import { CANONICAL_HOOKS_PATH, GOOSE_ENVELOPE_VERSION, GOOSE_NAMESPACE, GOOSE_NAMESPACE_ALIASES, HOOK_EVENTS, LEGACY_HOOKS_PATH } from "./hook_format.js";
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export class UsageError extends Error {
 }
@@ -66,11 +66,26 @@ export function initHook(options) {
     const manifest = join(root, "plugin.json");
     if (!existsSync(manifest))
         throw new Error(`Plugin manifest not found: ${manifest}`);
-    const hooksPath = join(root, "hooks", "hooks.json");
+    const hooksPath = join(root, ...CANONICAL_HOOKS_PATH.split("/"));
+    const legacyHooksPath = join(root, ...LEGACY_HOOKS_PATH.split("/"));
     const scriptPath = join(root, "scripts", `${name}.sh`);
+    if (existsSync(legacyHooksPath))
+        throw new Error(`Legacy hooks found at ${LEGACY_HOOKS_PATH}; migrate explicitly before adding canonical hooks`);
     if (existsSync(scriptPath))
         throw new Error(`Refusing to overwrite existing script: ${scriptPath}`);
-    mkdirSync(join(root, "hooks"), { recursive: true });
+    const manifestValue = JSON.parse(readFileSync(manifest, "utf-8"));
+    const extensions = (manifestValue.extensions ?? {});
+    if (typeof extensions !== "object" || extensions === null || Array.isArray(extensions))
+        throw new Error("plugin.json extensions must be an object");
+    for (const alias of GOOSE_NAMESPACE_ALIASES)
+        if (alias in extensions)
+            throw new Error(`Unsupported Goose namespace alias '${alias}'`);
+    const existing = extensions[GOOSE_NAMESPACE];
+    if (existing && (existing.version !== GOOSE_ENVELOPE_VERSION || existing.hooks !== CANONICAL_HOOKS_PATH))
+        throw new Error(`Conflicting ${GOOSE_NAMESPACE} extension envelope`);
+    extensions[GOOSE_NAMESPACE] = { version: GOOSE_ENVELOPE_VERSION, hooks: CANONICAL_HOOKS_PATH };
+    manifestValue.extensions = extensions;
+    mkdirSync(join(root, "extensions", GOOSE_NAMESPACE), { recursive: true });
     mkdirSync(join(root, "scripts"), { recursive: true });
     let document;
     if (existsSync(hooksPath)) {
@@ -95,6 +110,7 @@ export function initHook(options) {
         rule.matcher = matcher;
     document.hooks[event] = document.hooks[event] ?? [];
     document.hooks[event].push(rule);
+    writeFileSync(manifest, `${JSON.stringify(manifestValue, null, 2)}\n`, "utf-8");
     writeFileSync(hooksPath, `${JSON.stringify(document, null, 2)}\n`, "utf-8");
     writeFileSync(scriptPath, "#!/usr/bin/env sh\nset -eu\npayload=$(cat 2>/dev/null || printf '{}')\n" +
         "# Implement trusted local automation using the JSON payload.\n" +

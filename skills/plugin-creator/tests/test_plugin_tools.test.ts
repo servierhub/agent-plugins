@@ -11,6 +11,7 @@ import { validate } from "../dist/scripts/validate_goose_plugin.js";
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = join(HERE, "..");
 const DIST = join(ROOT, "dist", "scripts");
+const PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
 
 function makePlugin(root: string): string {
   const plugin = join(root, "demo-plugin");
@@ -258,5 +259,33 @@ test("package rejects symbolic links", () => {
     const output = join(tmp, "plugin.zip");
     assert.throws(() => execFileSync("node", [join(DIST, "package_goose_plugin.js"), plugin, output]), /status 1|Command failed/);
     assert.equal(existsSync(output), false);
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
+});
+test("validation never reads external symlink sentinel content", { skip: process.platform === "win32" }, () => {
+  const tmp = mkdtempSync(join(tmpdir(), "plugin-test-"));
+  try {
+    const plugin = makePlugin(tmp);
+    const sentinel = join(tmp, "outside-sentinel.md");
+    writeFileSync(sentinel, "# TODO: this content must never be scanned\n");
+    symlinkSync(sentinel, join(plugin, "README-link.md"));
+    const result = validate(plugin);
+    assert.ok(result.errors.some(error => error.includes("resolved-outside")));
+    assert.ok(!result.warnings.some(warning => warning.includes("placeholder")));
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test("escaped skills directory is isolated before traversal", { skip: process.platform === "win32" }, () => {
+  const tmp = mkdtempSync(join(tmpdir(), "plugin-test-"));
+  try {
+    const plugin = join(tmp, "demo-plugin");
+    const outside = join(tmp, "outside-skills");
+    mkdirSync(outside, { recursive: true });
+    writeFileSync(join(outside, "sentinel"), "TODO: never scan");
+    mkdirSync(plugin);
+    writeFileSync(join(plugin, "plugin.json"), JSON.stringify({ $schema: PLUGIN_SCHEMA, name: "demo-plugin" }));
+    symlinkSync(outside, join(plugin, "skills"), "dir");
+    const result = validate(plugin);
+    assert.ok(result.errors.some(error => error.includes("skills") && error.includes("resolved-outside")));
+    assert.ok(!result.warnings.some(warning => warning.includes("placeholder")));
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 });

@@ -3,10 +3,12 @@
 import { realpathSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { validateHooks } from "./hook_format.js";
+import { CANONICAL_HOOKS_PATH, locateHooks, validateHooks } from "./hook_format.js";
 export function validateHook(pluginDir) {
     const root = resolve(pluginDir);
-    return { ...validateHooks(root), path: join(root, "hooks", "hooks.json") };
+    const result = validateHooks(root);
+    const located = locateHooks(root);
+    return { ...result, path: located.path ?? join(root, ...CANONICAL_HOOKS_PATH.split("/")) };
 }
 function isMain(metaUrl) {
     if (!process.argv[1])

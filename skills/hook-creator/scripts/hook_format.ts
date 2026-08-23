@@ -2,6 +2,12 @@
 import { readFileSync, statSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
+export const GOOSE_NAMESPACE = "io.github.block.goose";
+export const GOOSE_ENVELOPE_VERSION = 1;
+export const CANONICAL_HOOKS_PATH = "extensions/io.github.block.goose/hooks.json";
+export const LEGACY_HOOKS_PATH = "hooks/hooks.json";
+export const GOOSE_NAMESPACE_ALIASES = new Set(["goose", "block.goose", "com.block.goose"]);
+
 export const HOOK_EVENTS = new Set([
   "SessionStart",
   "SessionEnd",
@@ -70,13 +76,43 @@ function isValidRegex(pattern: string): boolean {
   }
 }
 
-export function validateHooks(pluginRoot: string): ValidationResult {
+export function locateHooks(pluginRoot: string): { path: string | null; legacy: boolean; errors: string[]; warnings: string[] } {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const path = join(pluginRoot, "hooks", "hooks.json");
-  if (!isFile(path)) {
-    return { errors: [`Missing hook configuration: ${path}`], warnings };
+  const canonical = join(pluginRoot, ...CANONICAL_HOOKS_PATH.split("/"));
+  const legacy = join(pluginRoot, ...LEGACY_HOOKS_PATH.split("/"));
+  const hasCanonical = isFile(canonical);
+  const hasLegacy = isFile(legacy);
+  if (hasCanonical && hasLegacy) {
+    errors.push(`Ambiguous Goose hooks: both ${CANONICAL_HOOKS_PATH} and legacy ${LEGACY_HOOKS_PATH} exist`);
+    return { path: null, legacy: false, errors, warnings };
   }
+  if (hasCanonical) {
+    const manifest = loadJson(join(pluginRoot, "plugin.json"), errors);
+    const extension = isPlainObject(manifest) && isPlainObject(manifest.extensions)
+      ? manifest.extensions[GOOSE_NAMESPACE] : undefined;
+    if (!isPlainObject(extension) || Object.keys(extension).some(key => !["version", "hooks"].includes(key)) || extension.version !== GOOSE_ENVELOPE_VERSION || extension.hooks !== CANONICAL_HOOKS_PATH) {
+      errors.push(`plugin.json: extensions.${GOOSE_NAMESPACE} must declare version ${GOOSE_ENVELOPE_VERSION} and hooks '${CANONICAL_HOOKS_PATH}'`);
+    }
+    if (isPlainObject(manifest) && isPlainObject(manifest.extensions)) {
+      for (const alias of GOOSE_NAMESPACE_ALIASES) if (alias in manifest.extensions) errors.push(`plugin.json: unsupported Goose namespace alias '${alias}'`);
+    }
+    return { path: canonical, legacy: false, errors, warnings };
+  }
+  if (hasLegacy) {
+    warnings.push(`Legacy Goose hooks detected at ${LEGACY_HOOKS_PATH}; migrate to ${CANONICAL_HOOKS_PATH}`);
+    return { path: legacy, legacy: true, errors, warnings };
+  }
+  errors.push(`Missing hook configuration: ${CANONICAL_HOOKS_PATH}`);
+  return { path: null, legacy: false, errors, warnings };
+}
+
+export function validateHooks(pluginRoot: string): ValidationResult {
+  const located = locateHooks(pluginRoot);
+  const errors = [...located.errors];
+  const warnings = [...located.warnings];
+  if (!located.path) return { errors, warnings };
+  const path = located.path;
 
   const document = loadJson(path, errors);
   if (!isPlainObject(document)) {
@@ -84,11 +120,11 @@ export function validateHooks(pluginRoot: string): ValidationResult {
   }
   const documentKeys = Object.keys(document);
   if (documentKeys.length !== 1 || documentKeys[0] !== "hooks") {
-    errors.push("hooks/hooks.json must contain only the top-level 'hooks' field");
+    errors.push(`${path}: document must contain only the top-level 'hooks' field`);
   }
   const hooks = document.hooks;
   if (!isPlainObject(hooks) || Object.keys(hooks).length === 0) {
-    errors.push("hooks/hooks.json: 'hooks' must be a non-empty object");
+    errors.push(`${path}: 'hooks' must be a non-empty object`);
     return { errors, warnings };
   }
 
