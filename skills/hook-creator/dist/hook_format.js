@@ -1,6 +1,7 @@
 // Shared validation for Goose/Open Plugins hooks.
 import { readFileSync, statSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { regularFile, safePluginPath } from "./containment.js";
 export const GOOSE_NAMESPACE = "io.github.block.goose";
 export const GOOSE_ENVELOPE_VERSION = 1;
 export const CANONICAL_HOOKS_PATH = "extensions/io.github.block.goose/hooks.json";
@@ -69,16 +70,34 @@ function isValidRegex(pattern) {
 export function locateHooks(pluginRoot) {
     const errors = [];
     const warnings = [];
-    const canonical = join(pluginRoot, ...CANONICAL_HOOKS_PATH.split("/"));
-    const legacy = join(pluginRoot, ...LEGACY_HOOKS_PATH.split("/"));
-    const hasCanonical = isFile(canonical);
-    const hasLegacy = isFile(legacy);
+    let canonical, legacy, hasCanonical, hasLegacy;
+    try {
+        const c = regularFile(pluginRoot, CANONICAL_HOOKS_PATH, "Canonical hooks"), l = regularFile(pluginRoot, LEGACY_HOOKS_PATH, "Legacy hooks");
+        canonical = c.path;
+        legacy = l.path;
+        hasCanonical = c.exists;
+        hasLegacy = l.exists;
+    }
+    catch (error) {
+        errors.push(error.message);
+        return { path: null, legacy: false, errors, warnings };
+    }
     if (hasCanonical && hasLegacy) {
         errors.push(`Ambiguous Goose hooks: both ${CANONICAL_HOOKS_PATH} and legacy ${LEGACY_HOOKS_PATH} exist`);
         return { path: null, legacy: false, errors, warnings };
     }
     if (hasCanonical) {
-        const manifest = loadJson(join(pluginRoot, "plugin.json"), errors);
+        let mf;
+        try {
+            mf = regularFile(pluginRoot, "plugin.json", "plugin.json");
+            if (!mf.exists)
+                throw new Error("plugin.json: manifest is missing");
+        }
+        catch (error) {
+            errors.push(error.message);
+            return { path: canonical, legacy: false, errors, warnings };
+        }
+        const manifest = loadJson(mf.path, errors);
         const extension = isPlainObject(manifest) && isPlainObject(manifest.extensions)
             ? manifest.extensions[GOOSE_NAMESPACE] : undefined;
         if (!isPlainObject(extension) || Object.keys(extension).some(key => !["version", "hooks"].includes(key)) || extension.version !== GOOSE_ENVELOPE_VERSION || extension.hooks !== CANONICAL_HOOKS_PATH) {
@@ -172,8 +191,15 @@ export function validateHooks(pluginRoot) {
                 }
                 else {
                     const relative = referencedPluginFile(command);
-                    if (relative && !isFile(join(pluginRoot, relative))) {
-                        errors.push(`${actionContext}: referenced file does not exist: ${relative}`);
+                    if (relative) {
+                        try {
+                            const rf = regularFile(pluginRoot, relative, actionContext);
+                            if (!rf.exists)
+                                errors.push(actionContext + ": referenced file does not exist: " + relative);
+                        }
+                        catch (error) {
+                            errors.push(error.message);
+                        }
                     }
                 }
                 const timeout = action.timeout;
@@ -185,15 +211,30 @@ export function validateHooks(pluginRoot) {
             });
         });
     }
-    const scriptsDir = join(pluginRoot, "scripts");
-    if (isDir(scriptsDir)) {
+    let scriptsDir = null;
+    try {
+        scriptsDir = safePluginPath(pluginRoot, "scripts", "scripts directory");
+    }
+    catch (error) {
+        errors.push(error.message);
+    }
+    if (scriptsDir && isDir(scriptsDir)) {
         for (const entry of readdirSync(scriptsDir)) {
             const scriptPath = join(scriptsDir, entry);
-            if (!isFile(scriptPath))
+            let checked;
+            try {
+                const rf = regularFile(pluginRoot, "scripts/" + entry, "Hook script");
+                if (!rf.exists)
+                    continue;
+                checked = rf.path;
+            }
+            catch (error) {
+                errors.push(error.message);
                 continue;
+            }
             const suffix = entry.includes(".") ? entry.slice(entry.lastIndexOf(".")) : "";
             if ([".sh", ".bash", ".py"].includes(suffix)) {
-                const text = readFileSync(scriptPath, "utf-8");
+                const text = readFileSync(checked, "utf-8");
                 if (text.includes("TODO")) {
                     errors.push(`${scriptPath}: unresolved TODO placeholder`);
                 }
