@@ -88,12 +88,25 @@ export function resolveContainedPath(rootPath, candidatePath, options = {}) {
             kind = kindOf(statSync(resolvedPath));
         }
         else {
-            const parent = dirname(lexicalPath);
-            const resolvedParent = realpathSync.native(parent);
-            if (!statSync(resolvedParent).isDirectory()) {
-                return { ...base, contained: false, status: "unresolved-parent", resolvedRoot, message: "candidate parent is not a directory" };
+            const missingParts = [];
+            let existingAncestor = lexicalPath;
+            while (existingAncestor !== dirname(existingAncestor)) {
+                try {
+                    lstatSync(existingAncestor);
+                    break;
+                }
+                catch (error) {
+                    if (error.code !== "ENOENT")
+                        throw error;
+                    missingParts.unshift(existingAncestor.slice(dirname(existingAncestor).length + (dirname(existingAncestor).endsWith(sep) ? 0 : 1)));
+                    existingAncestor = dirname(existingAncestor);
+                }
             }
-            resolvedPath = resolve(resolvedParent, lexicalPath.slice(parent.length + (parent.endsWith(sep) ? 0 : 1)));
+            const resolvedParent = realpathSync.native(existingAncestor);
+            if (!statSync(resolvedParent).isDirectory()) {
+                return { ...base, contained: false, status: "unresolved-parent", resolvedRoot, message: "nearest existing ancestor is not a directory" };
+            }
+            resolvedPath = resolve(resolvedParent, ...missingParts);
             kind = "missing";
         }
     }

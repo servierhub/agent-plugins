@@ -56,9 +56,10 @@ test("resolves a missing final path through its existing parent", () => fixture(
   const absentExpected = resolveContainedPath(root, "output/archive.zip", { expectedKind: "missing" });
   assert.equal(absentExpected.kindOutcome, "match");
 
-  const noParent = resolveContainedPath(root, "absent/archive.zip");
-  assert.equal(noParent.contained, false);
-  assert.equal(noParent.status, "unresolved-parent");
+  const noParent = resolveContainedPath(root, "absent/archive.zip", { expectedKind: "missing" });
+  assert.equal(noParent.contained, true);
+  assert.equal(noParent.status, "contained");
+  assert.equal(noParent.kindOutcome, "match");
 }));
 
 test("follows in-root links and rejects resolved escapes", { skip: process.platform === "win32" }, () => fixture(tmp => {
