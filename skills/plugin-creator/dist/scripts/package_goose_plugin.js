@@ -5,6 +5,7 @@ import { collectPackageFiles } from "./package_manifest.js";
 import { loadRuntimeDependency } from "./runtime-deps.js";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { validate } from "./validate_goose_plugin.js";
+import { loadPortablePlugin } from "./portable_loader.js";
 const AdmZip = loadRuntimeDependency("adm-zip");
 function isDirectory(path) {
     try {
@@ -53,10 +54,16 @@ function main() {
     const missing = validateOfflineSkills(root);
     if (missing.length)
         fail("Offline bundle is incomplete: " + missing.join(", "));
-    const schema = validateAgentPluginSchema(root);
+    const portable = loadPortablePlugin(root, "portable-load");
+    const schema = validateAgentPluginSchema(root, "auto", "strict-authoring");
     if (!schema.valid) {
         for (const error of schema.errors)
             console.error(`SCHEMA ERROR: ${error.path}: ${error.message}`);
+        console.error(`PORTABLE LOAD: ${portable.status}; release policy: failed`);
+        process.exit(1);
+    }
+    if (portable.status !== "accepted") {
+        console.error(`PORTABLE LOAD: ${portable.status}; release policy: failed`);
         process.exit(1);
     }
     const operational = validate(root);

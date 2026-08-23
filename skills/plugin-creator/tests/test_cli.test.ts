@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,3 +10,5 @@ function plugin(tmp:string){const root=join(tmp,"demo-plugin");mkdirSync(join(ro
 test("CLI JSON validation and usage code",()=>{const tmp=mkdtempSync(join(tmpdir(),"plugin-cli-"));try{const root=plugin(tmp);const result=JSON.parse(execFileSync(process.execPath,[CLI,"validate",root,"--format","json"],{encoding:"utf8"}));assert.equal(result.ok,true);assert.equal(spawnSync(process.execPath,[CLI,"unknown"]).status,2);}finally{rmSync(tmp,{recursive:true,force:true});}});
 test("CLI maps blocked verification to exit 3",()=>{const tmp=mkdtempSync(join(tmpdir(),"plugin-cli-"));try{const result=spawnSync(process.execPath,[CLI,"verify",plugin(tmp),"--profile","static","--quiet"],{encoding:"utf8"});assert.equal(result.status,3);assert.equal(result.stdout,"");}finally{rmSync(tmp,{recursive:true,force:true});}});
 test("package rejects schema-invalid plugin before archive",()=>{const tmp=mkdtempSync(join(tmpdir(),"plugin-cli-"));try{const root=plugin(tmp),output=join(tmp,"plugin.zip");writeFileSync(join(root,"plugin.json"),JSON.stringify({name:"demo-plugin",version:"1.0.0",description:"invalid"}));const result=spawnSync(process.execPath,[CLI,"package",root,output],{encoding:"utf8"});assert.equal(result.status,1);assert.equal(existsSync(output),false);assert.match(result.stderr,/SCHEMA ERROR/);}finally{rmSync(tmp,{recursive:true,force:true});}});
+
+test("CLI portable-load reports normative manifest exceptions without failing",()=>{const tmp=mkdtempSync(join(tmpdir(),"plugin-cli-"));try{const root=plugin(tmp);const value=JSON.parse(readFileSync(join(root,"plugin.json"),"utf8"));value.unknown=true;value.extensions="invalid";writeFileSync(join(root,"plugin.json"),JSON.stringify(value));const run=spawnSync(process.execPath,[CLI,"validate",root,"--mode","portable-load","--format","json"],{encoding:"utf8"});assert.equal(run.status,0,run.stderr);const result=JSON.parse(run.stdout);assert.equal(result.outcome.status,"accepted");assert.deepEqual(result.outcome.diagnostics.map((x:any)=>x.code),["manifest.unknown-field","manifest.extensions-non-object"]);const strict=spawnSync(process.execPath,[CLI,"validate",root,"--mode","strict-authoring","--format","json"],{encoding:"utf8"});assert.equal(strict.status,1)}finally{rmSync(tmp,{recursive:true,force:true})}});

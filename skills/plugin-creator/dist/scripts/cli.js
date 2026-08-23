@@ -5,15 +5,28 @@ import { fileURLToPath } from "node:url";
 import { validate } from "./validate_goose_plugin.js";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { fullEval } from "./full_eval.js";
+import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json  Output format (default: text)\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--dry-run] [--resume]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
-function parseCommon(args) { let format = "text", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
+const HELP = "Usage: plugin-creator <init|validate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--dry-run] [--resume]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
+function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
         quiet = true;
     else if (a === "--help" || a === "-h")
         help = true;
+    else if (a === "--mode") {
+        const v = args[++i];
+        if (!["portable-load", "strict-authoring"].includes(v))
+            return "--mode must be portable-load or strict-authoring";
+        mode = v;
+    }
+    else if (a.startsWith("--mode=")) {
+        const v = a.slice(7);
+        if (!["portable-load", "strict-authoring"].includes(v))
+            return "--mode must be portable-load or strict-authoring";
+        mode = v;
+    }
     else if (a === "--format") {
         const v = args[++i];
         if (v !== "text" && v !== "json")
@@ -28,7 +41,7 @@ function parseCommon(args) { let format = "text", quiet = false, help = false; c
     }
     else
         rest.push(a);
-} return { format, quiet, help, args: rest }; }
+} return { format, quiet, help, mode, args: rest }; }
 function emit(value, text, o) { if (!o.quiet)
     console.log(o.format === "json" ? JSON.stringify(value, null, 2) : text); }
 function usage(message) { if (message)
@@ -40,7 +53,11 @@ function wrapped(command, o) { if (!o.args.length)
     return code === 2 ? 2 : 1;
 } const output = out.split(/\r?\n/).filter(Boolean).at(-1) ?? ""; emit({ ok: true, command, output }, output, o); return 0; }
 function runValidate(o) { if (o.args.length !== 1)
-    return usage("validate requires exactly one plugin directory"); const target = resolve(o.args[0]), schema = validateAgentPluginSchema(target), structural = validate(target), ok = schema.valid && !structural.errors.length; const lines = [...schema.documents.map(d => (d.valid ? "VALID: " : "INVALID: ") + d.file + " (" + d.type + ")"), ...schema.errors.map(e => "SCHEMA ERROR: " + e.path + ": " + e.message), ...structural.warnings.map(w => "WARNING: " + w), ...structural.errors.map(e => "ERROR: " + e), ...(ok ? ["OK: " + target] : [])]; emit({ ok, command: "validate", target, schema, structural }, lines.join("\n"), o); return ok ? 0 : 1; }
+    return usage("validate requires exactly one plugin directory"); const target = resolve(o.args[0]); if (o.mode === "portable-load") {
+    const outcome = loadPortablePlugin(target, o.mode);
+    emit({ ok: outcome.status === "accepted", command: "validate", target, outcome }, "Portable load: " + outcome.status, o);
+    return outcome.status === "accepted" ? 0 : 1;
+} const schema = validateAgentPluginSchema(target, "auto", "strict-authoring"), structural = validate(target), ok = schema.valid && !structural.errors.length; const lines = [...schema.documents.map(d => (d.valid ? "VALID: " : "INVALID: ") + d.file + " (" + d.type + ")"), ...schema.errors.map(e => "SCHEMA ERROR: " + e.path + ": " + e.message), ...structural.warnings.map(w => "WARNING: " + w), ...structural.errors.map(e => "ERROR: " + e), ...(ok ? ["OK: " + target] : [])]; emit({ ok, command: "validate", target, schema, structural }, lines.join("\n"), o); return ok ? 0 : 1; }
 function runVerify(o) { if (!o.args.length)
     return usage("verify requires a plugin directory"); const r = child("verify_plugin_gates.js", o.args), raw = (r.stdout ?? "").trim(); let receipt; try {
     receipt = JSON.parse(raw);
