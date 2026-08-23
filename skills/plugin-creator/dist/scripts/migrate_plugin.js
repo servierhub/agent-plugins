@@ -186,16 +186,18 @@ export function auditPluginMigration(rootArg) {
             }
         }
     }
-    const legacyHooks = "hooks/hooks.json", canonicalHooks = "extensions/io.github.block.goose/hooks.json", hasLegacy = entries.includes(legacyHooks), hasCanonical = entries.includes(canonicalHooks);
-    if (hasLegacy && hasCanonical)
-        add(findings, "hooks", "unsupported", "Both legacy and canonical Goose hooks exist; precedence is ambiguous.", true);
-    else if (hasLegacy) {
-        add(findings, legacyHooks, "migratable", "Move legacy hooks into the namespaced Goose extension.");
-        proposedMoves.push({ from: legacyHooks, to: canonicalHooks, reason: "Canonical namespaced Goose hook location." });
+    const legacyHooks = "hooks/hooks.json", historicalHooks = "extensions/io.github.block.goose/hooks.json", canonicalHooks = "extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json", hasLegacy = entries.includes(legacyHooks), hasHistorical = entries.includes(historicalHooks), hasCanonical = entries.includes(canonicalHooks);
+    if ([hasLegacy, hasHistorical, hasCanonical].filter(Boolean).length > 1)
+        add(findings, "hooks", "unsupported", "Multiple canonical or legacy Goose hook layouts exist; precedence is ambiguous.", true);
+    else if (hasLegacy || hasHistorical) {
+        const source = hasHistorical ? historicalHooks : legacyHooks;
+        add(findings, source, "migratable", "Move legacy hooks into the distributor-owned Goose extension namespace.");
+        proposedMoves.push({ from: source, to: canonicalHooks, reason: "Canonical distributor-owned Goose hook location." });
         if (manifest) {
             const ext = object(manifest.extensions) ? { ...manifest.extensions } : {};
-            ext["io.github.block.goose"] = { version: 1, hooks: canonicalHooks };
-            proposedDocuments.push({ path: "plugin.json", document: { ...manifest, $schema: PLUGIN_SCHEMA, extensions: ext, ...("mcpServers" in manifest ? { mcpServers: undefined } : {}) }, reason: "Declare the namespaced Goose hooks extension." });
+            delete ext["io.github.block.goose"];
+            ext["io.github.bioinfornatics.agent-plugins.goose"] = { version: 1, hooks: canonicalHooks };
+            proposedDocuments.push({ path: "plugin.json", document: { ...manifest, $schema: PLUGIN_SCHEMA, extensions: ext, ...("mcpServers" in manifest ? { mcpServers: undefined } : {}) }, reason: "Declare the distributor-owned Goose hooks extension." });
         }
     }
     else if (hasCanonical)

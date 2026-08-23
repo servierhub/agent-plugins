@@ -20,13 +20,13 @@ See `references/UPSTREAM.md` when refreshing the snapshot.
 
 ## Scope boundary
 
-- Use this creator for Goose hook documents at `extensions/io.github.block.goose/hooks.json` and their command scripts. Treat root `hooks/hooks.json` as a legacy migration input only.
+- Use this creator for Goose hook documents at `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json` and their command scripts. Treat root `hooks/hooks.json` as a legacy migration input only.
 - Use `agent-plugins:skill-creator` (or standalone `skill-creator`) for standalone or plugin-bundled Agent Skills.
 - Use `agent-plugins:agent-creator` (or standalone `agent-creator`) for standalone `.agents/agents` definitions.
 
 ## Plugin Dependency
 
-Unlike `skill-creator`, `hook-creator` has **no standalone mode** — a hook only ever exists as a Goose-specific plugin extension at `extensions/io.github.block.goose/hooks.json`, never independently under `.agents/hooks`. The legacy root `hooks/hooks.json` form is detected for migration but is not portable core. This creator can be invoked in isolation to author or fix one hook rule/script, but the surrounding plugin must already exist (with a valid `plugin.json`) or be created first.
+Unlike `skill-creator`, `hook-creator` has **no standalone mode** — a hook only ever exists as a Goose-specific plugin extension at `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json`, never independently under `.agents/hooks`. The legacy root `hooks/hooks.json` form is detected for migration but is not portable core. This creator can be invoked in isolation to author or fix one hook rule/script, but the surrounding plugin must already exist (with a valid `plugin.json`) or be created first.
 
 | When to depend on `agent-plugins:plugin-creator` (fallback: standalone `plugin-creator`) | Why | Success criteria before returning |
 |---|---|---|
@@ -64,7 +64,7 @@ When invoked from `plugin-creator`, return a validated hook component that can b
    <plugin>/
    ├── plugin.json
    ├── extensions/
-   │   └── io.github.block.goose/
+   │   └── io.github.bioinfornatics.agent-plugins.goose/
    │       └── hooks.json
    └── scripts/
        └── handler.sh
@@ -123,7 +123,7 @@ Never use blocking hooks for telemetry or slow network calls.
 
 A hook component is ready only when:
 
-- `extensions/io.github.block.goose/hooks.json` is valid JSON and `plugin.json` declares the matching versioned namespace envelope;
+- `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json` is valid JSON and `plugin.json` declares the matching versioned namespace envelope;
 - all event names are supported;
 - every matcher compiles as a regular expression;
 - each rule has at least one command action;

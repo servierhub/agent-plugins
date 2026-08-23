@@ -3,7 +3,7 @@ import { chmodSync, closeSync, lstatSync, mkdirSync, openSync, readFileSync, rea
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { directoryOrMissing, regularFile, safePluginPath } from "./containment.js";
-import { CANONICAL_HOOKS_PATH, GOOSE_ENVELOPE_VERSION, GOOSE_NAMESPACE, GOOSE_NAMESPACE_ALIASES, HOOK_EVENTS, LEGACY_HOOKS_PATH } from "./hook_format.js";
+import { CANONICAL_HOOKS_PATH, GOOSE_ENVELOPE_VERSION, GOOSE_NAMESPACE, GOOSE_NAMESPACE_ALIASES, HISTORICAL_HOOKS_PATH, HOOK_EVENTS, LEGACY_HOOKS_PATH } from "./hook_format.js";
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export class UsageError extends Error {
 }
@@ -69,9 +69,11 @@ export function initHook(o) {
     const manifest = regularFile(root, "plugin.json", "plugin.json");
     if (!manifest.exists)
         throw new Error("Plugin manifest not found: " + manifest.path);
-    const hooks = regularFile(root, CANONICAL_HOOKS_PATH, "Canonical hooks"), legacy = regularFile(root, LEGACY_HOOKS_PATH, "Legacy hooks"), script = regularFile(root, "scripts/" + name + ".sh", "Hook script");
+    const hooks = regularFile(root, CANONICAL_HOOKS_PATH, "Canonical hooks"), legacy = regularFile(root, LEGACY_HOOKS_PATH, "Legacy hooks"), historical = regularFile(root, HISTORICAL_HOOKS_PATH, "Historical Goose hooks"), script = regularFile(root, "scripts/" + name + ".sh", "Hook script");
     if (legacy.exists)
         throw new Error("Legacy hooks found at " + LEGACY_HOOKS_PATH);
+    if (historical.exists)
+        throw new Error("Historical Goose hooks found at " + HISTORICAL_HOOKS_PATH + "; migrate explicitly before adding canonical hooks");
     if (script.exists)
         throw new Error("Refusing to overwrite existing script: " + script.path);
     let mv;

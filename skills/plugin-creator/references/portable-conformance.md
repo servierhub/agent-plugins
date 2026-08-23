@@ -52,12 +52,12 @@ Release builds use strict authoring and may additionally require specialist comp
 |---|---|---|
 | root `.mcp.json` | root `mcp.json` | Propose only when every server maps safely |
 | inline `plugin.json.mcpServers` | root `mcp.json` | Remove inline data after approved migration |
-| root `hooks/hooks.json` | `extensions/io.github.block.goose/hooks.json` plus manifest envelope | Validate for the selected Goose target before translating |
+| root `hooks/hooks.json` | `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json` plus manifest envelope | Validate for the selected Goose target before translating |
 
 When canonical and legacy forms coexist, or multiple legacy MCP forms coexist, fail as ambiguous. Never merge, select precedence, or ship both.
 
 ## Goose boundary
 
-`io.github.block.goose` is a repository-defined adapter contract. Agent Plugins 1.0.0 transports its manifest object but assigns no portable semantics. A client that does not implement it may ignore it under portable rules; only the Goose adapter validates or executes it.
+`io.github.bioinfornatics.agent-plugins.goose` is a distributor-owned adapter contract. Agent Plugins 1.0.0 transports its manifest object but assigns no portable semantics. A client that does not implement it may ignore it under portable rules; only the Goose adapter validates or executes it.
 
-New hooks use `plugin.json.extensions["io.github.block.goose"]` pointing to `extensions/io.github.block.goose/hooks.json`. Do not describe hooks as portable core or claim upstream ratification.
+New hooks use `plugin.json.extensions["io.github.bioinfornatics.agent-plugins.goose"]` pointing to `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json`. Do not describe hooks as portable core or claim upstream ratification.

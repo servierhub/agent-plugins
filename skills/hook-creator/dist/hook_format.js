@@ -2,11 +2,13 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { directoryOrMissing, regularFile } from "./containment.js";
-export const GOOSE_NAMESPACE = "io.github.block.goose";
+export const GOOSE_NAMESPACE = "io.github.bioinfornatics.agent-plugins.goose";
 export const GOOSE_ENVELOPE_VERSION = 1;
-export const CANONICAL_HOOKS_PATH = "extensions/io.github.block.goose/hooks.json";
+export const CANONICAL_HOOKS_PATH = "extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json";
 export const LEGACY_HOOKS_PATH = "hooks/hooks.json";
-export const GOOSE_NAMESPACE_ALIASES = new Set(["goose", "block.goose", "com.block.goose"]);
+export const HISTORICAL_GOOSE_NAMESPACE = "io.github.block.goose";
+export const HISTORICAL_HOOKS_PATH = "extensions/io.github.block.goose/hooks.json";
+export const GOOSE_NAMESPACE_ALIASES = new Set([HISTORICAL_GOOSE_NAMESPACE, "goose", "block.goose", "com.block.goose"]);
 export const HOOK_EVENTS = new Set([
     "SessionStart",
     "SessionEnd",
@@ -54,20 +56,22 @@ function isValidRegex(pattern) {
 export function locateHooks(pluginRoot) {
     const errors = [];
     const warnings = [];
-    let canonical, legacy, hasCanonical, hasLegacy;
+    let canonical, legacy, historical, hasCanonical, hasLegacy, hasHistorical;
     try {
-        const c = regularFile(pluginRoot, CANONICAL_HOOKS_PATH, "Canonical hooks"), l = regularFile(pluginRoot, LEGACY_HOOKS_PATH, "Legacy hooks");
+        const c = regularFile(pluginRoot, CANONICAL_HOOKS_PATH, "Canonical hooks"), l = regularFile(pluginRoot, LEGACY_HOOKS_PATH, "Legacy hooks"), h = regularFile(pluginRoot, HISTORICAL_HOOKS_PATH, "Historical Goose hooks");
         canonical = c.path;
         legacy = l.path;
+        historical = h.path;
         hasCanonical = c.exists;
         hasLegacy = l.exists;
+        hasHistorical = h.exists;
     }
     catch (error) {
         errors.push(error.message);
         return { path: null, legacy: false, errors, warnings };
     }
-    if (hasCanonical && hasLegacy) {
-        errors.push(`Ambiguous Goose hooks: both ${CANONICAL_HOOKS_PATH} and legacy ${LEGACY_HOOKS_PATH} exist`);
+    if ([hasCanonical, hasLegacy, hasHistorical].filter(Boolean).length > 1) {
+        errors.push(`Ambiguous Goose hooks: multiple canonical or legacy layouts exist`);
         return { path: null, legacy: false, errors, warnings };
     }
     if (hasCanonical) {
@@ -93,6 +97,17 @@ export function locateHooks(pluginRoot) {
                     errors.push(`plugin.json: unsupported Goose namespace alias '${alias}'`);
         }
         return { path: canonical, legacy: false, errors, warnings };
+    }
+    if (hasHistorical) {
+        const manifestFile = regularFile(pluginRoot, "plugin.json", "plugin.json");
+        const manifest = manifestFile.exists ? loadJson(manifestFile.path, errors) : null;
+        const extension = isPlainObject(manifest) && isPlainObject(manifest.extensions)
+            ? manifest.extensions[HISTORICAL_GOOSE_NAMESPACE] : undefined;
+        if (!isPlainObject(extension) || extension.version !== GOOSE_ENVELOPE_VERSION || extension.hooks !== HISTORICAL_HOOKS_PATH) {
+            errors.push(`plugin.json: invalid historical ${HISTORICAL_GOOSE_NAMESPACE} extension envelope`);
+        }
+        warnings.push(`Historical Goose namespace detected at ${HISTORICAL_GOOSE_NAMESPACE}; migrate to ${GOOSE_NAMESPACE}`);
+        return { path: historical, legacy: true, errors, warnings };
     }
     if (hasLegacy) {
         warnings.push(`Legacy Goose hooks detected at ${LEGACY_HOOKS_PATH}; migrate to ${CANONICAL_HOOKS_PATH}`);

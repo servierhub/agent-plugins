@@ -43,7 +43,7 @@ test("conformance fixtures are a closed, small, immutable corpus", () => {
   const allFiles = files(ROOT).sort();
   for (const path of allFiles) assert.ok(statSync(path).size <= 4096, `${relative(ROOT, path)} exceeds 4 KiB`);
   const digest = createHash("sha256").update(allFiles.map(path => `${relative(ROOT, path).replaceAll("\\", "/")}\0${createHash("sha256").update(readFileSync(path)).digest("hex")}`).join("\n")).digest("hex");
-  assert.equal(digest, "a71f6472cbbc834e6be5b6491ed9adcb0ea3b5d00cbd7a720d517f39350c7d8c");
+  assert.equal(digest, "65b7c3c272839048e82c8539cdc005f0241d40388faa86765ddd43ccfc2b195a");
   const covered = new Set(matrix.cases.flatMap((x: any) => x.sections));
   assert.deepEqual([...covered].sort(), REQUIRED_SECTIONS.sort());
 });

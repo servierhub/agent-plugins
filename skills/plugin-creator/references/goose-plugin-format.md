@@ -8,7 +8,7 @@ Use this reference when creating, porting, auditing, or packaging an Agent Plugi
 |---|---|---|
 | Agent Plugins 1.0.0 | Published; active | The only portable generation and validation target |
 | Agent Plugins 1.1.0 snapshot | Working Draft; inactive | Analysis only; its schema identifiers are unsupported |
-| `io.github.block.goose` | Repository-defined Goose adapter | Client behavior transported by 1.0.0 extensions; not portable semantics or claimed upstream ratification |
+| `io.github.bioinfornatics.agent-plugins.goose` | Repository-defined Goose adapter | Client behavior transported by 1.0.0 extensions; not portable semantics or claimed upstream ratification |
 
 Never infer 1.1.0 support from schema similarity or semantic-version proximity.
 
@@ -73,7 +73,7 @@ my-plugin/
 ├── plugin.json
 ├── skills/review/SKILL.md
 ├── extensions/
-│   └── io.github.block.goose/
+│   └── io.github.bioinfornatics.agent-plugins.goose/
 │       └── hooks.json
 └── scripts/hook-command.sh
 ```
@@ -83,15 +83,15 @@ my-plugin/
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "my-plugin",
   "extensions": {
-    "io.github.block.goose": {
+    "io.github.bioinfornatics.agent-plugins.goose": {
       "version": 1,
-      "hooks": "extensions/io.github.block.goose/hooks.json"
+      "hooks": "extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json"
     }
   }
 }
 ```
 
-Agent Plugins permits client-specific objects under `extensions` but assigns no semantics to their children. This repository's Goose adapter defines `version: 1` and `hooks`. Other hosts must not execute or claim validation of them.
+Agent Plugins permits client-specific objects under `extensions` but assigns no semantics to their children. This distribution's Goose adapter defines `version: 1` and `hooks`. Other hosts must not execute or claim validation of them.
 
 Root `hooks/hooks.json` is legacy Goose compatibility input. An importer may translate it after host validation. New output uses the namespaced form. If both exist, fail rather than merge or risk double execution. Hook commands are executable code; use `${PLUGIN_ROOT}` for package-relative paths and review blocking behavior. See [goose-hooks.md](goose-hooks.md).
 

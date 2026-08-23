@@ -18,7 +18,7 @@ Read [goose-plugin-format.md](references/goose-plugin-format.md) and [portable-c
 - Target published **Agent Plugins 1.0.0**: root `plugin.json`, optional `skills/`, and optional root `mcp.json`.
 - Emit canonical 1.0.0 schema identifiers in `plugin.json` and `mcp.json`.
 - Treat vendored **1.1.0 as an inactive Working Draft**. Do not generate or validate it as supported based on schema similarity.
-- Put new Goose hooks under `plugin.json.extensions["io.github.block.goose"]`, pointing to `extensions/io.github.block.goose/hooks.json`.
+- Put new Goose hooks under `plugin.json.extensions["io.github.bioinfornatics.agent-plugins.goose"]`, pointing to `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json`.
 - Treat root `hooks/hooks.json`, root `.mcp.json`, and inline `plugin.json.mcpServers` as legacy Goose inputs. Migrate explicitly; never emit legacy and canonical forms together.
 
 ## Specialist routing
@@ -51,7 +51,7 @@ Current Goose custom agents live under `.agents/agents/`; do not claim a plugin 
    node dist/scripts/cli.js init <plugin-directory>
    ```
 
-6. Keep only required resources: root `plugin.json`; `skills/<name>/SKILL.md`; root `mcp.json`; and, only when needed, `extensions/io.github.block.goose/hooks.json` plus command scripts.
+6. Keep only required resources: root `plugin.json`; `skills/<name>/SKILL.md`; root `mcp.json`; and, only when needed, `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json` plus command scripts.
 7. Document runtime prerequisites and credentials, but never package secrets.
 8. For ports, classify each item as `portable`, `adapt`, `replace`, or `unsupported`. Preserve behavior before deleting source metadata.
 9. Run both profiles:
@@ -88,15 +88,15 @@ Hooks are client behavior, not portable core. New output uses:
 ```json
 {
   "extensions": {
-    "io.github.block.goose": {
+    "io.github.bioinfornatics.agent-plugins.goose": {
       "version": 1,
-      "hooks": "extensions/io.github.block.goose/hooks.json"
+      "hooks": "extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json"
     }
   }
 }
 ```
 
-This namespace is the repository's Goose adapter contract, not an upstream-ratified identifier. Validate hooks against the selected Goose source. Use `${PLUGIN_ROOT}` in package-relative command paths. Treat commands as executable code; review blocking events and fail closed on unsupported semantics. Root `hooks/hooks.json` is an input-only migration alias. If both forms exist, stop as ambiguous.
+This namespace is the distribution's Goose adapter contract, not an upstream-ratified identifier. Validate hooks against the selected Goose source. Use `${PLUGIN_ROOT}` in package-relative command paths. Treat commands as executable code; review blocking events and fail closed on unsupported semantics. Root `hooks/hooks.json` is an input-only migration alias. If both forms exist, stop as ambiguous.
 
 ## Behavioral Evaluation Contract
 

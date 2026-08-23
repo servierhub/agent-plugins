@@ -13,8 +13,10 @@ const HOOK_EVENTS = new Set([
   "BeforeReadFile", "AfterFileEdit", "BeforeShellExecution", "AfterShellExecution",
 ]);
 const MANIFEST_KEYS = new Set(["$schema", "name", "version", "description", "author", "homepage", "repository", "license", "keywords", "extensions", "skills", "mcpServers"]);
-const GOOSE_NAMESPACE = "io.github.block.goose";
-const CANONICAL_HOOKS_PATH = "extensions/io.github.block.goose/hooks.json";
+const GOOSE_NAMESPACE = "io.github.bioinfornatics.agent-plugins.goose";
+const CANONICAL_HOOKS_PATH = "extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json";
+const HISTORICAL_GOOSE_NAMESPACE = "io.github.block.goose";
+const HISTORICAL_HOOKS_PATH = "extensions/io.github.block.goose/hooks.json";
 const PLACEHOLDER_LINE_RE = /^(?:\s*(?:#|\/\/|\/\*|\*)\s*)?(?:TODO|FIXME|TBD)\b(?:\s*[:—-]|\s+\S)/i;
 const PLACEHOLDER_VALUE_RE = /^\s*(?:["']?[\w.-]+["']?\s*[:=]\s*["']?)(?:TODO|FIXME|TBD)\b/i;
 const PLACEHOLDER_LIST_RE = /^\s*[-*+]\s+(?:TODO|FIXME|TBD)\b/i;
@@ -410,23 +412,35 @@ export function validate(root: string): { errors: string[]; warnings: string[] }
 
   const legacyHooksPath = join(root, "hooks", "hooks.json");
   const canonicalHooksPath = join(root, ...CANONICAL_HOOKS_PATH.split("/"));
+  const historicalHooksPath = join(root, ...HISTORICAL_HOOKS_PATH.split("/"));
   const hasLegacyHooks = Boolean(discoveredFile(root, legacyHooksPath, errors, "hooks/hooks.json"));
   const hasCanonicalHooks = Boolean(discoveredFile(root, canonicalHooksPath, errors, CANONICAL_HOOKS_PATH));
-  if (hasLegacyHooks && hasCanonicalHooks) errors.push(`Ambiguous Goose hooks: both ${CANONICAL_HOOKS_PATH} and legacy hooks/hooks.json exist`);
+  const hasHistoricalHooks = Boolean(discoveredFile(root, historicalHooksPath, errors, HISTORICAL_HOOKS_PATH));
+  const extensions = isPlainObject(manifest) && isPlainObject(manifest.extensions) ? manifest.extensions : {};
+  const hasCanonicalEnvelope = GOOSE_NAMESPACE in extensions;
+  const hasHistoricalEnvelope = HISTORICAL_GOOSE_NAMESPACE in extensions;
+  if ([hasLegacyHooks, hasCanonicalHooks, hasHistoricalHooks].filter(Boolean).length > 1 || (hasCanonicalEnvelope && hasHistoricalEnvelope)) errors.push("Ambiguous Goose hooks: multiple canonical or legacy layouts exist");
   else if (hasCanonicalHooks) {
-    const extension = isPlainObject(manifest) && isPlainObject(manifest.extensions) ? manifest.extensions[GOOSE_NAMESPACE] : undefined;
+    const extension = extensions[GOOSE_NAMESPACE];
     if (!isPlainObject(extension) || Object.keys(extension).some(key => !["version", "hooks"].includes(key)) || extension.version !== 1 || extension.hooks !== CANONICAL_HOOKS_PATH) errors.push(`plugin.json: invalid ${GOOSE_NAMESPACE} extension envelope`);
     else validateHooks(canonicalHooksPath, root, errors);
+  } else if (hasHistoricalHooks) {
+    const extension = extensions[HISTORICAL_GOOSE_NAMESPACE];
+    if (!isPlainObject(extension) || extension.version !== 1 || extension.hooks !== HISTORICAL_HOOKS_PATH) errors.push(`plugin.json: invalid historical ${HISTORICAL_GOOSE_NAMESPACE} extension envelope`);
+    warnings.push(`Historical Goose namespace ${HISTORICAL_GOOSE_NAMESPACE} detected; migrate to ${GOOSE_NAMESPACE}`);
+    validateHooks(historicalHooksPath, root, errors);
   } else if (hasLegacyHooks) {
     warnings.push(`Legacy Goose hooks detected at hooks/hooks.json; migrate to ${CANONICAL_HOOKS_PATH}`);
     validateHooks(legacyHooksPath, root, errors);
+  } else if (hasCanonicalEnvelope || hasHistoricalEnvelope) {
+    errors.push("plugin.json declares a Goose hooks extension but its hooks document is missing");
   }
 
   const mcpPaths = [join(root, ".mcp.json"), join(root, "mcp.json")].filter((path) => discoveredFile(root, path, errors, path.slice(root.length + 1)));
   for (const mcpPath of mcpPaths) validateMcpDocument(loadJson(root, mcpPath, errors), mcpPath.slice(root.length + 1), root, errors);
 
   const manifestHasMcp = isPlainObject(manifest) && "mcpServers" in manifest;
-  if (!skills.length && !hasLegacyHooks && !hasCanonicalHooks && !mcpPaths.length && !manifestHasMcp) {
+  if (!skills.length && !hasLegacyHooks && !hasCanonicalHooks && !hasHistoricalHooks && !mcpPaths.length && !manifestHasMcp) {
     errors.push("Plugin contains no skills, hooks, or MCP servers");
   }
 

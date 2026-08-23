@@ -1,6 +1,6 @@
 # ADR 0001: Namespace Goose-specific plugin extensions under `io.github.block.goose`
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR 0004](0004-distributor-goose-extension-namespace.md) for new output
 - **Date:** 2026-08-23
 - **Decision story:** ap-i8j.5.1
 - **Scope:** Open Plugin packages that carry Goose hook declarations or other Goose host data

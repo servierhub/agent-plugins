@@ -8,7 +8,7 @@ This matrix is the complete acceptance contract for `assets/conformance-fixtures
 |---|---|
 | Portable load | Agent Plugins core loading with declared transports. `partial` means a narrow invalid or unsupported entry is skipped while siblings remain usable. |
 | Strict authoring | Portable loading plus repository authoring policy, notably fixed-secret rejection. It is not an extra Agent Plugins requirement. |
-| Goose extension | Validation of the repository-defined `io.github.block.goose` adapter. `not-applicable` means no Goose namespace is declared. Portable clients merely preserve or ignore extension data. |
+| Goose extension | Validation of the distributor-owned `io.github.bioinfornatics.agent-plugins.goose` adapter. `not-applicable` means no Goose namespace is declared. Portable clients merely preserve or ignore extension data. |
 | Release | `fail` means deterministic format, semantic, or Goose validation failed. `blocked` means those checks passed, or only an optional transport was skipped, but evaluation, test, review, receipt, or archive evidence was intentionally not supplied. No fixture is release-eligible. |
 
 ## Matrix

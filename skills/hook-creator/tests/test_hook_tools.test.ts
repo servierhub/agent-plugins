@@ -103,11 +103,11 @@ test("scaffold writes the namespaced Goose extension envelope", () => {
     const plugin = makePlugin(tmp);
     execFileSync("node", [join(DIST, "init_hook.js"), plugin, "PostToolUse", "record-tool"]);
     const manifest = JSON.parse(readFileSync(join(plugin, "plugin.json"), "utf8"));
-    assert.deepEqual(manifest.extensions["io.github.block.goose"], {
+    assert.deepEqual(manifest.extensions["io.github.bioinfornatics.agent-plugins.goose"], {
       version: 1,
-      hooks: "extensions/io.github.block.goose/hooks.json",
+      hooks: "extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json",
     });
-    assert.equal(existsSync(join(plugin, "extensions", "io.github.block.goose", "hooks.json")), true);
+    assert.equal(existsSync(join(plugin, "extensions", "io.github.bioinfornatics.agent-plugins.goose", "hooks.json")), true);
     assert.equal(existsSync(join(plugin, "hooks", "hooks.json")), false);
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 });
@@ -119,14 +119,33 @@ test("legacy hooks warn and mixed canonical and legacy forms fail closed", () =>
     mkdirSync(join(plugin, "hooks"));
     writeFileSync(join(plugin, "hooks", "hooks.json"), JSON.stringify({ hooks: { PostToolUse: [{ hooks: [{ command: "echo ok" }] }] } }));
     assert.ok(validateHooks(plugin).warnings.some(w => w.includes("Legacy Goose hooks")));
-    mkdirSync(join(plugin, "extensions", "io.github.block.goose"), { recursive: true });
-    writeFileSync(join(plugin, "extensions", "io.github.block.goose", "hooks.json"), JSON.stringify({ hooks: { PostToolUse: [{ hooks: [{ command: "echo ok" }] }] } }));
+    mkdirSync(join(plugin, "extensions", "io.github.bioinfornatics.agent-plugins.goose"), { recursive: true });
+    writeFileSync(join(plugin, "extensions", "io.github.bioinfornatics.agent-plugins.goose", "hooks.json"), JSON.stringify({ hooks: { PostToolUse: [{ hooks: [{ command: "echo ok" }] }] } }));
     assert.ok(validateHooks(plugin).errors.some(e => e.includes("Ambiguous Goose hooks")));
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 });
 
 test("validator rejects hook and referenced-script symlinks", { skip: process.platform === "win32" }, () => {
-  const tmp=mkdtempSync(join(tmpdir(),"hook-test-")); try { const plugin=makePlugin(tmp),outside=join(tmp,"outside.json");mkdirSync(join(plugin,"extensions","io.github.block.goose"),{recursive:true});writeFileSync(outside,JSON.stringify({hooks:{PostToolUse:[{hooks:[{command:"echo ok"}]}]}}));symlinkSync(outside,join(plugin,"extensions","io.github.block.goose","hooks.json"));const manifest=JSON.parse(readFileSync(join(plugin,"plugin.json"),"utf8"));manifest.extensions={"io.github.block.goose":{version:1,hooks:"extensions/io.github.block.goose/hooks.json"}};writeFileSync(join(plugin,"plugin.json"),JSON.stringify(manifest));assert.ok(validateHooks(plugin).errors.some(e=>e.includes("symlink"))); } finally {rmSync(tmp,{recursive:true,force:true})}
+  const tmp=mkdtempSync(join(tmpdir(),"hook-test-")); try { const plugin=makePlugin(tmp),outside=join(tmp,"outside.json");mkdirSync(join(plugin,"extensions","io.github.bioinfornatics.agent-plugins.goose"),{recursive:true});writeFileSync(outside,JSON.stringify({hooks:{PostToolUse:[{hooks:[{command:"echo ok"}]}]}}));symlinkSync(outside,join(plugin,"extensions","io.github.bioinfornatics.agent-plugins.goose","hooks.json"));const manifest=JSON.parse(readFileSync(join(plugin,"plugin.json"),"utf8"));manifest.extensions={"io.github.bioinfornatics.agent-plugins.goose":{version:1,hooks:"extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json"}};writeFileSync(join(plugin,"plugin.json"),JSON.stringify(manifest));assert.ok(validateHooks(plugin).errors.some(e=>e.includes("symlink"))); } finally {rmSync(tmp,{recursive:true,force:true})}
 });
 
-test("init rejects a non-array existing event before changing the manifest",()=>{const tmp=mkdtempSync(join(tmpdir(),"hook-test-"));try{const plugin=makePlugin(tmp);mkdirSync(join(plugin,"extensions","io.github.block.goose"),{recursive:true});writeFileSync(join(plugin,"extensions","io.github.block.goose","hooks.json"),JSON.stringify({hooks:{PostToolUse:{bad:true}}}));const manifest=JSON.parse(readFileSync(join(plugin,"plugin.json"),"utf8"));manifest.extensions={"io.github.block.goose":{version:1,hooks:"extensions/io.github.block.goose/hooks.json"}};writeFileSync(join(plugin,"plugin.json"),JSON.stringify(manifest));const before=readFileSync(join(plugin,"plugin.json"),"utf8");assert.throws(()=>execFileSync("node",[join(DIST,"init_hook.js"),plugin,"PostToolUse","record-tool"]));assert.equal(readFileSync(join(plugin,"plugin.json"),"utf8"),before);assert.equal(existsSync(join(plugin,"scripts","record-tool.sh")),false)}finally{rmSync(tmp,{recursive:true,force:true})}});
+test("init rejects a non-array existing event before changing the manifest",()=>{const tmp=mkdtempSync(join(tmpdir(),"hook-test-"));try{const plugin=makePlugin(tmp);mkdirSync(join(plugin,"extensions","io.github.bioinfornatics.agent-plugins.goose"),{recursive:true});writeFileSync(join(plugin,"extensions","io.github.bioinfornatics.agent-plugins.goose","hooks.json"),JSON.stringify({hooks:{PostToolUse:{bad:true}}}));const manifest=JSON.parse(readFileSync(join(plugin,"plugin.json"),"utf8"));manifest.extensions={"io.github.bioinfornatics.agent-plugins.goose":{version:1,hooks:"extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json"}};writeFileSync(join(plugin,"plugin.json"),JSON.stringify(manifest));const before=readFileSync(join(plugin,"plugin.json"),"utf8");assert.throws(()=>execFileSync("node",[join(DIST,"init_hook.js"),plugin,"PostToolUse","record-tool"]));assert.equal(readFileSync(join(plugin,"plugin.json"),"utf8"),before);assert.equal(existsSync(join(plugin,"scripts","record-tool.sh")),false)}finally{rmSync(tmp,{recursive:true,force:true})}});
+
+test("historical Block namespace is migration-only and conflicts with canonical output", () => {
+  const tmp=mkdtempSync(join(tmpdir(),"hook-test-"));
+  try {
+    const plugin=makePlugin(tmp);
+    mkdirSync(join(plugin,"extensions","io.github.block.goose"),{recursive:true});
+    writeFileSync(join(plugin,"extensions","io.github.block.goose","hooks.json"),JSON.stringify({hooks:{PostToolUse:[{hooks:[{command:"echo ok"}]}]}}));
+    const manifest=JSON.parse(readFileSync(join(plugin,"plugin.json"),"utf8"));
+    manifest.extensions={"io.github.block.goose":{version:1,hooks:"extensions/io.github.block.goose/hooks.json"}};
+    writeFileSync(join(plugin,"plugin.json"),JSON.stringify(manifest));
+    let result=validateHooks(plugin);
+    assert.deepEqual(result.errors,[]);
+    assert.ok(result.warnings.some(w=>w.includes("Historical Goose namespace")));
+    mkdirSync(join(plugin,"extensions","io.github.bioinfornatics.agent-plugins.goose"),{recursive:true});
+    writeFileSync(join(plugin,"extensions","io.github.bioinfornatics.agent-plugins.goose","hooks.json"),JSON.stringify({hooks:{PostToolUse:[{hooks:[{command:"echo ok"}]}]}}));
+    result=validateHooks(plugin);
+    assert.ok(result.errors.some(e=>e.includes("Ambiguous Goose hooks")));
+  } finally {rmSync(tmp,{recursive:true,force:true});}
+});

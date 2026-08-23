@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -288,4 +288,23 @@ test("escaped skills directory is isolated before traversal", { skip: process.pl
     assert.ok(result.errors.some(error => error.includes("skills") && error.includes("resolved-outside")));
     assert.ok(!result.warnings.some(warning => warning.includes("placeholder")));
   } finally { rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test("historical Block hook namespace is migration-only and conflicts with canonical hooks", () => {
+  const tmp=mkdtempSync(join(tmpdir(),"plugin-test-"));
+  try {
+    const plugin=makePlugin(tmp);
+    mkdirSync(join(plugin,"extensions","io.github.block.goose"),{recursive:true});
+    writeFileSync(join(plugin,"extensions","io.github.block.goose","hooks.json"),JSON.stringify({hooks:{PostToolUse:[{hooks:[{command:"echo ok"}]}]}}));
+    const manifest=JSON.parse(readFileSync(join(plugin,"plugin.json"),"utf8"));
+    manifest.extensions={"io.github.block.goose":{version:1,hooks:"extensions/io.github.block.goose/hooks.json"}};
+    writeFileSync(join(plugin,"plugin.json"),JSON.stringify(manifest));
+    let result=validate(plugin);
+    assert.deepEqual(result.errors,[]);
+    assert.ok(result.warnings.some(w=>w.includes("Historical Goose namespace")));
+    mkdirSync(join(plugin,"extensions","io.github.bioinfornatics.agent-plugins.goose"),{recursive:true});
+    writeFileSync(join(plugin,"extensions","io.github.bioinfornatics.agent-plugins.goose","hooks.json"),JSON.stringify({hooks:{PostToolUse:[{hooks:[{command:"echo ok"}]}]}}));
+    result=validate(plugin);
+    assert.ok(result.errors.some(e=>e.includes("Ambiguous Goose hooks")));
+  } finally {rmSync(tmp,{recursive:true,force:true});}
 });

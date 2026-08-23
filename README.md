@@ -32,7 +32,7 @@ my-plugin/
 
 The vendored Agent Plugins **1.1.0** snapshot is an inactive Working Draft for analysis only. It is not a supported generation or validation target, even though its current schemas resemble 1.0.0.
 
-Hooks are outside the portable core. New Goose hook packages use this repository-defined, client-specific envelope:
+Hooks are outside the portable core. New Goose hook packages use this distributor-owned, client-specific envelope:
 
 ```json
 {
@@ -41,15 +41,15 @@ Hooks are outside the portable core. New Goose hook packages use this repository
   "version": "0.1.0",
   "description": "Reusable review workflows",
   "extensions": {
-    "io.github.block.goose": {
+    "io.github.bioinfornatics.agent-plugins.goose": {
       "version": 1,
-      "hooks": "extensions/io.github.block.goose/hooks.json"
+      "hooks": "extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json"
     }
   }
 }
 ```
 
-The canonical hook document is `extensions/io.github.block.goose/hooks.json`. Root `hooks/hooks.json` is legacy Goose compatibility input. Never ship both. The namespace is this repository's Goose adapter contract, not an assertion of upstream Goose ratification.
+The canonical hook document is `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json`. Root `hooks/hooks.json` is legacy Goose compatibility input. Never ship both. The namespace is this distribution's Goose adapter contract, not an assertion of upstream Goose ratification.
 
 See [portable conformance](skills/plugin-creator/references/portable-conformance.md) and the [Goose format reference](skills/plugin-creator/references/goose-plugin-format.md).
 
