@@ -8,7 +8,7 @@ import { fullEval } from "./full_eval.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--dry-run] [--resume]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--dry-run] [--resume]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -58,6 +58,14 @@ function runValidate(o) { if (o.args.length !== 1)
     emit({ ok: outcome.status === "accepted", command: "validate", target, outcome }, "Portable load: " + outcome.status, o);
     return outcome.status === "accepted" ? 0 : 1;
 } const schema = validateAgentPluginSchema(target, "auto", "strict-authoring"), structural = validate(target), ok = schema.valid && !structural.errors.length; const lines = [...schema.documents.map(d => (d.valid ? "VALID: " : "INVALID: ") + d.file + " (" + d.type + ")"), ...schema.errors.map(e => "SCHEMA ERROR: " + e.path + ": " + e.message), ...structural.warnings.map(w => "WARNING: " + w), ...structural.errors.map(e => "ERROR: " + e), ...(ok ? ["OK: " + target] : [])]; emit({ ok, command: "validate", target, schema, structural }, lines.join("\n"), o); return ok ? 0 : 1; }
+function runMigrate(o) { if (!o.args.length)
+    return usage("migrate requires a plugin directory"); const r = child("migrate_plugin.js", o.args), raw = (r.stdout ?? "").trim(); let report; try {
+    report = JSON.parse(raw);
+}
+catch {
+    console.error((r.stderr ?? raw).trim());
+    return r.status === 2 ? 2 : 1;
+} emit(report, "Migration: " + String(report.status).toUpperCase(), o); return report.status === "blocked" ? 3 : 0; }
 function runVerify(o) { if (!o.args.length)
     return usage("verify requires a plugin directory"); const r = child("verify_plugin_gates.js", o.args), raw = (r.stdout ?? "").trim(); let receipt; try {
     receipt = JSON.parse(raw);
@@ -117,13 +125,14 @@ function runFullEval(o) {
 export function runCli(argv) { const [command, ...raw] = argv; if (!command || command === "--help" || command === "-h") {
     console.log(HELP);
     return 0;
-} if (!["init", "validate", "verify", "package", "full-eval"].includes(command))
+} if (!["init", "validate", "migrate", "verify", "package", "full-eval"].includes(command))
     return usage("Unknown command: " + command); const o = parseCommon(raw); if (typeof o === "string")
     return usage(o); if (o.help) {
     console.log(HELP);
     return 0;
 } if (command === "validate")
-    return runValidate(o); if (command === "verify")
+    return runValidate(o); if (command === "migrate")
+    return runMigrate(o); if (command === "verify")
     return runVerify(o); if (command === "full-eval")
     return runFullEval(o); return wrapped(command, o); }
 if (process.argv[1] && resolve(fileURLToPath(import.meta.url)) === resolve(process.argv[1]))
