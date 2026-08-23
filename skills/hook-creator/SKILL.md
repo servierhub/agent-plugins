@@ -1,6 +1,6 @@
 ---
 name: hook-creator
-description: Create, edit, validate, test, and integrate Goose/Open Plugins lifecycle hooks under a plugin's hooks/hooks.json and scripts directory. Use for logging, notifications, formatting, policy gates, tool-call blocking, stop gates, or reactions to session, prompt, tool, file, and shell events. Do not use for general plugin assembly, standalone skills, or standalone custom agents.
+description: Creates, audits, and tests lifecycle hooks inside Open Plugins. Use for hooks.json, event matchers, hook handlers, notifications, logging, tool-call policy, PreToolUse blocking, or Stop safety; not Skills, agents, MCP, or whole-plugin packaging.
 ---
 
 # Hook Creator
@@ -101,6 +101,12 @@ When invoked from `plugin-creator`, return a validated hook component that can b
 9. Test handlers with representative payloads. Check both matching and non-matching cases, allow and deny cases for blocking hooks, missing optional fields, malformed input, and absent external dependencies.
 
 10. Return the changed hook files, event/matcher rationale, runtime prerequisites, safety notes, and test evidence to `plugin-creator` or the user.
+
+## Audit and handoff contract
+
+For every blocking-hook audit, inspect the concrete event and matcher, resolve the referenced command, verify that its handler exists and is executable, and test allow, block, malformed-input, missing-dependency, and recovery paths. Report observed safety evidence; never infer safety from configuration alone.
+
+Route creation, validation, packaging, installation, or release of the whole plugin to `agent-plugins:plugin-creator`. This creator returns only validated hook files, handler tests, and safety evidence.
 
 ## Blocking guidance
 

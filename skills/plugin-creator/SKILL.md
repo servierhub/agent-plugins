@@ -1,6 +1,6 @@
 ---
 name: plugin-creator
-description: "Work on an entire Goose/Open Plugin package: create, adapt, audit, validate, test, behaviorally evaluate, benchmark, package, release, or migrate a plugin directory containing plugin.json and one or more skills, hooks, MCP servers, or other components. Use for multi-skill changes, cross-component integration, plugin-level baselines, packaging, and plugin manifests. Do not use for one isolated SKILL.md or for asking whether a single skill generates better outputs; use skill-creator. Do not use for standalone custom agents or isolated hook implementation."
+description: Orchestrates work at the complete Open Plugin package boundary. Use when plugin.json or the whole plugin is the target for creation, validation, cross-component evaluation, packaging, migration, or release. Do not use when the request targets only one Skill, hook, or custom agent.
 ---
 
 # Plugin Creator
@@ -37,6 +37,13 @@ Create production-ready Goose/Open Plugins, not just example snippets. Keep the 
 Prefer loading the creator instructions into the current context when assembling one plugin. Delegate only when component work is isolated into disjoint files, and never let multiple delegates modify the same plugin files concurrently.
 
 If a required creator is unavailable, state the limitation and follow its documented source of truth directly rather than inventing a schema.
+
+## Operational request matrix
+
+- **Static validation:** run both the canonical Agent Plugins schema validator and the Goose operational validator, plus each changed component validator.
+- **Package-only:** run static validation, create the archive, and verify archive identity; do not force behavioral evaluation.
+- **Whole-plugin evaluation:** run changed-component evaluations and executable plugin integration scenarios, then aggregate, generate static review HTML when needed, validate receipts, and run release gates.
+- **Changed Skill plus blocking hook:** use skill-creator behavioral evaluation, hook-creator safety tests, and integration cases that exercise their cross-component behavior.
 
 ## Behavioral Evaluation Contract
 
@@ -91,9 +98,11 @@ If any required capability is unavailable, report `evaluation: blocked`. Never r
 7. After loading `agent-plugins:skill-creator` or its standalone fallback, for every bundled Skill:
    - Require YAML frontmatter with only `name` and `description`.
    - Keep the name lowercase and concise.
-   - Put triggering conditions in `description`, not in a body section named “When to use”.
-   - Write direct, imperative instructions.
-   - Keep the entrypoint focused; move large reference material into adjacent files.
+   - Write all Skill metadata and instructions in English.
+   - Make `description` concise and third person: state what the Skill does and when it activates.
+   - Write direct, imperative instructions in execution order.
+   - Distinguish required steps from conditional branches; move conditional or deep detail into directly linked references.
+   - Keep `SKILL.md` at or below 500 lines.
    - Add explicit verification steps for deterministic workflows.
 
 8. For external dependencies:
@@ -186,9 +195,13 @@ A plugin is ready only when:
 - No unresolved placeholder or example files remain unless intentionally part of a template.
 - Validation succeeds.
 
+## Full-eval agent protocol
+
+For whole-plugin evaluation, run `plugin-creator full-eval <plugin> --workspace <dir> --dry-run --format json` first. Follow the returned component commands exactly; they identify each bundled Skill source and its expected receipt. Do not claim that an LLM evaluation ran unless an external evaluator produced the receipt and integration artifacts. Rerun with `--resume`; the orchestrator reuses current artifacts, packages only after prerequisites are present, and always invokes plugin release verification. A blocked envelope's ordered `next_actions` is the authoritative handoff, including missing integration benchmark/viewer and pending human review.
+
 ## Bundled Utilities
 
-- `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, and `package` CLI.
+- `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, `package`, and deterministic `full-eval` CLI.
 - `dist/scripts/init_goose_plugin.js`: create a minimal goose plugin scaffold.
 - `dist/scripts/validate_agent_plugin_schema.js`: validate `plugin.json` and MCP configuration against the vendored Agent Plugins 1.0.0 schemas, with text, JSON, and quiet CI modes.
 - `dist/scripts/validate_goose_plugin.js`: statically validate manifest, Skills, hooks, MCP servers, and references.

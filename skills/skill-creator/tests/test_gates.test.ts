@@ -12,7 +12,7 @@ function fixture() {
   mkdirSync(root);
   writeFileSync(
     join(root, "SKILL.md"),
-    "---\nname: demo\ndescription: Handles demo work\n---\n\n# Demo\n",
+    "---\nname: demo\ndescription: Handles demo workflows. Use when testing release gates\n---\n\n# Demo\n",
   );
   return { tmp, root, workspace: join(tmp, "evaluation") };
 }
@@ -37,6 +37,7 @@ test("static skill gates pass", () => {
   try {
     const receipt = verifySkill({ skillPath: root, profile: "static" });
     assert.equal(receipt.status, "pass");
+    assert.equal(receipt.gates.authoring.status, "pass");
     assert.equal(receipt.gates.behavior.status, "na");
   } finally {
     rmSync(tmp, { recursive: true, force: true });

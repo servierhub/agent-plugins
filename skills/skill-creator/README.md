@@ -5,7 +5,7 @@ A vendor-neutral fork of Anthropic's `skill-creator`, adapted to the open [Agent
 ## What changed
 
 - Skills live in `.agents/skills/` or `~/.agents/skills/` and retain the standard `SKILL.md` format.
-- Repository instructions use `AGENTS.md`; no `CLAUDE.md` or `.claude/` files are created.
+- Repository instructions use `AGENTS.md` exclusively; no host-specific instruction or configuration files are created.
 - Scope is restricted to skills under `.agents/skills/`; agent definitions and plugins belong to separate creators.
 - Trigger evaluation stages the skill in an isolated `.agents/skills/` project.
 - Description optimization calls a configurable non-interactive agent CLI. Goose is the default.
@@ -23,6 +23,11 @@ Build once, then use the unified entrypoint for validation, evaluation, aggregat
 ```bash
 npm install && npm run build
 node dist/scripts/cli.js validate /path/to/skill
+node dist/scripts/cli.js audit /path/to/skill --format json
+node dist/scripts/cli.js design-evals /path/to/skill/evals/evals.json --skill-path /path/to/skill --format json
+node dist/scripts/cli.js analyze /path/to/workspace --skill-path /path/to/skill --format json
+node dist/scripts/cli.js full-eval /path/to/skill --workspace /path/to/workspace --dry-run
+node dist/scripts/cli.js full-eval /path/to/skill --workspace /path/to/workspace --resume --human-review pass --tests-status pass
 node dist/scripts/cli.js trigger-eval --eval-set /path/to/trigger-evals.json --skill-path /path/to/skill
 node dist/scripts/cli.js aggregate /path/to/iteration-workspace
 node dist/scripts/cli.js review /path/to/iteration-workspace --static review.html
@@ -31,6 +36,10 @@ node dist/scripts/cli.js package /path/to/skill ./dist-out
 ```
 
 Every subcommand accepts `--help`, `--format text|json`, and `--quiet`. Exit codes are `0` for success, `1` for failure, `2` for invalid usage, and `3` when verification or execution is blocked. The former script entrypoints remain supported for compatibility.
+
+`validate` checks Agent Skills format conformance. `audit` checks repository authoring policy. `design-evals` checks scenario realism, discrimination, capabilities, atomic assertions, fixtures, and navigation expectations. `analyze` separates completed, unavailable, and blocked evidence, then maps failed assertions and navigation results to authoring patterns. Packaging blocks error-level audit findings and reports warnings.
+
+`full-eval` uses the fixed phase order `validate → authoring-audit → evaluation-design → scaffold → paired-runs-and-grading → aggregate → static-review → receipt → post-evaluation-pattern-review → verify`. Its result always includes `status`, `phases`, and `next_actions`; `--format json` wraps that result in the unified CLI envelope. `--dry-run` is non-mutating. Normal reruns and `--resume` preserve existing artifacts and continue from the first unmet requirement. The orchestrator never invokes an LLM itself: exit code `3` identifies the exact paired output, grading, timing, test, or human-review evidence an agent or person must provide before rerunning. Once verification is reached, it writes the reusable component receipt to `<workspace>/receipt.json`.
 
 ## Legacy validate and package entrypoints
 

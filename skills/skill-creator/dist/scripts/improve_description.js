@@ -71,13 +71,15 @@ Based on the failures, write a new and improved description that is more likely 
 1. Avoid overfitting
 2. The list might get loooong and it's injected into ALL queries and there might be a lot of skills, so we don't want to blow too much space on any given description.
 
-Concretely, your description should not be more than about 100-200 words, even if that comes at the cost of accuracy. There is a hard limit of 1024 characters — descriptions over that will be truncated, so stay comfortably under it.
+Write the description in English and in third person. Answer only two questions: what does the Skill do, and when should the agent activate it? Prefer one or two sentences and roughly 15-40 words when that preserves reliable discovery. The hard limit is 1024 characters, not a target.
 
-Here are some tips that we've found to work well in writing these descriptions:
-- The skill should be phrased in the imperative -- "Use this skill for" rather than "this skill does"
-- The skill description should focus on the user's intent, what they are trying to achieve, vs. the implementation details of how the skill works.
-- The description competes with other skills for the agent's attention — make it distinctive and immediately recognizable.
-- If you're getting lots of failures after repeated attempts, change things up. Try different sentence structures or wordings.
+Use these rules:
+- State the distinctive user intent and concrete domain terms, not implementation steps.
+- A second sentence may begin with "Use when" to name activation contexts.
+- Do not include translated prompt examples or multilingual keyword lists; test multilingual queries against the English description instead.
+- Do not enumerate every neighboring Skill. Mention one only when it resolves a realistic routing ambiguity.
+- The description competes with other Skills for attention, so keep it immediately recognizable.
+- If repeated attempts fail, change the structure without expanding into a query list.
 
 I'd encourage you to be creative and mix up the style in different iterations since you'll have multiple opportunities to try different approaches and we'll just grab the highest-scoring one at the end. 
 

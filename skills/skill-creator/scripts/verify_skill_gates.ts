@@ -5,6 +5,7 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { validateSkill } from "./quick_validate.js";
+import { auditSkill } from "./audit_skill.js";
 
 export type GateStatus = "pass" | "fail" | "blocked" | "na";
 export type VerificationProfile = "static" | "evaluation" | "release";
@@ -180,6 +181,7 @@ export function verifySkill(options: VerifySkillOptions) {
   const strict = profile !== "static";
   const currentSourceHash = sourceHash(root);
   const [valid, message] = validateSkill(root);
+  const authoringAudit = auditSkill(root);
 
   const pkg = loadJson(join(root, "package.json"));
   const offline = Boolean(pkg?.offlineBundle);
@@ -256,6 +258,15 @@ export function verifySkill(options: VerifySkillOptions) {
       ["valid frontmatter", "name matches directory"],
       [message],
     ),
+    authoring: gate(
+      authoringAudit.status === "fail" ? "fail" : "pass",
+      true,
+      ["English discovery metadata", "entrypoint line budget", "portable references", "authoring pattern review"],
+      authoringAudit.findings.length
+        ? authoringAudit.findings.map((item) => `[${item.rule}] ${item.message}`)
+        : [`authoring audit ${authoringAudit.status}; ${authoringAudit.pattern_review.filter((item) => item.relevant).length} relevant pattern(s)`],
+      authoringAudit.status === "fail" ? "error-level authoring audit findings" : undefined,
+    ),
     portability: gate(
       missing.length ? "fail" : "pass",
       true,
@@ -307,6 +318,11 @@ export function verifySkill(options: VerifySkillOptions) {
       .map(([gateName]) => gateName),
     artifacts: {
       skill: root,
+      authoring_audit: {
+        status: authoringAudit.status,
+        findings: authoringAudit.findings,
+        pattern_review: authoringAudit.pattern_review,
+      },
       ...(workspace
         ? {
             evaluation_workspace: workspace,

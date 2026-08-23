@@ -5,6 +5,7 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { validateSkill } from "./quick_validate.js";
+import { auditSkill } from "./audit_skill.js";
 const PROFILES = new Set(["static", "evaluation", "release"]);
 const GATE_STATUSES = new Set(["pass", "fail", "blocked", "na"]);
 const HUMAN_REVIEW_STATUSES = new Set(["pass", "fail", "blocked"]);
@@ -129,6 +130,7 @@ export function verifySkill(options) {
     const strict = profile !== "static";
     const currentSourceHash = sourceHash(root);
     const [valid, message] = validateSkill(root);
+    const authoringAudit = auditSkill(root);
     const pkg = loadJson(join(root, "package.json"));
     const offline = Boolean(pkg?.offlineBundle);
     const missing = [];
@@ -205,6 +207,9 @@ export function verifySkill(options) {
     }
     const gates = {
         structure: gate(valid ? "pass" : "fail", true, ["valid frontmatter", "name matches directory"], [message]),
+        authoring: gate(authoringAudit.status === "fail" ? "fail" : "pass", true, ["English discovery metadata", "entrypoint line budget", "portable references", "authoring pattern review"], authoringAudit.findings.length
+            ? authoringAudit.findings.map((item) => `[${item.rule}] ${item.message}`)
+            : [`authoring audit ${authoringAudit.status}; ${authoringAudit.pattern_review.filter((item) => item.relevant).length} relevant pattern(s)`], authoringAudit.status === "fail" ? "error-level authoring audit findings" : undefined),
         portability: gate(missing.length ? "fail" : "pass", true, ["self-contained", "offline bundle complete"], [missing.length ? `missing: ${missing.join(", ")}` : "complete"]),
         tests: gate(tests, strict, ["build and deterministic tests pass"], [`reported: ${tests}`], tests !== "pass" && strict ? "passing test evidence missing" : undefined),
         triggering: gate(triggering, triggeringRequired, ["positive and difficult-negative routing thresholds pass", "sibling overlap checked"], [options.triggeringReason ?? `reported: ${triggering}`], triggering !== "pass" && triggeringRequired ? "passing trigger evidence missing" : undefined),
@@ -226,6 +231,11 @@ export function verifySkill(options) {
             .map(([gateName]) => gateName),
         artifacts: {
             skill: root,
+            authoring_audit: {
+                status: authoringAudit.status,
+                findings: authoringAudit.findings,
+                pattern_review: authoringAudit.pattern_review,
+            },
             ...(workspace
                 ? {
                     evaluation_workspace: workspace,

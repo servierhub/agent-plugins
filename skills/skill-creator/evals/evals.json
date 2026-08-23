@@ -8,9 +8,31 @@
       "assertions": [
         "Requires paired current and old-skill runs",
         "Requires grading.json for every run",
-        "Requires aggregate_benchmark.js outputs",
-        "Requires eval-viewer/generate_review.js",
+        "Requires aggregated benchmark JSON and Markdown outputs",
+        "Requires a generated evaluation review artifact",
         "Does not present quick_validate or an ad-hoc comparison as sufficient"
+      ],
+      "expected_output": "A complete paired evaluation receipt and release-gate result.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/evaluation-workflow.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:behavioral-evaluation"
       ]
     },
     {
@@ -18,8 +40,28 @@
       "name": "static-validation-only",
       "prompt": "Vérifie seulement que le frontmatter de cette skill est valide; ne lance pas de benchmark.",
       "assertions": [
-        "Uses quick_validate",
+        "Runs the official deterministic Skill format validator",
         "Does not force behavioral evaluation when explicitly excluded"
+      ],
+      "expected_output": "A deterministic frontmatter validation result without behavioral runs.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": false,
+        "browser": false,
+        "network": false,
+        "tools": []
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/audit.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:static-validation"
       ]
     },
     {
@@ -31,6 +73,26 @@
         "Names missing paired runs and viewer artifacts",
         "Preserves completed artifacts",
         "Does not fabricate pass rates"
+      ],
+      "expected_output": "An honest blocked evaluation receipt naming unavailable evidence.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": false,
+        "browser": false,
+        "network": false,
+        "tools": []
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/evaluation-workflow.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:blocked-runner"
       ]
     },
     {
@@ -38,9 +100,31 @@
       "name": "trigger-versus-behavior",
       "prompt": "Teste à la fois si la skill se déclenche sur les bonnes requêtes et si ses réponses sont meilleures.",
       "assertions": [
-        "Uses run_eval or run_loop for trigger accuracy",
+        "Runs the official trigger-description evaluation workflow",
         "Uses paired outputs and grading for behavior",
         "Aggregates and generates a viewer for behavioral results"
+      ],
+      "expected_output": "Separate trigger and behavioral evaluation artifacts with an aggregated viewer.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/evaluation-workflow.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:trigger-and-behavior"
       ]
     },
     {
@@ -50,7 +134,76 @@
       "assertions": [
         "Lists eval set, paired runs, grading, benchmark, viewer and review status",
         "Separates completed, unavailable and blocked evidence"
+      ],
+      "expected_output": "A final report that classifies completed, unavailable, and blocked evidence.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/evaluation-workflow.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:final-receipt"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "rule-rich-domain-creation",
+      "prompt": "Create a portable Agent Skill for reviewing backward compatibility between two versioned API contracts. The domain has deterministic request and response rules, multiple formats and versions, external references, and ambiguous semantic cases.",
+      "assertions": [
+        "Identifies the task as a rule-rich deterministic domain",
+        "Inventories the main rule space across direction, format, version, constraints and failure modes",
+        "Distinguishes automated rules from semantic and unsupported cases",
+        "Creates coverage-tagged evaluation scenarios for every important in-scope dimension",
+        "Does not treat one representative script case as sufficient domain coverage",
+        "Keeps common workflow concise through progressive disclosure"
+      ],
+      "expected_output": "A valid Skill with a rule-coverage matrix, proportionate deterministic automation, explicit semantic residual, and coverage-tagged evaluations.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/authoring.md",
+          "references/domain-coverage.md",
+          "references/evaluation-design.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:rule-rich-creation"
       ]
     }
-  ]
+  ],
+  "coverage_dimensions": {
+    "mode": [
+      "behavioral-evaluation",
+      "static-validation",
+      "blocked-runner",
+      "trigger-and-behavior",
+      "final-receipt",
+      "rule-rich-creation"
+    ]
+  }
 }

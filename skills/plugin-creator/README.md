@@ -28,7 +28,7 @@ The current Goose custom-agent contract uses `.agents/agents`; do not package an
 
 ## Unified CLI
 
-Use `node dist/scripts/cli.js <init|validate|verify|package>`. All subcommands accept `--format text|json`, `--quiet`, and `--help`. Exit codes are `0` success, `1` failure, `2` usage, and `3` blocked. Packaging runs schema and structural validation.
+Use `node dist/scripts/cli.js <init|validate|verify|package|full-eval>`. All subcommands accept `--format text|json`, `--quiet`, and `--help`. Exit codes are `0` success, `1` failure, `2` usage, and `3` blocked. Packaging runs schema and structural validation. `full-eval` returns a stable versioned envelope in JSON mode.
 
 ## Create a plugin
 
@@ -88,6 +88,19 @@ Load agent-plugins:plugin-creator and evaluate this plugin against the previous
 release. Include Skill receipts, routing and hook integration scenarios, the
 combined benchmark, release gates, and a static HTML review report.
 ```
+
+## Full-eval orchestration
+
+Use the deterministic orchestrator when an AI agent needs to evaluate a whole plugin without guessing the next step:
+
+```bash
+node dist/scripts/cli.js full-eval /path/to/plugin --workspace /tmp/plugin-eval --dry-run --format json
+node dist/scripts/cli.js full-eval /path/to/plugin --workspace /tmp/plugin-eval --resume --format json
+```
+
+The fixed phases are validation, bundled-Skill discovery, component evaluation receipt detection, integration output detection, packaging, and release verification. Component commands use the bundled skill-creator CLI by absolute path, so an agent does not depend on a global binary. Each completed Skill evaluation writes `receipt.json` exactly where plugin orchestration expects it. Dry-run is side-effect free. Rerunning (optionally with `--resume`) discovers existing receipts and outputs, making each phase idempotent. The envelope reports exact Skill paths, expected receipt paths, component `skill-creator full-eval` commands, phase statuses, and `next_actions`.
+
+This command never runs or simulates an LLM. It stops with exit code 3 when Skill receipts, `integration/benchmark.json`, `integration/review.html`, test evidence, or explicit `--human-review pass` are absent. Once prerequisites exist, it packages the plugin and invokes the existing release verifier. Inputs can be overridden with repeated `--component-receipt`, `--integration`, `--archive`, and `--tests-status pass`.
 
 ## Package
 

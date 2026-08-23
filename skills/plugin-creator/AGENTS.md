@@ -1,6 +1,11 @@
 # Repository instructions
 
+
 This repository maintains the Goose/Open Plugins creator skill.
+
+- Write all Agent Skill metadata and instructions in English.
+- Keep Skill descriptions concise and in third person; state what the Skill does and when it should activate.
+- Keep `SKILL.md` at or below 500 lines; move conditional or deep detail into directly linked references using progressive disclosure.
 
 - Scope generated artifacts to plugins installed under `.agents/plugins`.
 - Do not generate standalone `.agents/skills` or `.agents/agents` assets.

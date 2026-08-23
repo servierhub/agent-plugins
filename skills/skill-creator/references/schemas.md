@@ -2,6 +2,17 @@
 
 This document defines the JSON schemas used by skill-creator.
 
+## Contents
+
+- [evals.json](#evalsjson)
+- [history.json](#historyjson)
+- [grading.json](#gradingjson)
+- [metrics.json](#metricsjson)
+- [timing.json](#timingjson)
+- [benchmark.json](#benchmarkjson)
+- [comparison.json](#comparisonjson)
+- [analysis.json](#analysisjson)
+
 ---
 
 ## evals.json
@@ -17,10 +28,23 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
       "prompt": "User's example prompt",
       "expected_output": "Description of expected result",
       "files": ["evals/files/sample1.pdf"],
-      "expectations": [
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": []
+      },
+      "assertions": [
         "The output includes X",
-        "The skill used script Y"
-      ]
+        "The official deterministic validator reports success"
+      ],
+      "navigation_expectations": {
+        "must_read": ["SKILL.md"],
+        "read_when_relevant": [],
+        "must_not_read": []
+      },
+      "coverage_tags": ["format:pdf", "failure:missing-parser"]
     }
   ]
 }
@@ -28,11 +52,17 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
 
 **Fields:**
 - `skill_name`: Name matching the skill's frontmatter
+- `coverage_dimensions`: Optional top-level map of required `dimension` to values for a rule-rich deterministic domain; every declared `dimension:value` cell should appear in at least one scenario's `coverage_tags`
 - `evals[].id`: Unique integer identifier
 - `evals[].prompt`: The task to execute
 - `evals[].expected_output`: Human-readable description of success
 - `evals[].files`: Optional list of input file paths (relative to skill root)
-- `evals[].expectations`: List of verifiable statements
+- `evals[].capabilities`: Declared filesystem, runner, browser, network, and tool availability
+- `evals[].assertions`: Atomic, observable statements graded for every run
+- `evals[].navigation_expectations`: Required, conditional, and forbidden resource reads for progressive-disclosure cases
+- `evals[].coverage_tags`: Optional stable `dimension:value` labels used to verify the coverage matrix of a rule-rich deterministic domain
+
+Use `assertions` only in scenario and `eval_metadata.json` files. Use `expectations` only in `grading.json`, where every assertion gains `passed` and `evidence`.
 
 ---
 

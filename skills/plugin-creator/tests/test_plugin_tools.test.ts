@@ -153,28 +153,26 @@ test("package excludes git metadata", () => {
   }
 });
 
-test("package excludes repository-local agent and editor metadata", () => {
+test("package excludes repository-local hidden metadata", () => {
   const tmp = mkdtempSync(join(tmpdir(), "plugin-test-"));
   try {
     const plugin = makePlugin(tmp);
-    for (const directory of [".agents", ".beads", ".claude", ".codex", "evaluations"]) {
+    for (const directory of [".agents", ".beads", ".local-agent", ".local-tools", "evaluations"]) {
       mkdirSync(join(plugin, directory), { recursive: true });
       writeFileSync(join(plugin, directory, "local.txt"), "development metadata");
     }
-    writeFileSync(join(plugin, "CLAUDE.md"), "development instructions");
     mkdirSync(join(plugin, ".vscode"), { recursive: true });
     writeFileSync(join(plugin, ".vscode", "tasks.json"), JSON.stringify({ version: "2.0.0", tasks: [] }));
     mkdirSync(join(plugin, ".beads"), { recursive: true });
     writeFileSync(join(plugin, ".beads", "local.txt"), "TODO local tracker state");
-    writeFileSync(join(plugin, ".claude", "local.txt"), "TODO local Claude settings");
+    writeFileSync(join(plugin, ".local-agent", "settings.json"), "{}");
     assert.deepEqual(validate(plugin).warnings, []);
     const output = join(tmp, "dist", "plugin.zip");
     execFileSync("node", [join(DIST, "package_goose_plugin.js"), plugin, output], { encoding: "utf-8" });
     const names = new AdmZip(output).getEntries().map((entry) => entry.entryName);
-    for (const excluded of ["/.agents/", "/.beads/", "/.claude/", "/.codex/", "/evaluations/"]) {
+    for (const excluded of ["/.agents/", "/.beads/", "/.local-agent/", "/.local-tools/", "/evaluations/"]) {
       assert.ok(!names.some((name) => name.includes(excluded)), excluded);
     }
-    assert.ok(!names.some((name) => name.endsWith("/CLAUDE.md")));
     assert.ok(names.some((name) => name.includes("/.vscode/tasks.json")));
   } finally {
     rmSync(tmp, { recursive: true, force: true });

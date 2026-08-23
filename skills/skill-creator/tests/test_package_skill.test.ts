@@ -10,7 +10,7 @@ test("skill packaging rejects symbolic links", () => {
   try {
     const root = join(tmp, "demo");
     mkdirSync(root);
-    writeFileSync(join(root, "SKILL.md"), "---\nname: demo\ndescription: Demo work\n---\n\n# Demo\n");
+    writeFileSync(join(root, "SKILL.md"), "---\nname: demo\ndescription: Packages demo workflows. Use when testing Skill packaging\n---\n\n# Demo\n");
     writeFileSync(join(tmp, "secret.txt"), "secret");
     symlinkSync(join(tmp, "secret.txt"), join(root, "secret-link"));
     const oldLog = console.log;
@@ -20,4 +20,15 @@ test("skill packaging rejects symbolic links", () => {
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
+});
+
+test("skill packaging blocks error-level authoring audit findings", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "package-skill-audit-"));
+  try {
+    const root = join(tmp, "demo"); mkdirSync(root);
+    writeFileSync(join(root, "SKILL.md"), "---\nname: demo\ndescription: Traite les fichiers. Utilisez quand nécessaire.\n---\n\n# Demo\n");
+    const oldLog = console.log; console.log = () => {};
+    try { assert.equal(packageSkill(root, join(tmp, "out")), null); }
+    finally { console.log = oldLog; }
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
 });

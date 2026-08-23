@@ -10,7 +10,7 @@ function invoke(args: string[]) { return spawnSync(process.execPath, [cli, ...ar
 function skill(valid = true) {
   const root = mkdtempSync(join(tmpdir(), "skill-cli-"));
   const dir = join(root, "demo"); mkdirSync(dir);
-  writeFileSync(join(dir, "SKILL.md"), valid ? "---\nname: demo\ndescription: A useful demo skill.\n---\n# Demo\n" : "# invalid\n");
+  writeFileSync(join(dir, "SKILL.md"), valid ? "---\nname: demo\ndescription: Handles demo workflows. Use when testing demo behavior.\n---\n# Demo\n" : "# invalid\n");
   return dir;
 }
 
@@ -36,7 +36,7 @@ test("quiet suppresses successful text output", () => {
 });
 
 test("every unified subcommand exposes help", () => {
-  for (const command of ["validate", "trigger-eval", "aggregate", "review", "verify", "package"]) assert.equal(invoke([command, "--help"]).status, 0, command);
+  for (const command of ["validate", "audit", "design-evals", "analyze", "full-eval", "trigger-eval", "aggregate", "review", "verify", "package"]) assert.equal(invoke([command, "--help"]).status, 0, command);
 });
 
 test("verify maps an incomplete release pipeline to blocked", () => {
@@ -45,4 +45,14 @@ test("verify maps an incomplete release pipeline to blocked", () => {
   const body = JSON.parse(result.stdout);
   assert.equal(body.status, "blocked");
   assert.equal(body.exit_code, 3);
+});
+
+test("audit exposes stable authoring findings and pattern decisions", () => {
+  const target = skill();
+  const result = invoke(["audit", target, "--format", "json"]);
+  assert.equal(result.status, 0, result.stderr);
+  const body = JSON.parse(result.stdout);
+  assert.equal(body.command, "audit");
+  assert.equal(body.output.artifact, "skill-authoring-audit");
+  assert.ok(Array.isArray(body.output.pattern_review));
 });

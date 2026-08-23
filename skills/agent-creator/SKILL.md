@@ -1,6 +1,6 @@
 ---
 name: agent-creator
-description: Create, edit, validate, test, and install Goose custom agent definitions under .agents/agents using Markdown with YAML frontmatter. Use when asked to define a reusable role, persona, specialist, reviewer, writer, planner, or delegated subagent; migrate an agent from .goose/agents or .claude/agents; or audit an existing custom agent. Do not use for Agent Skills under .agents/skills, plugins under .agents/plugins, or repeatable workflows that belong in recipes.
+description: Creates and manages Goose custom agent definitions for reusable roles and delegated personas, including reviewers, writers, planners, and specialists. Use when the request concerns a custom agent, persona, subagent, delegation role, or .agents/agents; exclude Skills, hooks, and plugin packaging.
 ---
 
 # Agent Creator
@@ -116,6 +116,11 @@ Prefer the bundled **agent-creator** executable (or node <agent-creator>/dist/sc
     @code-reviewer review the current diff
     ```
 
+## Request routing
+
+- For creation or audit, use the official validator before installation and report supported frontmatter explicitly.
+- For evaluation or comparison, require paired current and baseline runs, grading for every run, aggregated benchmark JSON/Markdown, a review artifact, and a traceable conclusion. Static validation alone never proves behavioral improvement.
+
 ## Agent evaluation
 
 Evaluate the custom agent as a reusable role, not as a skill trigger. The key question is whether delegating the same realistic task to the specialized agent produces better, more consistent results than a controlled baseline.
@@ -213,7 +218,7 @@ Do not duplicate generic system behavior, repository instructions already suppli
 
 ## Migration guidance
 
-When migrating from `.goose/agents/` or `.claude/agents/`:
+When migrating from a legacy host-specific agent directory:
 
 - place new shared definitions in `.agents/agents/`;
 - preserve the semantic role and instructions;

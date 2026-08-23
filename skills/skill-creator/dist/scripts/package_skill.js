@@ -9,6 +9,7 @@ import { existsSync, lstatSync, readdirSync, mkdirSync, readFileSync } from "nod
 import { resolve, join, basename, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateSkill } from "./quick_validate.js";
+import { auditSkill } from "./audit_skill.js";
 import { loadRuntimeDependency } from "./runtime-deps.js";
 const AdmZip = loadRuntimeDependency("adm-zip");
 const EXCLUDE_DIRS = new Set([".git", ".hg", ".svn", "__pycache__", "node_modules"]);
@@ -103,6 +104,15 @@ export function packageSkill(skillPathArg, outputDirArg) {
         return null;
     }
     console.log(`✅ ${message}\n`);
+    console.log("🔎 Auditing authoring quality...");
+    const audit = auditSkill(skillPath);
+    for (const item of audit.findings)
+        console.log(`  ${item.severity.toUpperCase()}: [${item.rule}] ${item.message}`);
+    if (audit.status === "fail") {
+        console.log("❌ Authoring audit failed. Fix error-level findings before packaging.");
+        return null;
+    }
+    console.log(`✅ Authoring audit: ${audit.status}${audit.summary.warnings ? ` (${audit.summary.warnings} warning(s))` : ""}\n`);
     const missingOffline = validateOfflineBundle(skillPath);
     if (missingOffline.length) {
         console.log(`❌ Offline bundle is incomplete: ${missingOffline.join(", ")}`);

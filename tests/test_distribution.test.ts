@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PLUGIN_NAME = "agent-plugins";
+const SKILLS = join(ROOT, "skills");
 const EXPECTED_SKILLS = new Set(["skill-creator", "agent-creator", "hook-creator", "plugin-creator"]);
 
 test("open plugins manifest", () => {
@@ -53,17 +54,20 @@ test("documentation recommends plugin install", () => {
   }
 });
 
-test("explicit skill evaluation requests require the official completion receipt", () => {
-  const text = readFileSync(join(ROOT, "skills", "skill-creator", "SKILL.md"), "utf-8");
+test("explicit skill evaluation requests use the progressively disclosed completion contract", () => {
+  const entrypoint = readFileSync(join(ROOT, "skills", "skill-creator", "SKILL.md"), "utf-8");
+  const workflow = readFileSync(join(ROOT, "skills", "skill-creator", "references", "evaluation-workflow.md"), "utf-8");
+  assert.match(entrypoint, /Evaluate behavioral quality or compare versions[\s\S]*references\/evaluation-workflow\.md/);
+  assert.match(entrypoint, /When the user asks to evaluate[\s\S]*execute the evaluation/);
   for (const required of [
-    "Evaluation Completion Contract",
-    "paired runs",
+    "Completion contract",
+    "paired `with_skill`",
     "grading.json",
     "aggregate_benchmark.js",
     "eval-viewer/generate_review.js",
-    "evaluation: blocked",
-    "Never silently substitute an ad-hoc benchmark",
-  ]) assert.ok(text.includes(required), required);
+    "blocked",
+    "does not replace behavioral evaluation",
+  ]) assert.ok(workflow.includes(required), required);
 });
 
 test("explicit plugin evaluation requests require behavioral skill and integration evidence", () => {
@@ -101,4 +105,59 @@ test("offline vendors contain production dependencies only", () => {
     for (const dependency of Object.keys(pkg.dependencies ?? {})) assert.ok(bundled.has(dependency));
     for (const devDependency of Object.keys(pkg.devDependencies ?? {})) assert.ok(!bundled.has(devDependency), `${name}: bundled dev dependency ${devDependency}`);
   }
+});
+
+test("skill metadata and progressive disclosure follow repository policy", () => {
+  for (const entry of readdirSync(SKILLS)) {
+    const skillFile = join(SKILLS, entry, "SKILL.md");
+    if (!existsSync(skillFile)) continue;
+    const text = readFileSync(skillFile, "utf8");
+    const description = text.match(/^description:\s*["']?(.*?)["']?$/m)?.[1] ?? "";
+    assert.ok(description.length > 0 && description.length <= 350, `${entry}: description must be concise`);
+    assert.ok(!/[^\x00-\x7F]/.test(description), `${entry}: description must be English/ASCII metadata`);
+    assert.match(description, /\bUse (?:when|for)\b/, `${entry}: description must state when to activate`);
+    assert.ok(text.split(/\r?\n/).length <= 500, `${entry}: SKILL.md must use progressive disclosure above 500 lines`);
+  }
+  const creator = readFileSync(join(SKILLS, "skill-creator", "SKILL.md"), "utf8");
+  for (const question of ["What does the Skill do?", "When should the agent activate it?", "What instructions must the Skill give?", "In what order must they run?", "Are all instructions mandatory?", "Which instructions are conditional?", "Does `SKILL.md` exceed or approach 500 lines?"]) {
+    assert.ok(creator.includes(question), `skill-creator missing authoring question: ${question}`);
+  }
+  assert.match(creator, /Progressive disclosure[\s\S]*metadata for selection[\s\S]*SKILL\.md[\s\S]*common workflow[\s\S]*bundled[\s\S]*references\//i);
+});
+
+test("skill-creator applies the complete authoring pattern catalog at creation and improvement", () => {
+  const creator = readFileSync(join(SKILLS, "skill-creator", "SKILL.md"), "utf8");
+  const catalog = readFileSync(join(SKILLS, "skill-creator", "references", "skill-authoring-best-practices.md"), "utf8");
+  assert.match(creator, /Create or materially redesign a Skill[\s\S]*pattern catalog/i);
+  assert.match(creator, /Improve after evaluation or real usage[\s\S]*pattern catalog/i);
+  assert.match(creator, /At creation and after evaluation[\s\S]*Is it relevant here\?[\s\S]*Why\?[\s\S]*Where should it be applied\?/i);
+  for (const pattern of [
+    "Concise is key",
+    "Appropriate degree of freedom",
+    "Test with all intended models",
+    "Effective description",
+    "High-level guide with references",
+    "Domain-specific organization",
+    "Conditional details",
+    "Sequential workflow",
+    "Feedback loop",
+    "Plan-validate-execute",
+    "Avoid time-sensitive information",
+    "Consistent terminology",
+    "Template pattern",
+    "Examples pattern",
+    "Conditional workflow",
+    "Evaluation-driven development",
+    "Expert-author / fresh-user loop",
+    "Observe navigation behavior",
+    "Solve, do not defer",
+    "Utility scripts",
+    "Visual analysis",
+    "Verifiable intermediate outputs",
+    "Package dependencies",
+    "Fully qualified MCP tools",
+    "Do not assume tools are installed",
+    "Avoid too many options",
+  ]) assert.ok(catalog.includes(pattern), `missing upstream authoring pattern: ${pattern}`);
+  assert.match(catalog, /Is it relevant here\? Why\? Where should it be applied\?/);
 });

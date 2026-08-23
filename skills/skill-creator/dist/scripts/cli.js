@@ -5,6 +5,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 const commands = {
     validate: { entry: "quick_validate.js", usage: "validate <skill-directory>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+    audit: { entry: "audit_skill.js", usage: "audit <skill-directory> [-o audit.json]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+    "design-evals": { entry: "design_evals.js", usage: "design-evals <evals.json> [--skill-path <dir>] [--normalize <file>]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+    analyze: { entry: "analyze_evaluation.js", usage: "analyze <evaluation-workspace> --skill-path <dir> [-o analysis.json]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) && hasValue(a, "--skill-path") },
+    "full-eval": { entry: "full_eval.js", usage: "full-eval <skill-directory> [--workspace <dir>] [--eval-set <file>] [--dry-run] [--resume] [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
     "trigger-eval": { entry: "run_eval.js", usage: "trigger-eval --eval-set <file> --skill-path <dir> [options]", required: (a) => hasValue(a, "--eval-set") && hasValue(a, "--skill-path") },
     aggregate: { entry: "aggregate_benchmark.js", usage: "aggregate <benchmark-directory> [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
     review: { entry: "../eval-viewer/generate_review.js", usage: "review <workspace> [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
@@ -26,7 +30,11 @@ Common options:
     return `Usage: skill-creator <command> [options]
 
 Commands:
-  validate      Validate a skill directory
+  validate      Validate Agent Skills format conformance
+  audit         Audit authoring quality and recommend relevant patterns
+  design-evals  Validate and normalize evaluation scenarios
+  analyze       Map evaluation evidence to authoring patterns
+  full-eval     Orchestrate resumable behavioral evaluation
   trigger-eval  Run trigger-description evaluation
   aggregate     Aggregate behavioral benchmark runs
   review        Generate or serve the evaluation review viewer
@@ -103,15 +111,27 @@ ${help(name)}`);
     const stderr = (child.stderr ?? "").trimEnd();
     let code = rawCode === 0 ? 0 : rawCode === 2 ? 2 : 1;
     let payload = maybeJson(stdout);
-    if (name === "verify" && payload && typeof payload === "object" && "status" in payload) {
+    if ((name === "verify" || name === "full-eval" || name === "audit" || name === "design-evals" || name === "analyze") && payload && typeof payload === "object" && "status" in payload) {
         const status = payload.status;
-        code = status === "pass" ? 0 : status === "blocked" ? 3 : 1;
+        code = status === "pass" || status === "warning" || status === "complete" || status === "success" || status === "planned" ? 0 : status === "blocked" ? 3 : 1;
     }
     else if (name === "trigger-eval" && rawCode !== 0 && /(command not found|unsupported runner|exited \d+|timed? out)/i.test(stderr)) {
         // A valid evaluation that cannot use its configured execution backend is blocked.
         code = 3;
     }
-    if (parsed.format === "json") {
+    if (name === "full-eval" && payload && typeof payload === "object") {
+        if (parsed.format === "json") {
+            if (!parsed.quiet || code !== 0)
+                console.log(JSON.stringify(payload, null, 2));
+        }
+        else if (!parsed.quiet || code !== 0) {
+            const result = payload;
+            console.log([`full-eval: ${result.status}`, ...(result.phases ?? []).map((phase) => `[${phase.status}] ${phase.name}${phase.detail ? `: ${phase.detail}` : ""}`), ...(result.next_actions ?? []).map((action) => `NEXT: ${action}`)].join("\n"));
+        }
+        if (stderr)
+            console.error(stderr);
+    }
+    else if (parsed.format === "json") {
         console.log(JSON.stringify({ command: name, status: code === 0 ? "success" : code === 3 ? "blocked" : code === 2 ? "usage" : "failure", exit_code: code, output: payload, stderr: stderr || null }, null, 2));
     }
     else {

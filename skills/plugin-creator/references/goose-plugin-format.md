@@ -110,7 +110,7 @@ Map source concepts explicitly:
 | Source component | Goose target |
 |---|---|
 | Agent Skill / `SKILL.md` | `skills/<name>/SKILL.md` |
-| Codex/OpenAI plugin manifest | root `plugin.json` plus documented dependencies |
+| External plugin manifest | root `plugin.json` plus documented dependencies |
 | lifecycle hook | `hooks/hooks.json` + command script |
 | tool binding / connector | goose extension or MCP dependency |
 | static template / asset | keep with relevant Skill or plugin resource |
