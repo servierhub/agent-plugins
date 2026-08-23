@@ -1,212 +1,133 @@
 ---
 name: plugin-creator
-description: Orchestrates work at the complete Open Plugin package boundary. Use when plugin.json or the whole plugin is the target for creation, validation, cross-component evaluation, packaging, migration, or release. Do not use when the request targets only one Skill, hook, or custom agent.
+description: Orchestrates complete Open Plugin packages. Use when plugin.json or the whole plugin is the target for creation, validation, migration, evaluation, packaging, or release.
 ---
 
 # Plugin Creator
 
+Create production-ready Agent Plugins for Goose. Own package architecture, root `plugin.json`, portable MCP declarations, Goose extension integration, whole-package validation, installation, and packaging. Route component content to its specialist.
+
 ## Offline runtime
 
-Released distributions include compiled scripts and production dependencies under `vendor/node_modules`. Run scripts from `dist/`; consumer machines need Node.js but must not run `npm install` or require network access. A missing vendor dependency is a packaging defect: report it and rebuild with the repository's `scripts/prepare-offline-bundle.mjs`.
+Released distributions include compiled scripts and production dependencies under `vendor/node_modules`. Run utilities from `dist/`; consumers need Node.js but must not run `npm install` or require network access. Report a missing vendored dependency as a packaging defect.
 
+## Format baseline
 
-Create production-ready Goose/Open Plugins, not just example snippets.
+Read [goose-plugin-format.md](references/goose-plugin-format.md) and [portable-conformance.md](references/portable-conformance.md) before changing a package contract.
 
-## Evaluation mode has execution priority
+- Target published **Agent Plugins 1.0.0**: root `plugin.json`, optional `skills/`, and optional root `mcp.json`.
+- Emit canonical 1.0.0 schema identifiers in `plugin.json` and `mcp.json`.
+- Treat vendored **1.1.0 as an inactive Working Draft**. Do not generate or validate it as supported based on schema similarity.
+- Put new Goose hooks under `plugin.json.extensions["io.github.block.goose"]`, pointing to `extensions/io.github.block.goose/hooks.json`.
+- Treat root `hooks/hooks.json`, root `.mcp.json`, and inline `plugin.json.mcpServers` as legacy Goose inputs. Migrate explicitly; never emit legacy and canonical forms together.
 
-If the user's current request says evaluate, test, benchmark, compare, or prove a plugin/skill improvement, do not merely describe an evaluation protocol. Execute the Behavioral Evaluation Contract in this task: freeze the baseline, route modified components to their specialized creators, run paired behavior cases and plugin integration cases, grade them, run the official aggregator, and generate the viewer. A plan-only response fails the request unless the user explicitly requested only a plan.
+## Specialist routing
 
-Before packaging, delivery, or a claim that evaluation passed, verify the complete artifact receipt. If execution is impossible, return `evaluation: blocked`; never downgrade silently to static validation or an ad-hoc two-agent comparison.
+| Specialist | Invoke when | Required result |
+|---|---|---|
+| `agent-plugins:skill-creator` (fallback `skill-creator`) | Any bundled Skill is new or modified | Valid frontmatter, name/path consistency, focused instructions, and requested evaluation evidence |
+| `agent-plugins:hook-creator` (fallback `hook-creator`) | Any Goose hook rule or command changes | Hook validation, executable checks, and blocking-behavior review |
+| `agent-plugins:agent-creator` (fallback `agent-creator`) | Only for an explicit, separately supported custom-agent target | Valid agent and confirmed project/user installation path |
 
-Then run `dist/scripts/verify_plugin_gates.js` with one current skill receipt per bundled skill. The plugin gate verifies receipt hashes, integration thresholds, tests, offline distribution, archive identity, and human review. A plugin is release-eligible only when every required component and plugin gate passes.
+Current Goose custom agents live under `.agents/agents/`; do not claim a plugin `agents/` directory is portable or auto-installed. Load specialist instructions in the current context when possible. Delegate only disjoint files. If a specialist is unavailable, state the limitation and follow its recorded source rather than inventing a schema.
 
-Create production-ready Goose/Open Plugins, not just example snippets. Keep the scope strictly within `.agents/plugins`: use the skill creator for standalone `.agents/skills` and an agent creator for standalone `.agents/agents`. Prefer the smallest valid plugin architecture that satisfies the request.
+## Request modes
 
-## Skill Dependencies
-
-`plugin-creator` owns architecture, the plugin root, `plugin.json`, MCP declarations, cross-component validation, installation, and packaging. It never authors a bundled skill's internal content, a hook script's behavior, or a standalone agent's persona itself — that work is always routed to the specialized creator listed below, before implementing it.
-
-| Skill | When to invoke | Why | Success criteria before continuing |
-|---|---|---|---|
-| `agent-plugins:skill-creator` (fallback: standalone `skill-creator`) | Any new or modified bundled skill under `<plugin>/skills/` | `plugin-creator` does not own `SKILL.md` authoring quality, triggering-description tuning, or skill evaluation; `skill-creator` is the single source of truth for that | The bundled `SKILL.md` has valid frontmatter (`name` matches its directory, non-empty `description` under 1024 chars), passes `skill-creator`'s `quick_validate`, and — when the plugin ships more than one skill or a routing hub — has been checked for triggering overlap with sibling skills |
-| `agent-plugins:hook-creator` (fallback: standalone `hook-creator`) | Any new or modified `hooks/hooks.json` rule or hook command script | Hook event/matcher semantics, blocking behavior, and security review of executable hook commands are `hook-creator`'s domain, not `plugin-creator`'s | `hooks/hooks.json` passes `hook-creator`'s validator with no errors, every referenced script exists and is executable, and blocking events (`PreToolUse`, `Stop`) have been reviewed for unintended side effects |
-| `agent-plugins:agent-creator` (fallback: standalone `agent-creator`) | Only when the target host and plugin format explicitly support bundled custom-agent components — do not assume a plugin's `agents/` directory is auto-installed; current Goose custom agents are discovered from `.agents/agents`, not from a plugin | Persona/role definition quality and supported-frontmatter rules are `agent-creator`'s domain | The agent file passes `agent-creator`'s `validate_agent` and its installation path (project or user scope) has been explicitly confirmed with the user |
-
-**Dependency is task-scoped, not permanent.** A request to package, validate, or install an *entire* plugin always needs this routing (at minimum `skill-creator` if any skill is bundled). A request that only touches one component in isolation — e.g. "fix the wording in this one hook script" with no other plugin change — can stay entirely within the specialized creator without `plugin-creator` being involved at all; see that creator's own `SKILL.md` for when it works standalone.
-
-Prefer loading the creator instructions into the current context when assembling one plugin. Delegate only when component work is isolated into disjoint files, and never let multiple delegates modify the same plugin files concurrently.
-
-If a required creator is unavailable, state the limitation and follow its documented source of truth directly rather than inventing a schema.
-
-## Operational request matrix
-
-- **Static validation:** run both the canonical Agent Plugins schema validator and the Goose operational validator, plus each changed component validator.
-- **Package-only:** run static validation, create the archive, and verify archive identity; do not force behavioral evaluation.
-- **Whole-plugin evaluation:** run changed-component evaluations and executable plugin integration scenarios, then aggregate, generate static review HTML when needed, validate receipts, and run release gates.
-- **Changed Skill plus blocking hook:** use skill-creator behavioral evaluation, hook-creator safety tests, and integration cases that exercise their cross-component behavior.
-
-## Behavioral Evaluation Contract
-
-When plugin evaluation is explicitly requested, static validation is necessary but insufficient. Require a complete evaluation receipt from `skill-creator` for every behaviorally changed skill, plus plugin-level integration scenarios. Make every scenario autonomous: name the plugin current/baseline paths and integration eval set, declare `target.execution` as explain, dry-run, execute, or resume, copy immutable fixtures before mutation, freeze source provenance and assertions, and provide enough budget for all artifacts explicitly required. Graders must not fail outputs on hidden deliverables; add new criteria to the next iteration and rerun both variants.
-
-Completion requires:
-
-1. paired `with_skill` and `old_skill`/`without_skill` outputs;
-2. `grading.json` for every run with `text`, `passed`, and `evidence`;
-3. `timing.json`, using null with a reason when metrics are unavailable;
-4. plugin-level integration scenarios covering routing and cross-component handoffs;
-5. `aggregate_benchmark.js` generates the combined benchmark as `benchmark.json` and `benchmark.md`;
-6. a review viewer generated by `eval-viewer/generate_review.js`, either live or as static review HTML;
-7. a final receipt listing all artifacts and human-review status.
-
-If any required capability is unavailable, report `evaluation: blocked`. Never replace this pipeline with an ad-hoc comparison. If asked to “just run two subagents and call it official,” refuse the substitution, do not create custom agents, and run the official paired-run → grading → aggregation → viewer workflow instead. Do not package or release while the requested evaluation receipt is incomplete.
+- **Portable-load audit:** report what a conformant 1.0.0 loader accepts, ignores, or isolates. This is not authoring approval.
+- **Strict authoring:** apply schema, semantic, Goose operational, safety, and migration checks. This is the default.
+- **Package-only:** run strict validation, create the archive, and verify identity; do not force behavioral evaluation.
+- **Whole-plugin evaluation:** evaluate changed components and integration behavior, then aggregate, review, and gate release.
+- **Release:** require strict authoring plus applicable tests, receipts, archive checks, and human review.
 
 ## Workflow
 
-1. Determine the requested plugin behavior from concrete examples.
-   - Identify expected inputs.
-   - Identify expected outputs or side effects.
-   - Identify required external tools, MCP extensions, CLIs, APIs, or credentials.
-   - If these are already clear from the request or surrounding context, do not ask again.
+1. Derive behavior from concrete inputs, outputs, side effects, tools, credentials, and target hosts. Do not repeat questions answered by context.
+2. Classify the package as skills-only, MCP, Goose-extension, hybrid, or ported.
+3. Inventory portable components separately from Goose-specific and legacy inputs.
+4. Route each changed Skill or hook to its specialist before authoring it.
+5. For a new package run:
 
-2. Classify the plugin before creating files:
-   - **Skills-only plugin**: reusable instructions, workflows, references, templates, or helper scripts.
-   - **Hook plugin**: needs lifecycle automation such as blocking a tool call, formatting after edits, logging, notifications, or validation.
-   - **MCP plugin**: contributes one or more MCP server configurations.
-   - **Hybrid plugin**: combines Skills, hooks, and/or MCP servers.
-   - **Ported plugin**: adapts an existing plugin format to goose while preserving reusable content.
+   ```bash
+   node dist/scripts/cli.js init <plugin-directory>
+   ```
 
-3. Consult `references/goose-plugin-format.md` for the canonical directory layout, manifest rules, skill discovery, and installation commands.
+6. Keep only required resources: root `plugin.json`; `skills/<name>/SKILL.md`; root `mcp.json`; and, only when needed, `extensions/io.github.block.goose/hooks.json` plus command scripts.
+7. Document runtime prerequisites and credentials, but never package secrets.
+8. For ports, classify each item as `portable`, `adapt`, `replace`, or `unsupported`. Preserve behavior before deleting source metadata.
+9. Run both profiles:
 
-4. Route components to their specialized creators:
-   - load `agent-plugins:skill-creator` (or standalone `skill-creator`) before authoring bundled skills;
-   - load `agent-plugins:hook-creator` (or standalone `hook-creator`) before authoring hooks;
-   - load `agent-plugins:agent-creator` (or standalone `agent-creator`) only for an explicitly supported standalone-agent target.
+   ```bash
+   node dist/scripts/cli.js validate <plugin-directory> --mode portable-load --format json
+   node dist/scripts/cli.js validate <plugin-directory> --mode strict-authoring --format json
+   ```
 
-   Use the local references as a fallback, not as a replacement for routing when the specialized creator is available.
+10. Run specialist validation for changed Skills and hooks. Check paths, environment declarations, `${PLUGIN_ROOT}` references, and executable scripts.
+11. Package when requested:
 
-5. Create the plugin with `dist/scripts/init_goose_plugin.js` when starting from scratch. Do not hand-create the basic scaffold unless the script cannot be used.
+   ```bash
+   node dist/scripts/cli.js package <plugin-directory> [output.zip]
+   ```
 
-6. Implement only the resources needed:
-   - `plugin.json` at plugin root.
-   - `skills/<skill-name>/SKILL.md` for reusable Agent Skills.
-   - skill-local scripts, references, templates, or assets when they improve reliability.
-   - `hooks/hooks.json` plus `scripts/` only when lifecycle behavior is explicitly needed.
-   - `.mcp.json` or manifest `mcpServers` only when runtime tools are required.
-   - Do not invent a standalone custom agent, recipe, MCP server, or hook when a Skill is sufficient.
+12. Deliver the artifact, architecture, prerequisites, both validation results, migration notes, and install command.
 
-7. After loading `agent-plugins:skill-creator` or its standalone fallback, for every bundled Skill:
-   - Require YAML frontmatter with only `name` and `description`.
-   - Keep the name lowercase and concise.
-   - Write all Skill metadata and instructions in English.
-   - Make `description` concise and third person: state what the Skill does and when it activates.
-   - Write direct, imperative instructions in execution order.
-   - Distinguish required steps from conditional branches; move conditional or deep detail into directly linked references.
-   - Keep `SKILL.md` at or below 500 lines.
-   - Add explicit verification steps for deterministic workflows.
+## Portable MCP rules
 
-8. For external dependencies:
-   - Separate **plugin contents** from **runtime prerequisites**.
-   - Document required goose extensions/MCP servers, CLIs, environment variables, and credentials in the plugin README or relevant Skill.
-   - Never place secrets or credentials in the plugin.
-   - Do not imply a plugin manifest automatically installs an MCP extension unless current goose documentation explicitly supports that behavior.
+Use only root `mcp.json`, with canonical 1.0.0 MCP schema and an `mcpServers` object. Servers use explicit closed variants such as `stdio`, `streamable-http`, or legacy HTTP+SSE `sse`. Keep paths contained and do not package credentials in `env` or `headers`.
 
-9. For a port from another ecosystem:
-   - Inventory source manifests, skills, agents, hooks, scripts, assets, templates, and tool bindings.
-   - Preserve portable Agent Skills and generic assets whenever possible.
-   - Replace ecosystem-specific manifest locations with root `plugin.json`.
-   - Map source-specific tool names to goose capabilities or document the missing dependency.
-   - Remove unsupported metadata only after preserving any behavior it encoded elsewhere.
-   - Produce a compatibility table: `portable`, `adapt`, `replace`, or `unsupported`.
+When `.mcp.json` or inline `plugin.json.mcpServers` exists:
 
-10. Validate before delivery:
-    - Run `dist/scripts/validate_agent_plugin_schema.js <plugin-dir> --format json` for deterministic, offline Agent Plugins 1.0.0 schema conformance. This validates `plugin.json` and `mcp.json`/`.mcp.json` against the vendored canonical schema snapshot; it does not call an external validator or download schemas at runtime.
-    - Run `dist/scripts/validate_goose_plugin.js <plugin-dir>` for structural and Goose-specific operational checks.
-    - Validate JSON syntax for `plugin.json`, `hooks/hooks.json`, and `.mcp.json` when present.
-    - Validate every `SKILL.md` frontmatter and name/path consistency.
-    - Run the `agent-plugins:hook-creator` validator or its standalone fallback for hooks, then check hook event names and matcher syntax conservatively.
-    - Check MCP server commands, paths, environment declarations, and `${PLUGIN_ROOT}` references.
-    - Run or syntax-check bundled executable scripts when feasible.
-    - If the `goose` CLI is installed, additionally run the most relevant native validation/list/install smoke checks available without mutating unrelated user configuration.
+1. identify it as legacy and nonportable;
+2. block when multiple MCP sources coexist because precedence is undefined;
+3. propose migration only when it maps safely to closed portable variants;
+4. require approval before replacing it with `mcp.json`.
 
-12. Package the result with `dist/scripts/package_goose_plugin.js <plugin-dir> [output.zip]` when the user requests a distributable artifact.
+## Goose hook rules
 
-12. Deliver:
-    - the plugin archive or directory,
-    - a short architecture summary,
-    - runtime prerequisites,
-    - validation results,
-    - the install command, typically `goose plugin install <git-repository-url>` for a git-backed plugin, or the appropriate local plugin placement for local development.
+Hooks are client behavior, not portable core. New output uses:
 
-## Architecture Rules
-
-Prefer this minimal shape:
-
-```text
-my-plugin/
-├── plugin.json
-└── skills/
-    └── my-workflow/
-        └── SKILL.md
+```json
+{
+  "extensions": {
+    "io.github.block.goose": {
+      "version": 1,
+      "hooks": "extensions/io.github.block.goose/hooks.json"
+    }
+  }
+}
 ```
 
-Add hooks only when needed:
+This namespace is the repository's Goose adapter contract, not an upstream-ratified identifier. Validate hooks against the selected Goose source. Use `${PLUGIN_ROOT}` in package-relative command paths. Treat commands as executable code; review blocking events and fail closed on unsupported semantics. Root `hooks/hooks.json` is an input-only migration alias. If both forms exist, stop as ambiguous.
 
-```text
-my-plugin/
-├── plugin.json
-├── skills/
-│   └── my-workflow/
-│       └── SKILL.md
-├── hooks/
-│   └── hooks.json
-└── scripts/
-    └── hook-command.sh
+## Behavioral evaluation contract
+
+When asked to evaluate, test, benchmark, compare, or prove improvement, execute the official workflow. Freeze baseline provenance and fixtures. Require:
+
+1. paired `with_skill` and `old_skill`/`without_skill` outputs;
+2. `grading.json` with `text`, `passed`, and `evidence` for every run;
+3. `timing.json`, using null plus a reason when unavailable;
+4. plugin integration scenarios for routing and cross-component handoffs;
+5. official `benchmark.json` and `benchmark.md`;
+6. live or static review output;
+7. a final receipt with artifact hashes and human-review status.
+
+Never grade hidden deliverables; add criteria to the next iteration and rerun both variants. If a capability is missing, preserve artifacts and report `evaluation: blocked`. Never substitute an ad-hoc two-agent comparison.
+
+Start with:
+
+```bash
+node dist/scripts/cli.js full-eval <plugin-directory> --workspace <directory> --dry-run --format json
 ```
 
-Do not confuse these concepts:
+Follow returned commands and receipt paths, then rerun with `--resume`. Before a release claim, run `node dist/scripts/cli.js verify ...` with workflow-provided arguments. Ordered `next_actions` in a blocked result are authoritative.
 
-- **Plugin**: distribution/package boundary for reusable components.
-- **Skill**: on-demand procedural knowledge and reusable workflow.
-- **Hook**: event-driven local command executed by goose.
-- **Extension/MCP server**: runtime tool capability exposed to goose.
-- **Recipe**: reusable session/workflow configuration; do not add merely to package Skills.
-- **Custom agent**: reusable role/persona/configuration; do not add merely to package Skills.
+## Quality bar
 
-## Safety and Portability
+A deliverable is ready only when the 1.0.0 manifest is valid; portable components use fixed locations; Skills are useful and valid; referenced files exist and remain contained; Goose behavior is namespaced and host-validated; legacy conflicts are resolved; prerequisites are documented; no secrets are packaged; strict validation succeeds; and requested evaluation, packaging, and release gates pass.
 
-- Treat hook scripts as executable code and flag this clearly in plugin documentation.
-- Prefer portable shell/Python code; document platform-specific dependencies.
-- Use `${PLUGIN_ROOT}` inside hook commands for plugin-relative paths.
-- Do not use bare `*` as a hook matcher; matcher values are regular expressions. Omit the matcher to match all events or use `.*` intentionally.
-- Avoid network downloads during installation unless the user explicitly wants them and the mechanism is documented.
-- Never silently weaken security controls during a port.
+## Utilities
 
-## Quality Bar
-
-A plugin is ready only when:
-
-- `plugin.json` is valid and has `name`, `version`, and `description`.
-- At least one useful component exists (Skill, hook, and/or MCP server).
-- Every Skill has valid frontmatter and coherent instructions.
-- Every referenced file exists.
-- Hook scripts referenced by `hooks/hooks.json` exist.
-- Runtime prerequisites are explicit.
-- No unresolved placeholder or example files remain unless intentionally part of a template.
-- Validation succeeds.
-
-## Full-eval agent protocol
-
-For whole-plugin evaluation, run `plugin-creator full-eval <plugin> --workspace <dir> --dry-run --format json` first. Follow the returned component commands exactly; they identify each bundled Skill source and its expected receipt. Do not claim that an LLM evaluation ran unless an external evaluator produced the receipt and integration artifacts. Rerun with `--resume`; the orchestrator reuses current artifacts, packages only after prerequisites are present, and always invokes plugin release verification. A blocked envelope's ordered `next_actions` is the authoritative handoff, including missing integration benchmark/viewer and pending human review.
-
-## Bundled Utilities
-
-- `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, `package`, and deterministic `full-eval` CLI.
-- `dist/scripts/init_goose_plugin.js`: create a minimal goose plugin scaffold.
-- `dist/scripts/validate_agent_plugin_schema.js`: validate `plugin.json` and MCP configuration against the vendored Agent Plugins 1.0.0 schemas, with text, JSON, and quiet CI modes.
-- `dist/scripts/validate_goose_plugin.js`: statically validate manifest, Skills, hooks, MCP servers, and references.
-- `dist/scripts/package_goose_plugin.js`: validate then create a distributable ZIP.
-- `references/goose-plugin-format.md`: canonical Goose plugin layout and installation model.
-- `references/goose-hooks.md`: lifecycle hooks format and safe patterns.
-- `evals/evals.json`: autonomous validation, packaging, comparison, protocol-refusal, and resumable-evaluation scenarios.
-- `assets/evaluation-fixtures/`: immutable valid, operationally invalid, package-ready, multi-component, and partial-workspace fixtures.
+- `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, `package`, and `full-eval` interface.
+- `references/goose-plugin-format.md`: layouts, schemas, Goose namespace, and migrations.
+- `references/portable-conformance.md`: load, authoring, and release semantics.
+- `references/goose-hooks.md`: recorded Goose hook behavior.
+- `evals/evals.json` and `assets/evaluation-fixtures/`: official scenarios and fixtures.
