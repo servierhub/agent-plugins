@@ -221,7 +221,8 @@ export function auditPluginMigration(rootArg) {
             add(findings, d.path, "unsupported", "Multiple incompatible document rewrites were proposed.", true);
     }
     const fs = unique(findings).sort((a, b) => a.artifact.localeCompare(b.artifact) || a.classification.localeCompare(b.classification));
-    return { root, mode: "dry-run", status: fs.some(x => x.blocking) ? "blocked" : "ready", findings: fs, proposedMoves, proposedDocuments: cleanDocs, changed: [] };
+    const blocked = fs.some(x => x.blocking);
+    return { root, mode: "dry-run", status: blocked ? "blocked" : "ready", findings: fs, proposedMoves: blocked ? [] : proposedMoves, proposedDocuments: blocked ? [] : cleanDocs, changed: [] };
 }
 function backup(root, rel, backupRoot) { const src = join(root, rel); if (!existsSync(src))
     return; const dst = join(backupRoot, rel); mkdirSync(dirname(dst), { recursive: true }); const s = lstatSync(src); if (s.isDirectory())
@@ -234,7 +235,7 @@ export function migratePlugin(rootArg, options = {}) { const report = auditPlugi
     report.status = "blocked";
     return report;
 } if (report.status === "blocked")
-    return report; const stamp = new Date().toISOString().replace(/[:.]/g, "-"); const backupRoot = resolve(options.backupDirectory ?? join(report.root, ".plugin-migration-backups", stamp)); const bc = resolveContainedPath(report.root, backupRoot, { expectedKind: "missing" }); if (!bc.contained || bc.kindOutcome !== "match") {
+    return report; const stamp = new Date().toISOString().replace(/[:.]/g, "-"); const backupRoot = options.backupDirectory ? (isAbsolute(options.backupDirectory) ? resolve(options.backupDirectory) : resolve(report.root, options.backupDirectory)) : join(report.root, ".plugin-migration-backups", stamp); const bc = resolveContainedPath(report.root, backupRoot, { expectedKind: "missing" }); if (!bc.contained || bc.kindOutcome !== "match") {
     add(report.findings, "backup", "unsupported", "Backup directory must be a new path inside the plugin root.", true);
     report.status = "blocked";
     return report;
