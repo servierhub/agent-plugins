@@ -44,7 +44,7 @@ Current Goose custom agents live under `.agents/agents/`; do not claim a plugin 
 1. Derive behavior from concrete inputs, outputs, side effects, tools, credentials, and target hosts. Do not repeat questions answered by context.
 2. Classify the package as skills-only, MCP, Goose-extension, hybrid, or ported.
 3. Inventory portable components separately from Goose-specific and legacy inputs.
-4. Route each changed Skill or hook to its specialist before authoring it.
+4. Route each changed Skill or hook to its specialist before authoring it. For evaluation, do not stop after describing that route: execute or consume the specialist's complete paired evidence and receipt before declaring the plugin evaluation complete.
 5. For a new package run:
 
    ```bash

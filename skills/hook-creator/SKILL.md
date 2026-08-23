@@ -72,6 +72,7 @@ When invoked from `plugin-creator`, return a validated hook component that can b
 
 5. Configure each rule:
    - `matcher` is an optional regular expression, not a glob;
+   - anchor a matcher intended for one exact tool name, for example `^developer__shell$`; an unanchored `developer__shell` also matches containing names;
    - omit it to match every event or use `.*` intentionally;
    - never use bare `*`;
    - use only the `command` action type currently supported by Goose;
@@ -93,10 +94,11 @@ When invoked from `plugin-creator`, return a validated hook component that can b
 
    Unexpected failures and timeouts fail open. Do not rely on an ordinary non-zero exit to block.
 
-8. Validate the plugin hook component:
+8. Validate the plugin hook component with the official bundled validator, not a custom substitute, and preserve its output plus executable-file evidence:
 
    ```bash
    node <hook-creator>/dist/scripts/validate_hook.js <plugin-dir>
+   test -x <plugin-dir>/scripts/<handler>
    ```
 
 9. Test handlers with representative payloads. Check both matching and non-matching cases, allow and deny cases for blocking hooks, missing optional fields, malformed input, and absent external dependencies. Evaluation scenarios must name the plugin fixture and payload paths, declare `target.execution`, copy immutable fixtures to a sandbox before mutation, and freeze assertions before execution. A safety grader must use observed exit codes, stdout/stderr, matcher, and executable-path evidence; it must not invent hidden criteria after the run.
