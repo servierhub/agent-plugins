@@ -52,6 +52,11 @@ test("documentation prioritizes open-format adoption and a verified host integra
   assert.ok(readme.includes("**runtime-agnostic by format**"));
   assert.ok(readme.includes("Verified host integration"));
   assert.ok(readme.includes("Agentic AI Foundation"));
+  for (const proof of ["## What you can do", "## See it in action", "paired A/B runs", "with_skill", "old_skill", "without_skill", "benchmark.json", "benchmark.md", "review.html"]) {
+    assert.ok(readme.includes(proof), `README missing demonstrated value: ${proof}`);
+  }
+  assert.ok(readme.indexOf("## What you can do") < readme.indexOf("## Quick start"), "value must precede installation");
+  assert.ok(readme.indexOf("## See it in action") < readme.indexOf("## Quick start"), "examples must precede installation");
   assert.ok(readme.includes(`Distribution | \`${manifest.version}\``), "README distribution version must match plugin.json");
   assert.ok(readme.includes("goose plugin install https://github.com/servierhub/agent-plugins.git"));
   assert.ok(!readme.split("\n").some((line) => line.includes("goose plugin install") && line.includes("bioinfornatics/agent-plugins")));

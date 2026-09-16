@@ -15,11 +15,53 @@ This distribution provides four guided creators for [Agent Skills](https://agent
 | Creator runtime | Node.js `22+` |
 | License | [CeCILL-C](LICENSE) |
 
+## What you can do
+
+Turn a concrete need into an agent capability, then prove whether it helps:
+
+- **Create** portable Agent Skills and complete plugins from guided requirements instead of hand-writing fragile package structures.
+- **Apply good practices** for concise instructions, progressive disclosure, safe paths, portable manifests, and explicit host adapters.
+- **Validate** schemas, structure, references, packaging, and host-specific behavior before distribution.
+- **Evaluate performance with paired A/B runs**: compare `with_skill` against an `old_skill` or `without_skill` baseline on the same scenarios.
+- **Inspect a visual report** that combines outputs, grading evidence, timing, benchmark summaries, regressions, and reviewer feedback.
+- **Improve from evidence**: revise weak instructions, rerun the same cases, and compare iterations without claiming gains that were not measured.
+
+The goal is not merely to generate files. It is to produce maintainable capabilities with traceable evidence from idea to release.
+
+## See it in action
+
+### Create a Skill with good practices
+
+> Use `agent-plugins:skill-creator` to create `.agents/skills/api-review`. It should review an OpenAPI diff for breaking changes and produce a concise Markdown report. Keep the Skill portable, apply progressive disclosure, add realistic evaluation cases, validate every reference, and show the resulting files.
+
+**Expected outcome:** a valid `SKILL.md`, only the supporting resources the workflow needs, and explicit validation or evaluation gaps.
+
+### Create and validate a complete plugin
+
+> Use `agent-plugins:plugin-creator` to create `./release-assistant` with a portable Skill for drafting release notes. Keep the portable core compliant with Agent Plugins 1.0.0, isolate any host-specific behavior, validate in portable-load and strict-authoring modes, and show the package before writing a release archive.
+
+**Expected outcome:** a valid `plugin.json`, portable components in fixed locations, separate host adapters when required, and a reviewable validation result before packaging.
+
+### A/B test a Skill and understand improvements
+
+> Use `agent-plugins:skill-creator` to evaluate `.agents/skills/api-review` against its previous version. Run the same realistic scenarios with the current Skill and the old Skill, grade both variants using explicit evidence, aggregate the benchmark, generate the static HTML review, identify regressions and trade-offs, and recommend only evidence-backed improvements.
+
+The evaluation workspace preserves paired `with_skill` and `old_skill`/`without_skill` outputs. It produces `benchmark.json`, `benchmark.md`, and an HTML review such as `review.html`. Open the HTML file in a browser to inspect outputs and grading side by side. The analysis should explain:
+
+- which assertions improved, regressed, or remained inconclusive;
+- whether quality gains trade off against time or token use;
+- which instruction or example likely caused each difference;
+- what to change next and which unchanged scenarios must be rerun.
+
+A complete report does not guarantee improvement: results remain `pass`, `fail`, `blocked`, or `na`, and missing evidence never becomes a positive claim.
+
 ## Contents
 
-- [Quick start](#quick-start)
+- [What you can do](#what-you-can-do)
+- [See it in action](#see-it-in-action)
 - [Choose your path](#choose-your-path)
 - [Choose the right creator](#choose-the-right-creator)
+- [Quick start](#quick-start)
 - [How-to guides](#how-to-guides)
 - [Installation and updates](#installation-and-updates)
 - [Validation and evaluation](#validation-and-evaluation)
@@ -28,6 +70,25 @@ This distribution provides four guided creators for [Agent Skills](https://agent
 - [Component reference](#component-reference)
 - [Contributing](#contributing)
 - [Project information](#project-information)
+
+## Choose your path
+
+- **Create a portable Skill:** start with [Create a Skill with good practices](#create-a-skill-with-good-practices), then install `skill-creator` through a compatible host or as a standalone Skill.
+- **Measure whether a Skill helps:** use [A/B test a Skill](#ab-test-a-skill-and-understand-improvements) to compare paired outputs and inspect the visual report.
+- **Build or migrate a plugin:** use `plugin-creator` for manifests, MCP, packaging, integration evaluation, and release decisions.
+- **Create host-specific behavior:** use `agent-creator` or `hook-creator`; these outputs are explicitly labeled as Goose-specific today.
+- **Contribute to this repository:** follow [Contributing](#contributing).
+
+## Choose the right creator
+
+| I want to… | Creator | Output portability |
+|---|---|---|
+| Create, improve, or A/B evaluate one Agent Skill | `agent-plugins:skill-creator` | Open Agent Skills format |
+| Create or evaluate a custom agent | `agent-plugins:agent-creator` | Goose custom-agent format |
+| Create or validate a lifecycle hook | `agent-plugins:hook-creator` | Goose extension in a plugin |
+| Create, migrate, validate, evaluate, or release a plugin | `agent-plugins:plugin-creator` | Portable core plus explicit host adapters |
+
+Use the unqualified names—such as `skill-creator`—when a creator is installed standalone. A productive request names one deliverable, its destination, user outcome, constraints, and success criteria.
 
 ## Quick start
 
@@ -58,25 +119,6 @@ Success means Goose resolves the qualified creator and asks for or explains the 
 > Use `agent-plugins:skill-creator` to create `.agents/skills/markdown-summary`. It should summarize one Markdown file into key decisions and open questions. Keep the Skill portable, validate it, and show me the files created and any evidence still required.
 
 A successful run creates at least `.agents/skills/markdown-summary/SKILL.md`, validates its format, and reports either completed evaluation evidence or an explicit `evaluation: blocked` state. Additional references, scripts, or evaluations are created only when the behavior needs them.
-
-## Choose your path
-
-- **Use all four creators:** install the ServierHub distribution; Goose is the host integration verified by this repository.
-- **Create one portable Skill:** use `skill-creator`; the resulting `SKILL.md` follows the open Agent Skills format.
-- **Maintain or migrate a plugin:** use `plugin-creator` for manifest, MCP, packaging, and whole-plugin decisions.
-- **Create Goose-specific behavior:** use `agent-creator` or `hook-creator`; these outputs are explicitly host-specific.
-- **Contribute to this repository:** follow [Contributing](#contributing).
-
-## Choose the right creator
-
-| I want to… | Creator | Output portability |
-|---|---|---|
-| Create, improve, or evaluate one Agent Skill | `agent-plugins:skill-creator` | Open Agent Skills format |
-| Create or evaluate a custom agent | `agent-plugins:agent-creator` | Goose custom-agent format |
-| Create or validate a lifecycle hook | `agent-plugins:hook-creator` | Goose extension in a plugin |
-| Create, migrate, validate, evaluate, or release a plugin | `agent-plugins:plugin-creator` | Portable core plus explicit host adapters |
-
-Use the unqualified names—such as `skill-creator`—when a creator is installed standalone. A productive request names one deliverable, its destination, user outcome, constraints, and success criteria.
 
 ## How-to guides
 
