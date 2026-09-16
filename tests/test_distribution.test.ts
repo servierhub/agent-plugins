@@ -45,11 +45,15 @@ test("plugin-creator routes to qualified names with fallbacks", () => {
   }
 });
 
-test("documentation recommends plugin install", () => {
+test("documentation prioritizes adoption and recommends plugin install", () => {
   const readme = readFileSync(join(ROOT, "README.md"), "utf-8");
+  assert.ok(readme.startsWith("[![Servier Powered]"), "Servier badge must be the first README element");
   assert.ok(
     readme.includes("goose plugin install https://github.com/bioinfornatics/agent-plugins.git")
   );
+  for (const section of ["## Contents", "## Start here", "## Choose the right creator", "## Usage examples", "## Installation options"]) {
+    assert.ok(readme.includes(section), `README missing adoption section: ${section}`);
+  }
   for (const name of EXPECTED_SKILLS) {
     assert.ok(readme.includes(`${PLUGIN_NAME}:${name}`));
   }
