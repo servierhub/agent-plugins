@@ -45,14 +45,16 @@ test("plugin-creator routes to qualified names with fallbacks", () => {
   }
 });
 
-test("documentation prioritizes runtime-agnostic adoption and a tested reference path", () => {
+test("documentation prioritizes open-format adoption and a verified host integration", () => {
   const readme = readFileSync(join(ROOT, "README.md"), "utf-8");
   const manifest = JSON.parse(readFileSync(join(ROOT, "plugin.json"), "utf-8"));
   assert.ok(readme.startsWith("[![Servier Powered]"), "Servier badge must be the first README element");
-  assert.ok(readme.includes("**runtime-agnostic**"));
-  assert.ok(readme.includes("tested reference runtime"));
+  assert.ok(readme.includes("**runtime-agnostic by format**"));
+  assert.ok(readme.includes("Verified host integration"));
+  assert.ok(readme.includes("Agentic AI Foundation"));
   assert.ok(readme.includes(`Distribution | \`${manifest.version}\``), "README distribution version must match plugin.json");
-  assert.ok(readme.includes("goose plugin install https://github.com/bioinfornatics/agent-plugins.git"));
+  assert.ok(readme.includes("goose plugin install https://github.com/servierhub/agent-plugins.git"));
+  assert.ok(!readme.split("\n").some((line) => line.includes("goose plugin install") && line.includes("bioinfornatics/agent-plugins")));
   for (const section of [
     "## Quick start",
     "## Choose your path",

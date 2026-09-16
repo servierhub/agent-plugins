@@ -4,14 +4,14 @@
 
 Build, improve, validate, evaluate, and package agent capabilities without tying their portable core to one runtime.
 
-This distribution provides four guided creators for [Agent Skills](https://agentskills.io/specification), custom agents, hooks, and complete [Agent Plugins](https://agent-plugins.org/). Portable artifacts follow open specifications and are **runtime-agnostic**. Runtime-specific behavior is isolated and identified explicitly. [Goose](https://block.github.io/goose/) is the tested reference runtime—not a required proprietary format or the only possible host.
+This distribution provides four guided creators for [Agent Skills](https://agentskills.io/specification), custom agents, hooks, and complete [Agent Plugins](https://agent-plugins.org/). Its portable outputs follow open Agent Skills and Agent Plugins specifications and are **runtime-agnostic by format**. Runtime-specific outputs are isolated and labeled explicitly. The integration suite is tested with [Goose](https://block.github.io/goose/), an open-source [Agentic AI Foundation](https://aaif.io/) project. Compatibility with another host depends on that host implementing the relevant specification and has not been verified by this repository unless stated.
 
 | Status | Value |
 |---|---|
 | Distribution | `0.5.0` |
 | Portable plugin target | Agent Plugins `1.0.0` |
 | Portable skill target | Agent Skills |
-| Tested reference runtime | Goose `1.47.0` |
+| Verified host integration | Goose `1.47.0` |
 | Creator runtime | Node.js `22+` |
 | License | [CeCILL-C](LICENSE) |
 
@@ -33,14 +33,14 @@ This distribution provides four guided creators for [Agent Skills](https://agent
 
 ### 1. Check the requirements
 
-You need a compatible agent host and Node.js 22 or later. The creators are distributed with compiled scripts and vendored runtime dependencies; consumers must not run `npm install` inside an installed release.
+The creator utilities require Node.js 22 or later. To load them through an agent, use a host that implements the relevant Agent Skills or Agent Plugins specification. The distribution includes compiled scripts and vendored runtime dependencies; consumers must not run `npm install` inside an installed release.
 
-Any host implementing the open Agent Skills or Agent Plugins formats can consume the corresponding portable artifacts. Host discovery and installation commands differ. The commands below use Goose because this repository tests that integration end to end.
+Host discovery and installation commands differ. This repository verifies the complete integration with Goose. Other hosts may load the portable outputs when they implement the corresponding specification, but this repository does not claim untested host compatibility.
 
-### 2. Install with the tested Goose adapter
+### 2. Install the ServierHub distribution with the verified Goose integration
 
 ```bash
-goose plugin install --auto-update https://github.com/bioinfornatics/agent-plugins.git
+goose plugin install --auto-update https://github.com/servierhub/agent-plugins.git
 ```
 
 Omit `--auto-update` if you want to approve updates manually.
@@ -61,7 +61,7 @@ A successful run creates at least `.agents/skills/markdown-summary/SKILL.md`, va
 
 ## Choose your path
 
-- **Use all four creators:** install the complete plugin with a compatible host; the Goose command above is the tested path.
+- **Use all four creators:** install the ServierHub distribution; Goose is the host integration verified by this repository.
 - **Create one portable Skill:** use `skill-creator`; the resulting `SKILL.md` follows the open Agent Skills format.
 - **Maintain or migrate a plugin:** use `plugin-creator` for manifest, MCP, packaging, and whole-plugin decisions.
 - **Create Goose-specific behavior:** use `agent-creator` or `hook-creator`; these outputs are explicitly host-specific.
@@ -131,16 +131,16 @@ node skills/plugin-creator/dist/scripts/cli.js validate <plugin-directory> --mod
 
 ## Installation and updates
 
-### Complete plugin in Goose—tested reference path
+### Complete plugin with Goose—verified integration
 
 ```bash
-goose plugin install --auto-update https://github.com/bioinfornatics/agent-plugins.git
+goose plugin install --auto-update https://github.com/servierhub/agent-plugins.git
 ```
 
 For an installation without automatic updates:
 
 ```bash
-goose plugin install https://github.com/bioinfornatics/agent-plugins.git
+goose plugin install https://github.com/servierhub/agent-plugins.git
 goose plugin update agent-plugins
 ```
 
@@ -148,14 +148,14 @@ Goose 1.47.0 provides `plugin install` and `plugin update`, but no plugin uninst
 
 ### Other compatible hosts
 
-Use the host's documented Agent Skills or Agent Plugins installation mechanism. There is intentionally no invented universal command: the portable file formats are shared, while discovery and lifecycle management belong to each host. Qualified creator names are a host presentation detail and may differ.
+Use the host's documented Agent Skills or Agent Plugins installation mechanism. There is intentionally no invented universal command: the file formats are open, while discovery and lifecycle management belong to each host. A host respecting a specification can consume the corresponding portable surface, but support must be verified per host and per component. Qualified creator names are a host presentation detail and may differ.
 
 ### One standalone creator from a source checkout
 
-Clone the canonical repository, then copy the self-contained creator directory:
+Clone the ServierHub distribution, then copy the self-contained creator directory:
 
 ```bash
-git clone https://github.com/bioinfornatics/agent-plugins.git
+git clone https://github.com/servierhub/agent-plugins.git
 cd agent-plugins
 mkdir -p ~/.agents/skills
 cp -R skills/skill-creator ~/.agents/skills/skill-creator
@@ -190,7 +190,7 @@ scenarios → paired isolated runs → grading → benchmark → review → rele
 | Evaluation reports `blocked` | Supply the requested model run, grading, timing, test, or human-review evidence, then resume the workflow. |
 | Portable and Goose behavior seem inconsistent | Check whether the resource is portable core, a Goose-specific adapter, or a legacy migration input. |
 
-Report reproducible defects in the [canonical issue tracker](https://github.com/bioinfornatics/agent-plugins/issues).
+Report reproducible defects in the [upstream issue tracker](https://github.com/bioinfornatics/agent-plugins/issues); the ServierHub fork does not maintain a separate issue queue.
 
 ## Formats, portability, and security
 
@@ -244,12 +244,13 @@ npm run test:offline
 
 ## Project information
 
-- Canonical development, issues, and releases: <https://github.com/bioinfornatics/agent-plugins>
-- Servier Open Source Hub showcase fork: <https://github.com/servierhub/agent-plugins>
-- Agent Skills specification: <https://agentskills.io/specification>
-- Agent Plugins specification: <https://agent-plugins.org/>
+- Servier Open Source Hub distribution: <https://github.com/servierhub/agent-plugins>
+- Upstream source repository: <https://github.com/bioinfornatics/agent-plugins>
+- Agent Skills open specification: <https://agentskills.io/specification>
+- Agent Plugins open specification: <https://agent-plugins.org/>
+- Agentic AI Foundation: <https://aaif.io/>
 - Goose documentation: <https://goose-docs.ai/>
 - Distribution manifest: [`plugin.json`](plugin.json)
 - License: [CeCILL-C](LICENSE)
 
-Install from and report issues to the canonical repository. The ServierHub repository showcases the project in the Servier Open Source Hub and may carry presentation commits before they are proposed upstream.
+Install this Servier distribution from `servierhub/agent-plugins`. It is a public fork of the upstream source repository and may carry Servier-specific presentation or release commits.
