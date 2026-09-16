@@ -4,12 +4,16 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const creatorNames = ["skill-creator", "agent-creator", "hook-creator", "plugin-creator"];
+const capabilityContractRoot = path.join(root, "contracts", "capability-contract");
 
 function run(args, cwd = root) {
   const result = spawnSync(process.execPath, args, { cwd, stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
+
+console.log("\n> Testing capability contract");
+run([path.join(capabilityContractRoot, "scripts", "test.mjs")], capabilityContractRoot);
 
 for (const name of creatorNames) {
   const creatorRoot = path.join(root, "skills", name);

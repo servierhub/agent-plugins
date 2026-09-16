@@ -1,0 +1,37 @@
+{
+  "name": "@agent-plugins/capability-contract",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema/1.0.0": "./schema/1.0.0/capability-contract.schema.json",
+    "./evaluation-schema/1.0.0": "./schema/1.0.0/evaluation-plan.schema.json",
+    "./result-schema/1.0.0": "./schema/1.0.0/result-contract.schema.json",
+    "./host-adapter-schema/1.0.0": "./schema/1.0.0/host-execution-adapter.schema.json",
+    "./host-event-schema/1.0.0": "./schema/1.0.0/host-execution-event.schema.json"
+  },
+  "files": [
+    "dist",
+    "schema",
+    "SPECIFICATION.md",
+    "EVALUATION_PLAN_SPECIFICATION.md",
+    "RESULT_SPECIFICATION.md",
+    "PRODUCER_INVENTORY_SPECIFICATION.md",
+    "HOST_ADAPTER_SPECIFICATION.md",
+    "fixtures/result",
+    "fixtures/host-adapter"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ajv": "^8.20.0",
+    "typescript": "^5.3.0"
+  }
+}

@@ -55,6 +55,37 @@ try {
     throw new Error("Archive contains development node_modules outside vendor/");
   }
   for (const required of [
+    "contracts/capability-contract/schema/1.0.0/capability-contract.schema.json",
+    "contracts/capability-contract/schema/1.0.0/evaluation-plan.schema.json",
+    "contracts/capability-contract/schema/1.0.0/result-contract.schema.json",
+    "contracts/capability-contract/schema/1.0.0/host-execution-adapter.schema.json",
+    "contracts/capability-contract/schema/1.0.0/host-execution-event.schema.json",
+    "contracts/capability-contract/EVALUATION_PLAN_SPECIFICATION.md",
+    "contracts/capability-contract/HOST_ADAPTER_SPECIFICATION.md",
+    "contracts/capability-contract/RESULT_SPECIFICATION.md",
+    "contracts/capability-contract/PRODUCER_INVENTORY_SPECIFICATION.md",
+    "contracts/capability-contract/fixtures/result/producer-inventory.json",
+    "contracts/capability-contract/fixtures/result/expected-consumer-fields.json",
+    "contracts/capability-contract/fixtures/result/valid/pending-human-review-mappings.json",
+    "contracts/capability-contract/dist/evaluation.js",
+    "contracts/capability-contract/dist/evaluation.d.ts",
+    "contracts/capability-contract/dist/evaluation-types.js",
+    "contracts/capability-contract/dist/evaluation-types.d.ts",
+    "contracts/capability-contract/dist/index.js",
+    "contracts/capability-contract/dist/index.d.ts",
+    "contracts/capability-contract/dist/host-adapter.js",
+    "contracts/capability-contract/dist/host-adapter.d.ts",
+    "contracts/capability-contract/dist/host-adapter-types.js",
+    "contracts/capability-contract/dist/host-adapter-types.d.ts",
+    "contracts/capability-contract/dist/fake-host-adapter.js",
+    "contracts/capability-contract/dist/fake-host-adapter.d.ts",
+    "contracts/capability-contract/fixtures/host-adapter/successful-stream.jsonl",
+    "contracts/capability-contract/dist/result.js",
+    "contracts/capability-contract/dist/result.d.ts",
+    "contracts/capability-contract/dist/result-types.js",
+    "contracts/capability-contract/dist/result-types.d.ts",
+    "contracts/capability-contract/fixtures/result/valid/completed-pass-pending.json",
+    "contracts/capability-contract/SPECIFICATION.md",
     "skills/skill-creator/dist/scripts/quick_validate.js",
     "skills/skill-creator/vendor/node_modules/js-yaml/package.json",
     "skills/skill-creator/vendor/node_modules/adm-zip/package.json",
@@ -72,6 +103,10 @@ try {
   ]) {
     if (!existsSync(path.join(plugin, required))) throw new Error(`Missing offline artifact: ${required}`);
   }
+
+  const contractIndex = path.join(plugin, "contracts", "capability-contract", "dist", "index.js");
+  const contractProbe = `import { mapLegacyStatus, classifyResultExit, FakeHostAdapter, HOST_ADAPTER_PROTOCOL_VERSION } from ${JSON.stringify(contractIndex)}; const mapped = mapLegacyStatus({ creator: "skill-creator", context: "skill-receipt-status", token: "complete" }); if (!mapped.ok || mapped.mapping.result.approval.state !== "not-applicable") throw new Error("offline legacy mapping failed"); const exit = classifyResultExit({ schemaVersion: "1.0.0", operation: { state: "completed" }, evaluation: { applicable: true, verdict: "pass" }, evidence: { applicable: true, availability: "available" }, approval: { applicable: true, state: "pending", context: "production-review" } }); if (exit.code !== 4) throw new Error("offline exit mapping failed"); const adapter = new FakeHostAdapter(); const negotiation = await adapter.discover({ supportedProtocolVersions: [HOST_ADAPTER_PROTOCOL_VERSION], capabilities: { required: [{ capability: "streaming" }], optional: [{ capability: "browser" }] } }); if (!negotiation.compatible || negotiation.degradations[0]?.capability !== "browser") throw new Error("offline host adapter negotiation failed");`;
+  run("--input-type=module", ["--eval", contractProbe]);
 
   run(path.join(plugin, "skills", "skill-creator", "dist", "scripts", "quick_validate.js"), [path.join(plugin, "skills", "skill-creator")]);
   const skillOut = path.join(tmp, "skill-out");

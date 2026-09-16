@@ -260,6 +260,7 @@ See [portable conformance](skills/plugin-creator/references/portable-conformance
 
 ## Component reference
 
+- [Shared capability contracts](contracts/capability-contract/SPECIFICATION.md)—portable capability, evaluation, result, and [host execution adapter](contracts/capability-contract/HOST_ADAPTER_SPECIFICATION.md) protocols.
 - [Skill Creator](skills/skill-creator/README.md)—portable Agent Skills authoring and evaluation.
 - [Plugin Creator](skills/plugin-creator/README.md)—portable package boundaries, validation, migration, and release.
 - [Agent Creator](skills/agent-creator/README.md)—Goose custom-agent definitions.
@@ -270,6 +271,7 @@ See [portable conformance](skills/plugin-creator/references/portable-conformance
 Contributor dependency installation is separate from end-user installation. From the repository root, these copy/paste-safe subshell commands preserve the working directory:
 
 ```bash
+(cd contracts/capability-contract && npm install && npm run build && npm test) # capability, evaluation-plan, result-state, and host-adapter contracts
 (cd skills/agent-creator && npm install && npm run build && npm test)
 (cd skills/hook-creator && npm install && npm run build && npm test)
 (cd skills/plugin-creator && npm install && npm run build && npm test)
