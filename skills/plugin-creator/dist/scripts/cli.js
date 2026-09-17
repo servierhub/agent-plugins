@@ -5,12 +5,13 @@ import { fileURLToPath } from "node:url";
 import { validate } from "./validate_goose_plugin.js";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { fullEval } from "./full_eval.js";
+import { runCiEval } from "./ci_eval.js";
 import { renderCiProgress, renderHistoricalReview, renderMachineJsonl, renderTerminalProgress } from "./progress_projections.js";
 import { replayExecutionEvents } from "./execution_event_stream.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval|ci-eval> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nci-eval options:\n  --config FILE        Provider-neutral, non-interactive CI configuration\n\nCI exit codes: 0 success, 1 evaluation failure, 2 invalid config, 3 blocked capability/evidence, 4 pending approval.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -155,11 +156,19 @@ async function runFullEval(o) {
 export async function runCli(argv) { const [command, ...raw] = argv; if (!command || command === "--help" || command === "-h") {
     console.log(HELP);
     return 0;
-} if (!["init", "validate", "migrate", "verify", "package", "full-eval"].includes(command))
+} if (!["init", "validate", "migrate", "verify", "package", "full-eval", "ci-eval"].includes(command))
     return usage("Unknown command: " + command); const o = parseCommon(raw); if (typeof o === "string")
     return usage(o); if (o.help) {
     console.log(HELP);
     return 0;
+} if (command === "ci-eval") {
+    const i = o.args.indexOf("--config"), path = i >= 0 ? o.args[i + 1] : undefined;
+    if (!path || o.args.length !== 2)
+        return usage("ci-eval requires --config FILE");
+    const result = await runCiEval(resolve(path));
+    if (!o.quiet)
+        console.log(JSON.stringify(result, null, 2));
+    return result.exit_code;
 } if (command === "validate")
     return runValidate(o); if (command === "migrate")
     return runMigrate(o); if (command === "verify")

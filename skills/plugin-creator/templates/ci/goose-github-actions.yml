@@ -1,0 +1,20 @@
+name: plugin evaluation
+on: [pull_request]
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Evaluate shipped distribution without installing or building
+        env:
+          PROVIDER_API_KEY: ${{ secrets.PROVIDER_API_KEY }}
+          GOOSE_CI_VERIFIED_MODELS: evaluation-model
+        run: |
+          cp skills/plugin-creator/templates/ci/plugin-creator-ci.json .plugin-ci.json
+          node skills/plugin-creator/dist/scripts/cli.js ci-eval --config .plugin-ci.json --format json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: plugin-evaluation
+          path: evaluations/ci/ci-archive

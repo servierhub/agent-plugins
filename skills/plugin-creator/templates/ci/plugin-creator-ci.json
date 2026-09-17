@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "plugin_path": ".",
+  "workspace": "evaluations/ci",
+  "host": {
+    "command": "node",
+    "args": [
+      "skills/plugin-creator/templates/ci/goose-host-adapter.mjs"
+    ],
+    "required_credentials": [
+      "PROVIDER_API_KEY"
+    ],
+    "required_models": [
+      "evaluation-model"
+    ],
+    "required_capabilities": [
+      "non-interactive",
+      "plugin-evaluation"
+    ]
+  },
+  "evaluation": {
+    "tests_status": "pass",
+    "human_review": "pending"
+  },
+  "limits": {
+    "timeout_ms": 900000,
+    "max_output_bytes": 1048576,
+    "total_budget_ms": 1800000
+  },
+  "privacy": {
+    "transcripts": "redact"
+  },
+  "cache": {
+    "enabled": true,
+    "resume": true
+  }
+}
