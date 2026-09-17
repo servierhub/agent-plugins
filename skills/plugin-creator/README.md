@@ -94,13 +94,13 @@ combined benchmark, release gates, and a static HTML review report.
 Use the deterministic orchestrator when an AI agent needs to evaluate a whole plugin without guessing the next step:
 
 ```bash
-node dist/scripts/cli.js full-eval /path/to/plugin --workspace /tmp/plugin-eval --dry-run --format json
-node dist/scripts/cli.js full-eval /path/to/plugin --workspace /tmp/plugin-eval --resume --format json
+node dist/scripts/cli.js full-eval /path/to/plugin --workspace /path/to/plugin/evaluations/full-eval --dry-run --format json
+node dist/scripts/cli.js full-eval /path/to/plugin --workspace /path/to/plugin/evaluations/full-eval --resume --format json
 ```
 
 The fixed phases are validation, bundled-Skill discovery, component evaluation receipt detection, integration output detection, packaging, and release verification. Component commands use the bundled skill-creator CLI by absolute path, so an agent does not depend on a global binary. Each completed Skill evaluation writes `receipt.json` exactly where plugin orchestration expects it. Dry-run is side-effect free. Rerunning (optionally with `--resume`) discovers existing receipts and outputs, making each phase idempotent. The envelope reports exact Skill paths, expected receipt paths, component `skill-creator full-eval` commands, phase statuses, and `next_actions`.
 
-This command never runs or simulates an LLM. It stops with exit code 3 when Skill receipts, `integration/benchmark.json`, `integration/review.html`, test evidence, or explicit `--human-review pass` are absent. Once prerequisites exist, it packages the plugin and invokes the existing release verifier. Inputs can be overridden with repeated `--component-receipt`, `--integration`, `--archive`, and `--tests-status pass`.
+This command never runs or simulates an LLM. The workspace must be a proper subdirectory of the plugin's `evaluations/` directory; integration and archive paths must stay inside that workspace. Evaluation files are therefore excluded consistently from source fingerprints and release archives. Cancellation requires an existing persisted graph and uses its saved configuration. It stops with exit code 3 when Skill receipts, `integration/benchmark.json`, `integration/review.html`, test evidence, or explicit `--human-review pass` are absent. Once prerequisites exist, it packages the plugin and invokes the existing release verifier. Inputs can be overridden with repeated `--component-receipt`, `--integration`, `--archive`, and `--tests-status pass`.
 
 ## Package
 

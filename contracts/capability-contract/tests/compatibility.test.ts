@@ -207,9 +207,11 @@ test("every significant semantic site is removal-sensitive and every discovered 
 });
 
 const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
+const pointerToken=(value:string)=>value.replaceAll("~","~0").replaceAll("/","~1");
+const pointerParts=(path:string)=>path.split("/").slice(1).map(value=>value.replaceAll("~1","/").replaceAll("~0","~"));
 function visitJson(value:any,path:string,visit:(parent:any,key:string|number,path:string,value:any)=>void):void{
   if(Array.isArray(value))for(let index=0;index<value.length;index++){visit(value,index,path+"/"+index,value[index]);visitJson(value[index],path+"/"+index,visit);}
-  else if(value&&typeof value==="object")for(const key of Object.keys(value)){visit(value,key,path+"/"+key,value[key]);visitJson(value[key],path+"/"+key,visit);}
+  else if(value&&typeof value==="object")for(const key of Object.keys(value)){const childPath=path+"/"+pointerToken(key);visit(value,key,childPath,value[key]);visitJson(value[key],childPath,visit);}
 }
 
 test("every readable JSON validator family recursively rejects invalid type mutations and closed-shape extras",()=>{
@@ -218,11 +220,26 @@ test("every readable JSON validator family recursively rejects invalid type muta
   for(const [validatorId,row] of representatives){
     const original=JSON.parse(outcomeFixture(row.expectedOutcome.fixture).toString());const objectPaths:string[]=[];const wrongTypes:{path:string;mutated:any}[]=[];
     if(original&&typeof original==="object"&&!Array.isArray(original))objectPaths.push("");
-    visitJson(original,"",(_parent,_key,path,value)=>{if(value&&typeof value==="object"&&!Array.isArray(value))objectPaths.push(path);const mutated=clone(original);let target=mutated;const parts=path.split("/").slice(1);for(const part of parts.slice(0,-1))target=target[Array.isArray(target)?Number(part):part];const last=parts.at(-1)!;target[Array.isArray(target)?Number(last):last]=Array.isArray(value)?{}:value&&typeof value==="object"?"__invalid_object__":{};wrongTypes.push({path,mutated});});
-    for(const path of objectPaths){const mutated=clone(original);let target=mutated;for(const part of path.split("/").slice(1))target=target[Array.isArray(target)?Number(part):part];target.__unexpectedCompatibilityField=true;assert.equal(validateSurfaceShape(row.id,mutated).valid,false,validatorId+" "+row.id+" extra at "+(path||"/"));}
+    visitJson(original,"",(_parent,_key,path,value)=>{if(value&&typeof value==="object"&&!Array.isArray(value))objectPaths.push(path);const mutated=clone(original);let target=mutated;const parts=pointerParts(path);for(const part of parts.slice(0,-1))target=target[Array.isArray(target)?Number(part):part];const last=parts.at(-1)!;target[Array.isArray(target)?Number(last):last]=Array.isArray(value)?{}:value&&typeof value==="object"?"__invalid_object__":{};wrongTypes.push({path,mutated});});
+    for(const path of objectPaths){const mutated=clone(original);let target=mutated;for(const part of pointerParts(path))target=target[Array.isArray(target)?Number(part):part];target.__unexpectedCompatibilityField=true;assert.equal(validateSurfaceShape(row.id,mutated).valid,false,validatorId+" "+row.id+" extra at "+(path||"/"));}
     for(const mutation of wrongTypes)assert.doesNotThrow(()=>validateSurfaceShape(row.id,mutation.mutated),validatorId+" must be total at "+mutation.path);
     assert.equal(wrongTypes.filter(mutation=>validateSurfaceShape(row.id,mutation.mutated).valid).length,0,validatorId+" "+row.id+" accepted an invalid recursive type mutation");
   }
+});
+
+test("full-eval validators accept emitted cancellation envelopes and deeply validate durable jobs",()=>{
+  const plugin=JSON.parse(outcomeFixture("cases/plugin.full-eval.v1.json").toString());
+  const skill=JSON.parse(outcomeFixture("cases/skill.full-eval.v1.json").toString());
+  assert.equal(plugin.status,"cancelled");assert.equal(skill.status,"cancelled");
+  assert.equal(validateSurfaceShape("plugin.full-eval.v1",plugin).valid,true);
+  assert.equal(validateSurfaceShape("skill.full-eval.v1",skill).valid,true);
+
+  const malformedPluginJobs=[{}, {...plugin.jobs[0],status:"unknown"}, {...plugin.jobs[0],depends_on:[7]}, {...plugin.jobs[0],input_hash:"bad"}, {...plugin.jobs[0],idempotency_key:"bad"}, {...plugin.jobs[0],output_hashes:{artifact:"bad"}}, {...plugin.jobs[0],extra:true}];
+  for(const job of malformedPluginJobs){const value=clone(plugin);value.jobs=[job];assert.equal(validateSurfaceShape("plugin.full-eval.v1",value).valid,false,JSON.stringify(job));}
+  const emptySkillJob=clone(skill);emptySkillJob.job={};assert.equal(validateSurfaceShape("skill.full-eval.v1",emptySkillJob).valid,false);
+  const malformedSkillPhases=[{}, {...skill.job.phases[0],status:"unknown"}, {...skill.job.phases[0],depends_on:[7]}, {...skill.job.phases[0],input_hash:"bad"}, {...skill.job.phases[0],artifact_hashes:{artifact:"bad"}}, {...skill.job.phases[0],extra:true}];
+  for(const phase of malformedSkillPhases){const value=clone(skill);value.job.phases=[phase];assert.equal(validateSurfaceShape("skill.full-eval.v1",value).valid,false,JSON.stringify(phase));}
+  for(const [id,source] of [["plugin.full-eval.v1",plugin],["skill.full-eval.v1",skill]] as const){const value=clone(source);value.status="unknown";assert.equal(validateSurfaceShape(id,value).valid,false);}
 });
 
 test("strict targeted validators reject known nested and discriminator mutations",()=>{

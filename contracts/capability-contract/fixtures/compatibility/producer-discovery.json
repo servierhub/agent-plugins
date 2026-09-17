@@ -914,6 +914,60 @@
       "validatorId": "artifact:full-eval"
     },
     {
+      "id": "skill.full-eval-state.v2",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": ".full-eval-job.json",
+      "sourceEvidence": "const STATE_FILE = \".full-eval-job.json\"",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "2.0"
+      ],
+      "emittedVersion": "2.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:skill-full-eval-state"
+    },
+    {
+      "id": "plugin.full-eval-state.v1",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": "full-eval-state.json",
+      "sourceEvidence": "const STATE_FILE=\"full-eval-state.json\"",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:plugin-full-eval-state"
+    },
+    {
+      "id": "skill.execution-evidence.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/execution-evidence.json",
+      "sourceEvidence": "const manifestPath = join(runDir, \"execution-evidence.json\");",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:execution-evidence"
+    },
+    {
       "id": "skill.authoring-audit.v1",
       "creator": "skill-creator",
       "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
@@ -1596,7 +1650,7 @@
       "creator": "skill-creator",
       "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
       "sourceFieldOrLayout": "workspace.skill-eval.current.v1",
-      "sourceEvidence": "for(const config of [\"with_skill\",baseline])artifacts.push(join(ed,config,\"run-1\",\"outputs\"))",
+      "sourceEvidence": "for(const config of [\"with_skill\",baseline])mkdirSync(join(ed,config,\"run-1\",\"outputs\"),{recursive:true});",
       "kind": "workspace-layout",
       "readVersionsOrRanges": [
         "1.0"
@@ -1657,7 +1711,7 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
       "sourceFieldOrLayout": "workspace.plugin-eval.unversioned",
-      "sourceEvidence": "join(root,\"evaluations\",\"plugin\")",
+      "sourceEvidence": "workspace=resolve(options.workspace??join(evaluations,\"plugin\"))",
       "kind": "workspace-layout",
       "readVersionsOrRanges": [
         "unversioned"
@@ -1995,7 +2049,7 @@
       "creator": "skill-creator",
       "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
       "sourceFieldOrLayout": "post-evaluation-pattern-review.json",
-      "sourceEvidence": "patternReviewPath=join(workspace,\"post-evaluation-pattern-review.json\")",
+      "sourceEvidence": "const path=join(workspace,\"post-evaluation-pattern-review.json\"),analysis=analyzeEvaluation(workspace,skill)",
       "kind": "evaluation-artifact",
       "artifactFormat": "json",
       "readVersionsOrRanges": [
@@ -2300,6 +2354,7 @@
       "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
       "expected": [
         "benchmark.json",
+        "full-eval-state.json",
         "plugin.json",
         "receipt.json",
         "review.html"
@@ -2441,8 +2496,19 @@
       "expected": []
     },
     {
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "expected": [
+        "eval_metadata.json",
+        "execution-evidence.json",
+        "grading.json",
+        "navigation.json",
+        "timing.json"
+      ]
+    },
+    {
       "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
       "expected": [
+        ".full-eval-job.json",
         "SKILL.md",
         "authoring-audit.json",
         "benchmark.json",
@@ -2499,6 +2565,7 @@
     {
       "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
       "expected": [
+        ".full-eval-job.json",
         "THIRD_PARTY_NOTICES.md",
         "benchmark.json",
         "package.json",
@@ -2918,10 +2985,10 @@
     {
       "id": "workspace.skill-eval.current.v1",
       "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
-      "sourceEvidence": "for(const config of [\"with_skill\",baseline])artifacts.push(join(ed,config,\"run-1\",\"outputs\"))",
+      "sourceEvidence": "for(const config of [\"with_skill\",baseline])mkdirSync(join(ed,config,\"run-1\",\"outputs\"),{recursive:true});",
       "emittedVersion": "1.0",
       "versionSourceFile": "skills/skill-creator/scripts/full_eval.ts",
-      "versionEvidence": "for(const config of [\"with_skill\",baseline])artifacts.push(join(ed,config,\"run-1\",\"outputs\"))"
+      "versionEvidence": "for(const config of [\"with_skill\",baseline])mkdirSync(join(ed,config,\"run-1\",\"outputs\"),{recursive:true});"
     },
     {
       "id": "plugin.manifest.v1",
@@ -3010,6 +3077,30 @@
       "emittedVersion": "1.0.0",
       "versionSourceFile": "skills/plugin-creator/scripts/cli.ts",
       "versionEvidence": "EXIT_SUCCESS=0, EXIT_FAILURE=1, EXIT_USAGE=2, EXIT_BLOCKED=3"
+    },
+    {
+      "id": "skill.full-eval-state.v2",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceEvidence": "const STATE_FILE = \".full-eval-job.json\"",
+      "emittedVersion": "2.0",
+      "versionSourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "versionEvidence": "const SCHEMA_VERSION = \"2.0\";"
+    },
+    {
+      "id": "plugin.full-eval-state.v1",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceEvidence": "const STATE_FILE=\"full-eval-state.json\"",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "versionEvidence": "schema_version:\"1.0\",command:\"full-eval\""
+    },
+    {
+      "id": "skill.execution-evidence.v1",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceEvidence": "const manifestPath = join(runDir, \"execution-evidence.json\");",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "versionEvidence": "schema_version: \"1.0\";"
     }
   ],
   "producerBackedSurfaceIds": [
@@ -3034,7 +3125,10 @@
     "skill.post-evaluation-pattern-review.unversioned",
     "skill.run-loop-report.unversioned",
     "skill.run-loop-result.unversioned",
-    "skill.verification-receipt.v1"
+    "skill.verification-receipt.v1",
+    "skill.full-eval-state.v2",
+    "plugin.full-eval-state.v1",
+    "skill.execution-evidence.v1"
   ],
   "canonicalArtifacts": [
     {
@@ -3322,6 +3416,24 @@
       "format": "html",
       "validatorId": "signature:html-document",
       "registrySurfaceId": "skill.viewer-html.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.full-eval-state.v2",
+      "format": "json",
+      "validatorId": "artifact:skill-full-eval-state",
+      "registrySurfaceId": "skill.full-eval-state.v2"
+    },
+    {
+      "canonicalArtifactId": "plugin.full-eval-state.v1",
+      "format": "json",
+      "validatorId": "artifact:plugin-full-eval-state",
+      "registrySurfaceId": "plugin.full-eval-state.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.execution-evidence.v1",
+      "format": "json",
+      "validatorId": "artifact:execution-evidence",
+      "registrySurfaceId": "skill.execution-evidence.v1"
     }
   ],
   "producerSiteAliases": [
@@ -3674,7 +3786,7 @@
       "role": "consumer",
       "canonicalArtifactId": "plugin.integration-benchmark.unversioned",
       "sourceEvidence": "benchmark.json",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 3
     },
     {
       "siteId": "skills/plugin-creator/scripts/full_eval.ts::full-eval return envelope",
@@ -3683,7 +3795,7 @@
       "role": "producer",
       "canonicalArtifactId": "plugin.full-eval.v1",
       "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
-      "evidenceOccurrences": 1
+      "evidenceOccurrences": 2
     },
     {
       "siteId": "skills/plugin-creator/scripts/full_eval.ts::plugin.json",
@@ -3710,7 +3822,7 @@
       "role": "consumer",
       "canonicalArtifactId": "plugin.integration-review-html.unversioned",
       "sourceEvidence": "review.html",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 4
     },
     {
       "siteId": "skills/plugin-creator/scripts/init_goose_plugin.ts::SKILL.md",
@@ -4151,7 +4263,7 @@
       "role": "structural-member",
       "canonicalArtifactId": "layout.skill-artifact.current",
       "sourceEvidence": "SKILL.md",
-      "evidenceOccurrences": 1
+      "evidenceOccurrences": 2
     },
     {
       "siteId": "skills/skill-creator/scripts/full_eval.ts::authoring-audit.json",
@@ -4169,7 +4281,7 @@
       "role": "consumer",
       "canonicalArtifactId": "skill.benchmark.unversioned",
       "sourceEvidence": "benchmark.json",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 9
     },
     {
       "siteId": "skills/skill-creator/scripts/full_eval.ts::benchmark.md",
@@ -4178,7 +4290,7 @@
       "role": "consumer",
       "canonicalArtifactId": "skill.benchmark-markdown.unversioned",
       "sourceEvidence": "benchmark.md",
-      "evidenceOccurrences": 1
+      "evidenceOccurrences": 2
     },
     {
       "siteId": "skills/skill-creator/scripts/full_eval.ts::eval_metadata.json",
@@ -4232,7 +4344,7 @@
       "role": "producer",
       "canonicalArtifactId": "skill.verification-receipt.v1",
       "sourceEvidence": "receipt.json",
-      "evidenceOccurrences": 1
+      "evidenceOccurrences": 3
     },
     {
       "siteId": "skills/skill-creator/scripts/full_eval.ts::review.html",
@@ -4241,7 +4353,7 @@
       "role": "consumer",
       "canonicalArtifactId": "skill.review-html.unversioned",
       "sourceEvidence": "review.html",
-      "evidenceOccurrences": 4
+      "evidenceOccurrences": 7
     },
     {
       "siteId": "skills/skill-creator/scripts/full_eval.ts::timing.json",
@@ -4379,6 +4491,15 @@
       "evidenceOccurrences": 2
     },
     {
+      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::.full-eval-job.json",
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFieldOrArtifact": ".full-eval-job.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.full-eval-state.v2",
+      "sourceEvidence": ".full-eval-job.json",
+      "evidenceOccurrences": 1
+    },
+    {
       "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::authoring audit input",
       "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": "authoring audit input",
@@ -4413,6 +4534,60 @@
       "canonicalArtifactId": "skill.verification-receipt.v1",
       "sourceEvidence": "schema_version: \"1.0\"",
       "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/full_eval.ts::full-eval-state.json",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "full-eval-state.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.full-eval-state.v1",
+      "sourceEvidence": "full-eval-state.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::.full-eval-job.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": ".full-eval-job.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.full-eval-state.v2",
+      "sourceEvidence": ".full-eval-job.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::eval_metadata.json",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::execution-evidence.json",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFieldOrArtifact": "execution-evidence.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.execution-evidence.v1",
+      "sourceEvidence": "execution-evidence.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::grading.json",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::timing.json",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFieldOrArtifact": "timing.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.timing.unversioned",
+      "sourceEvidence": "timing.json",
+      "evidenceOccurrences": 2
     }
   ],
   "structuralExclusions": [
@@ -4583,6 +4758,14 @@
       "sourceEvidence": "package.json",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 2
+    },
+    {
+      "site": "skills/skill-creator/scripts/evaluation_provenance.ts::navigation.json",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFieldOrArtifact": "navigation.json",
+      "sourceEvidence": "navigation.json",
+      "evidenceOccurrences": 1,
+      "rationale": "Optional navigation telemetry has no stable public serialized contract and is consumed only as best-effort execution-provenance evidence."
     }
   ],
   "compatibleSurfaceAliases": [

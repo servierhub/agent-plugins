@@ -1060,6 +1060,36 @@
         "diagnostic": "COMPATIBILITY_LEGACY_UNVERSIONED",
         "validatorId": "signature:markdown-document"
       }
+    },
+    {
+      "id": "skill.full-eval-state.v2",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/skill.full-eval-state.v2.json",
+        "diagnostic": null,
+        "validatorId": "artifact:skill-full-eval-state"
+      }
+    },
+    {
+      "id": "plugin.full-eval-state.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/plugin.full-eval-state.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:plugin-full-eval-state"
+      }
+    },
+    {
+      "id": "skill.execution-evidence.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/skill.execution-evidence.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:execution-evidence"
+      }
     }
   ]
 }

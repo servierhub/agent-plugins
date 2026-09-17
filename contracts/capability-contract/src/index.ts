@@ -6,6 +6,8 @@ export * from "./result-types.js";
 export * from "./result.js";
 export * from "./host-adapter-types.js";
 export * from "./host-adapter.js";
+export * from "./preflight-types.js";
+export * from "./preflight.js";
 export * from "./fake-host-adapter.js";
 
 export * from "./compatibility-types.js";

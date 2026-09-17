@@ -165,9 +165,9 @@
         "classification": "current",
         "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
         "sourceEvidence": [
-          "envelope(\"planned\"",
-          "status===\"success\"?0:status===\"blocked\"?3:1",
-          "?\"failure\":receipt.status==="
+          "const status=state.status",
+          "status===\"blocked\"||status===\"cancelled\"?3",
+          "state.status=state.jobs.some(j=>j.status===\"failed\")?\"failure\":state.jobs.every(j=>j.status===\"succeeded\")?\"success\":\"blocked\""
         ]
       }
     },
@@ -187,7 +187,7 @@
         "classification": "current",
         "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
         "sourceEvidence": [
-          "status:\"planned\"|\"pass\"|\"fail\"|\"blocked\"|\"skipped\""
+          "function legacyStatus(status:JobStatus):Phase[\"status\"]"
         ]
       }
     },
@@ -474,7 +474,7 @@
         "sourceEvidence": [
           "status===\"success\"||status===\"planned\"",
           "status===\"blocked\"?3:1",
-          "verification.status===\"pass\"?\"success\":verification.status"
+          "return envelope(options,job,verification.status,next"
         ]
       }
     },
@@ -494,7 +494,7 @@
         "classification": "current",
         "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
         "sourceEvidence": [
-          "type PhaseStatus = \"complete\" | \"blocked\" | \"planned\" | \"skipped\" | \"failed\""
+          "type PublicPhaseStatus = \"complete\" | \"blocked\" | \"planned\" | \"skipped\" | \"failed\""
         ]
       }
     },
@@ -903,7 +903,8 @@
         "plugin-gate-status"
       ],
       "sourceEvidence": [
-        "return envelope(status,status===\"success\"?0:status===\"blocked\"?3:1,root,workspace,archive,components,phases,next_actions,receipt"
+        "return{schema_version:\"1.0\",command:\"full-eval\",status,exit_code",
+        "verification};"
       ]
     },
     {
@@ -933,10 +934,8 @@
         "skill-gate-status"
       ],
       "sourceEvidence": [
-        "{audit}",
-        "{audit,design}",
-        "{receipt}",
-        "{receipt,verification}"
+        "{receipt});",
+        "{receipt,verification});"
       ]
     },
     {

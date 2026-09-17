@@ -164,7 +164,7 @@ test("independent producer expectations cover receipt status, forwarded fail, va
   const expected = [
     { context: "plugin-verification-receipt-status", tokens: ["pass","fail","blocked"], file: "skills/plugin-creator/scripts/verify_plugin_gates.ts", snippets: ["const status = aggregate(gates);", "artifact: \"plugin\", name, profile: parsed.profile, status"] },
     { context: "skill-verification-receipt-status", tokens: ["pass","fail","blocked"], file: "skills/skill-creator/scripts/verify_skill_gates.ts", snippets: ["const status = aggregate(gates);", "artifact: \"skill\",", "status,"] },
-    { context: "skill-full-eval-status", tokens: ["planned","success","failure","fail","blocked"], file: "skills/skill-creator/scripts/full_eval.ts", snippets: ["verification.status===\"pass\"?\"success\":verification.status"] },
+    { context: "skill-full-eval-status", tokens: ["planned","success","failure","fail","blocked"], file: "skills/skill-creator/scripts/full_eval.ts", snippets: ["return envelope(options,job,verification.status,next"] },
     { context: "plugin-validation-outcome", tokens: ["accepted","rejected","partial"], file: "skills/plugin-creator/scripts/validation_outcomes.ts", snippets: ["return { mode, status: deriveOutcomeStatus(diagnostics, components), diagnostics, components };"] },
     { context: "plugin-component-outcome-status", tokens: ["accepted","skipped","skipped-invalid","skipped-unsupported","runtime-failed"], file: "skills/plugin-creator/scripts/mcp_runtime.ts", snippets: ["return{status:\"runtime-failed\""] },
     { context: "plugin-release-eligible", tokens: ["true","false"], file: "skills/plugin-creator/scripts/verify_plugin_gates.ts", snippets: ["release_eligible: parsed.profile === \"release\" && status === \"pass\""] },

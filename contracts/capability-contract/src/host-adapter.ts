@@ -37,6 +37,10 @@ function hasSensitiveData(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
   return Object.entries(value as Record<string, unknown>).some(([key, child]) => sensitiveKey.test(key) || hasSensitiveData(child));
 }
+function filesystemModeAvailable(modes: HostCapabilityReport["filesystem"]["modes"], value: string): boolean {
+  if (value === "read-write") return modes.includes("read") && modes.includes("write");
+  return (value === "read" || value === "write") && modes.includes(value);
+}
 function requirementAvailable(report: HostCapabilityReport, requirement: HostCapabilityRequirement): boolean {
   const values = Array.isArray(requirement.value) ? requirement.value : requirement.value === undefined ? [] : [requirement.value];
   switch (requirement.capability) {
@@ -46,7 +50,7 @@ function requirementAvailable(report: HostCapabilityReport, requirement: HostCap
     case "resume": return report.resume.supported;
     case "model": return values.length > 0 && values.every((v) => report.supportedModels.includes(v));
     case "tools": return values.every((v) => report.supportedTools.includes(v));
-    case "filesystem": return report.filesystem.supported && report.filesystem.workspaceContained;
+    case "filesystem": return report.filesystem.supported && report.filesystem.workspaceContained && values.every((v) => filesystemModeAvailable(report.filesystem.modes, v));
     case "network": return report.network.supported;
     case "browser": return report.browser.supported;
     case "tokenMetrics": return report.metrics.tokens;

@@ -32,6 +32,30 @@ function benchmark(workspace: string, hash: string, current = 0.9, baseline = 0.
   writeFileSync(join(workspace, "review.html"), "ok");
 }
 
+
+test("source hash excludes evaluation plans but includes implementation sources", () => {
+  const { tmp, root } = fixture();
+  try {
+    mkdirSync(join(root, "evals"), { recursive: true });
+    mkdirSync(join(root, "evaluation"), { recursive: true });
+    mkdirSync(join(root, "scripts"), { recursive: true });
+    writeFileSync(join(root, "evals", "evals.json"), JSON.stringify({ evals: [{ id: 1 }] }));
+    writeFileSync(join(root, "evaluation", "notes.json"), JSON.stringify({ note: "first" }));
+    const customEval = join(root, "custom-plan.json");
+    writeFileSync(customEval, JSON.stringify({ evals: [{ id: 1 }] }));
+    writeFileSync(join(root, "scripts", "implement.ts"), "export const value = 1;\n");
+    const initial = sourceHash(root, [customEval]);
+    writeFileSync(join(root, "evals", "evals.json"), JSON.stringify({ evals: [{ id: 2 }] }));
+    writeFileSync(join(root, "evaluation", "notes.json"), JSON.stringify({ note: "second" }));
+    writeFileSync(customEval, JSON.stringify({ evals: [{ id: 2 }] }));
+    assert.equal(sourceHash(root, [customEval]), initial);
+    writeFileSync(join(root, "scripts", "implement.ts"), "export const value = 2;\n");
+    assert.notEqual(sourceHash(root, [customEval]), initial);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test("static skill gates pass", () => {
   const { tmp, root } = fixture();
   try {

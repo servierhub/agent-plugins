@@ -8,7 +8,7 @@ import { fullEval } from "./full_eval.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--dry-run] [--resume]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--dry-run] [--resume] [--cancel]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -85,6 +85,8 @@ function runFullEval(o) {
             options.dryRun = true;
         else if (a === "--resume")
             options.resume = true;
+        else if (a === "--cancel")
+            options.cancel = true;
         else if (value.has(a)) {
             const v = o.args[++i];
             if (!v || v.startsWith("--"))

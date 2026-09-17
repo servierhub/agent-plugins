@@ -1,20 +1,16 @@
 {
   "schema_version": "1.0",
   "command": "full-eval",
-  "status": "cancelled",
-  "exit_code": 3,
-  "dry_run": true,
-  "resume": false,
-  "plugin": "/fixture/plugin",
-  "workspace": "/fixture/workspace",
-  "archive": "/fixture/plugin.zip",
-  "phases": [],
-  "components": [],
-  "next_actions": [],
-  "verification": null,
-  "state_file": "/fixture/workspace/full-eval-state.json",
   "graph_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-  "revision": 0,
+  "revision": 1,
+  "status": "blocked",
+  "configuration": {
+    "pluginPath": "/fixture/plugin",
+    "workspace": "/fixture/workspace",
+    "componentReceipts": [],
+    "integration": "/fixture/workspace/integration",
+    "archive": "/fixture/workspace/plugin.zip"
+  },
   "jobs": [
     {
       "id": "full-eval/validation",
@@ -22,9 +18,9 @@
       "depends_on": [],
       "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
       "idempotency_key": "0000000000000000000000000000000000000000000000000000000000000000",
-      "status": "cancelled",
-      "attempts": 0,
-      "detail": "cancelled by request",
+      "status": "succeeded",
+      "attempts": 1,
+      "detail": "validation passed",
       "output_hashes": {}
     }
   ]

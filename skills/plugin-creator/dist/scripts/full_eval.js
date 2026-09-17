@@ -1,27 +1,52 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, linkSync, readFileSync, readdirSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
+import { isPathWithin } from "./path_containment.js";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { validate } from "./validate_goose_plugin.js";
-import { verifyPlugin } from "./verify_plugin_gates.js";
+import { sourceHash } from "./package_manifest.js";
+import { componentHash, verifyPlugin } from "./verify_plugin_gates.js";
 const HERE = dirname(fileURLToPath(import.meta.url));
+const PHASES = ["validation", "planning", "execution", "grading", "aggregation", "review", "improvement", "verification"];
+const STATE_FILE = "full-eval-state.json";
+const LOCK_FILE = STATE_FILE + ".lock";
 const q = (value) => JSON.stringify(value);
 function directories(path) { return existsSync(path) ? readdirSync(path, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name).sort() : []; }
+function json(value) { return JSON.stringify(value, (_k, v) => v && typeof v === "object" && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b))) : v); }
+function hash(value) { return createHash("sha256").update(typeof value === "string" ? value : json(value)).digest("hex"); }
+function fileHash(path) { return existsSync(path) ? hash(readFileSync(path)) : "missing"; }
+function pluginHash(root, archive) { try {
+    return sourceHash(root, [archive]);
+}
+catch {
+    return "invalid";
+} }
 function packagePlugin(root, archive) { return spawnSync(process.execPath, [join(HERE, "package_goose_plugin.js"), root, archive], { encoding: "utf8" }); }
-export function fullEval(options) {
-    const root = resolve(options.pluginPath), workspace = resolve(options.workspace ?? join(root, "evaluations", "plugin"));
+function requireText(path) { return readFileSync(path, "utf8"); }
+function receiptName(path) { try {
+    return JSON.parse(requireText(path))?.name ?? null;
+}
+catch {
+    return null;
+} }
+function context(options) {
+    const root = resolve(options.pluginPath), evaluations = join(root, "evaluations"), workspace = resolve(options.workspace ?? join(evaluations, "plugin"));
+    if (!isPathWithin(evaluations, workspace) || workspace === evaluations)
+        throw new Error("full-eval workspace must be a subdirectory of the plugin evaluations directory");
     const integration = resolve(options.integration ?? join(workspace, "integration"));
+    if (!isPathWithin(workspace, integration))
+        throw new Error("full-eval integration must be inside the workspace");
     const manifest = (() => { try {
         return JSON.parse(requireText(join(root, "plugin.json")));
     }
     catch {
         return null;
-    } })();
-    const name = manifest?.name ?? basename(root), archive = resolve(options.archive ?? join(workspace, name + ".zip"));
-    const skills = directories(join(root, "skills"));
-    const supplied = options.componentReceipts?.map(path => resolve(path)) ?? [];
-    const receiptByName = new Map();
+    } })(), name = manifest?.name ?? basename(root), archive = resolve(options.archive ?? join(workspace, name + ".zip"));
+    if (!isPathWithin(workspace, archive))
+        throw new Error("full-eval archive must be inside the workspace");
+    const skills = directories(join(root, "skills")), supplied = options.componentReceipts?.map(path => resolve(path)) ?? [], receiptByName = new Map();
     for (const path of supplied) {
         const n = receiptName(path);
         if (n)
@@ -34,60 +59,182 @@ export function fullEval(options) {
     }
     const skillCreatorCli = resolve(HERE, "../../../skill-creator/dist/scripts/cli.js");
     const components = skills.map(skill => { const skillPath = join(root, "skills", skill), receipt = receiptByName.get(skill) ?? join(workspace, "components", skill, "receipt.json"); return { name: skill, path: skillPath, receipt, available: existsSync(receipt), command: "node " + q(skillCreatorCli) + " full-eval " + q(skillPath) + " --workspace " + q(join(workspace, "components", skill)) + " --resume --format json" }; });
-    const phases = [
-        { name: "validate", status: "planned", detail: "validate Agent Plugins schema and Goose structure" },
-        { name: "discover_components", status: "planned", detail: skills.length + " bundled skill(s)" },
-        { name: "component_evaluation", status: "planned", detail: "consume component receipts; never invoke an LLM" },
-        { name: "integration_evaluation", status: "planned", detail: "detect benchmark.json and review.html" },
-        { name: "package", status: "planned", detail: archive },
-        { name: "verify", status: "planned", detail: "invoke release verification gates" }
-    ];
-    const next_actions = [];
-    if (options.dryRun)
-        return envelope("planned", 0, root, workspace, archive, components, phases, next_actions, null, true, Boolean(options.resume));
-    const schema = validateAgentPluginSchema(root), structural = validate(root), valid = schema.valid && !structural.errors.length;
-    phases[0].status = valid ? "pass" : "fail";
-    phases[0].detail = valid ? "validation passed" : "validation failed";
-    phases[1].status = "pass";
-    const missing = components.filter(c => !c.available);
-    phases[2].status = missing.length ? "blocked" : "pass";
-    phases[2].detail = missing.length ? missing.length + " component receipt(s) missing" : components.length + " component receipt(s) found";
-    for (const component of missing)
-        next_actions.push(component.command + " # writes " + component.receipt);
-    const benchmark = join(integration, "benchmark.json"), review = join(integration, "review.html");
-    const integrationMissing = [!existsSync(benchmark) ? benchmark : null, !existsSync(review) ? review : null].filter(Boolean);
-    const reviewPassed = options.humanReview === "pass";
-    phases[3].status = integrationMissing.length || !reviewPassed ? "blocked" : "pass";
-    phases[3].detail = integrationMissing.length ? "missing: " + integrationMissing.join(", ") : !reviewPassed ? "human review pending" : "integration outputs and human review present";
-    if (integrationMissing.length)
-        next_actions.push("produce plugin integration outputs at " + q(benchmark) + " and " + q(review));
-    if (!reviewPassed)
-        next_actions.push("review " + q(review) + " then rerun with --human-review pass --resume");
-    const prerequisites = valid && !missing.length && !integrationMissing.length && reviewPassed;
-    if (prerequisites) {
-        mkdirSync(dirname(archive), { recursive: true });
-        const packaged = packagePlugin(root, archive);
-        phases[4].status = packaged.status === 0 ? "pass" : "fail";
-        phases[4].detail = packaged.status === 0 ? archive : (packaged.stderr || packaged.stdout || "packaging failed").trim();
-    }
-    else {
-        phases[4].status = "skipped";
-        phases[4].detail = "prerequisites incomplete";
-    }
-    const receipt = verifyPlugin({ pluginPath: root, profile: "release", componentReceipts: components.filter(c => c.available).map(c => c.receipt), integration, archive: existsSync(archive) ? archive : undefined, testsStatus: options.testsStatus, humanReview: options.humanReview, minPassRate: options.minPassRate, minDelta: options.minDelta });
-    phases[5].status = receipt.status === "na" ? "skipped" : receipt.status;
-    phases[5].detail = "release verification: " + receipt.status;
-    for (const [gate, value] of Object.entries(receipt.gates))
-        if (value.status === "blocked" && !next_actions.some(a => a.includes(value.reason ?? "~~~")))
-            next_actions.push("resolve " + gate + " gate: " + (value.reason ?? "evidence missing"));
-    const status = !valid || phases[4].status === "fail" || receipt.status === "fail" ? "failure" : receipt.status === "pass" ? "success" : "blocked";
-    return envelope(status, status === "success" ? 0 : status === "blocked" ? 3 : 1, root, workspace, archive, components, phases, next_actions, receipt, false, Boolean(options.resume));
+    return { root, workspace, integration, archive, name, skills, components };
 }
-function requireText(path) { return readFileSync(path, "utf8"); }
-function receiptName(path) { try {
-    return JSON.parse(requireText(path))?.name ?? null;
+function fingerprints(c, o) {
+    const artifact = pluginHash(c.root, c.archive), componentInputs = c.components.map(x => ({ name: x.name, source: componentHash(x.path), receipt: fileHash(x.receipt) }));
+    const own = { validation: { artifact }, planning: { skills: c.skills, artifact }, execution: componentInputs, grading: { benchmark: fileHash(join(c.integration, "benchmark.json")), artifact, minPassRate: o.minPassRate ?? 0.8, minDelta: o.minDelta ?? 0 }, aggregation: { testsStatus: o.testsStatus ?? "blocked", artifact }, review: { review: fileHash(join(c.integration, "review.html")), humanReview: o.humanReview ?? "pending", artifact }, improvement: { artifact }, verification: { artifact, benchmark: fileHash(join(c.integration, "benchmark.json")), review: fileHash(join(c.integration, "review.html")), testsStatus: o.testsStatus ?? "blocked", humanReview: o.humanReview ?? "pending" } };
+    const result = {};
+    for (let i = 0; i < PHASES.length; i++) {
+        const phase = PHASES[i], dependencies = i ? [result[PHASES[i - 1]]] : [];
+        result[phase] = hash({ phase, input: own[phase], dependencies });
+    }
+    return result;
+}
+function persistedConfiguration(c, o) { return { pluginPath: c.root, workspace: c.workspace, componentReceipts: c.components.map(x => x.receipt), integration: c.integration, archive: c.archive, testsStatus: o.testsStatus, humanReview: o.humanReview, minPassRate: o.minPassRate, minDelta: o.minDelta }; }
+function optionsFromState(state) { return { ...state.configuration, componentReceipts: [...state.configuration.componentReceipts], resume: true }; }
+export function planFullEval(options) {
+    const c = context(options), fp = fingerprints(c, options);
+    const jobs = PHASES.map((phase, i) => { const id = "full-eval/" + phase, depends_on = i ? ["full-eval/" + PHASES[i - 1]] : []; return { id, phase, depends_on, input_hash: fp[phase], idempotency_key: hash({ artifact: fp.validation, plan: fp.planning, scenario: phase, configuration: fp[phase], run_index: 0 }), status: "planned", attempts: 0, detail: "pending", output_hashes: {} }; });
+    return { context: c, state: { schema_version: "1.0", command: "full-eval", graph_hash: hash(jobs.map(({ id, depends_on, input_hash, idempotency_key }) => ({ id, depends_on, input_hash, idempotency_key }))), revision: 0, status: "planned", configuration: persistedConfiguration(c, options), jobs } };
+}
+export function transitionJob(job, event, detail = job.detail) {
+    const allowed = { planned: ["start", "cancel", "skip"], running: ["succeed", "fail", "block", "cancel", "skip"], succeeded: ["succeed"], failed: ["fail", "retry"], blocked: ["block", "resume", "cancel"], cancelled: ["cancel", "resume"], skipped: ["skip", "resume"] };
+    if (!allowed[job.status].includes(event))
+        throw new Error("invalid full-eval transition: " + job.status + " -> " + event);
+    const target = { start: "running", succeed: "succeeded", fail: "failed", block: "blocked", cancel: "cancelled", retry: "planned", resume: "planned", skip: "skipped" };
+    const next = target[event];
+    return { ...job, status: next, attempts: event === "start" ? job.attempts + 1 : job.attempts, detail, output_hashes: event === "start" || event === "retry" || event === "resume" ? {} : job.output_hashes };
+}
+function loadState(path) { try {
+    const value = JSON.parse(requireText(path));
+    return value?.schema_version === "1.0" && Array.isArray(value.jobs) && value.configuration ? value : null;
 }
 catch {
     return null;
 } }
-function envelope(status, exit_code, plugin, workspace, archive, components, phases, next_actions, verification, dry_run, resume) { return { schema_version: "1.0", command: "full-eval", status, exit_code, dry_run, resume, plugin, workspace, archive, phases, components, next_actions, verification }; }
+function outputsCurrent(outputs) { return outputs !== undefined && Object.entries(outputs).every(([path, digest]) => fileHash(path) === digest); }
+function mergeState(plan, old, resume) {
+    if (!old || !resume)
+        return plan;
+    let stale = false;
+    const jobs = plan.jobs.map(job => { const prior = old.jobs.find(x => x.id === job.id); if (stale || !prior || prior.input_hash !== job.input_hash || (prior.status === "succeeded" && !outputsCurrent(prior.output_hashes))) {
+        stale = true;
+        return prior ? { ...job, attempts: prior.attempts } : job;
+    } if (prior.status === "succeeded")
+        return { ...job, status: "succeeded", attempts: prior.attempts, detail: prior.detail, output_hashes: prior.output_hashes ?? {} }; if (prior.status === "failed")
+        return transitionJob({ ...job, status: "failed", attempts: prior.attempts, detail: prior.detail }, "retry", "retry scheduled"); if (prior.status === "blocked" || prior.status === "cancelled" || prior.status === "skipped")
+        return transitionJob({ ...job, status: prior.status, attempts: prior.attempts, detail: prior.detail }, "resume", "resume scheduled"); return job; });
+    const verification = jobs.find(j => j.phase === "verification")?.status === "succeeded" ? old.verification : undefined;
+    return { ...plan, revision: old.revision, status: "planned", verification, jobs };
+}
+function checkpoint(path, state, expectedRevision) {
+    mkdirSync(dirname(path), { recursive: true });
+    const current = loadState(path);
+    if (current && current.revision !== expectedRevision)
+        throw new Error("concurrent full-eval state revision changed: expected " + expectedRevision + ", found " + current.revision);
+    const temporary = path + ".tmp-" + process.pid + "-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+    writeFileSync(temporary, JSON.stringify(state, null, 2) + "\n", { flag: "wx" });
+    try {
+        renameSync(temporary, path);
+    }
+    finally {
+        rmSync(temporary, { force: true });
+    }
+}
+function processAlive(pid) { try {
+    process.kill(pid, 0);
+    return true;
+}
+catch (error) {
+    return error?.code === "EPERM";
+} }
+function cleanupTemporaryStateFiles(directory) { for (const name of readdirSync(directory)) {
+    if (name.startsWith(STATE_FILE + ".tmp-"))
+        rmSync(join(directory, name), { force: true });
+} }
+function acquireLock(path) {
+    mkdirSync(dirname(path), { recursive: true });
+    for (let attempt = 0; attempt < 100; attempt++) {
+        const candidate = path + "." + process.pid + "." + Math.random().toString(16).slice(2);
+        try {
+            writeFileSync(candidate, JSON.stringify({ pid: process.pid, created_at: Date.now() }), { flag: "wx" });
+            linkSync(candidate, path);
+            unlinkSync(candidate);
+            return () => { try {
+                const value = JSON.parse(requireText(path));
+                if (value.pid === process.pid)
+                    unlinkSync(path);
+            }
+            catch { } };
+        }
+        catch (error) {
+            rmSync(candidate, { force: true });
+            if (error?.code !== "EEXIST")
+                throw error;
+            let stale = false;
+            try {
+                const value = JSON.parse(requireText(path)), age = Date.now() - statSync(path).mtimeMs;
+                stale = !Number.isInteger(value.pid) || (!processAlive(value.pid) && age > 100);
+            }
+            catch {
+                stale = true;
+            }
+            if (stale) {
+                try {
+                    unlinkSync(path);
+                }
+                catch { }
+                cleanupTemporaryStateFiles(dirname(path));
+                continue;
+            }
+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+        }
+    }
+    throw new Error("full-eval workspace is locked by another active run");
+}
+function legacyStatus(status) { return status === "succeeded" ? "pass" : status === "failed" ? "fail" : status === "cancelled" || status === "skipped" ? "skipped" : status; }
+function output(state, c, next_actions, verification, o) { const status = state.status, exit_code = status === "success" ? 0 : status === "blocked" || status === "cancelled" ? 3 : status === "planned" ? 0 : 1; const phases = state.jobs.map(j => ({ name: j.phase, status: legacyStatus(j.status), detail: j.detail })); return { schema_version: "1.0", command: "full-eval", status, exit_code, dry_run: Boolean(o.dryRun), resume: Boolean(o.resume), plugin: c.root, workspace: c.workspace, archive: c.archive, state_file: join(c.workspace, STATE_FILE), graph_hash: state.graph_hash, revision: state.revision, jobs: state.jobs, phases, components: c.components, next_actions, verification }; }
+export function fullEval(options) {
+    const locator = context({ pluginPath: options.pluginPath, workspace: options.workspace }), statePath = join(locator.workspace, STATE_FILE), lockPath = join(locator.workspace, LOCK_FILE);
+    if (options.dryRun) {
+        const initial = planFullEval(options), state = mergeState(initial.state, loadState(statePath), Boolean(options.resume));
+        return output(state, initial.context, [], state.verification ?? null, { ...options, dryRun: true });
+    }
+    const release = acquireLock(lockPath);
+    try {
+        const existing = loadState(statePath);
+        if (options.cancel) {
+            if (!existing)
+                throw new Error("cannot cancel full-eval: no persisted graph exists in " + locator.workspace);
+            const persistedOptions = optionsFromState(existing), c = context(persistedOptions);
+            let state = { ...existing, jobs: existing.jobs.map(j => j.status === "succeeded" || j.status === "cancelled" ? j : { ...j, status: "cancelled", detail: "cancelled by request", output_hashes: {} }), status: "cancelled" };
+            const expected = state.revision;
+            state.revision++;
+            checkpoint(statePath, state, expected);
+            return output(state, c, [], state.verification ?? null, options);
+        }
+        const effective = options.resume && existing ? { ...optionsFromState(existing), ...options, pluginPath: existing.configuration.pluginPath, workspace: existing.configuration.workspace, componentReceipts: options.componentReceipts ?? existing.configuration.componentReceipts } : options;
+        const planned = planFullEval(effective), c = planned.context;
+        let state = mergeState(planned.state, existing, Boolean(options.resume));
+        if (existing && !options.resume)
+            state.revision = existing.revision;
+        const next_actions = [];
+        let verification = state.verification ?? null;
+        const save = () => { const expected = state.revision; state.revision++; checkpoint(statePath, state, expected); };
+        const run = (phase, fn) => { const index = state.jobs.findIndex(j => j.phase === phase), job = state.jobs[index]; if (job.status === "succeeded")
+            return; const unmet = job.depends_on.map(id => state.jobs.find(j => j.id === id)).filter(j => j?.status !== "succeeded"); if (unmet.length) {
+            state.jobs[index] = { ...job, status: "blocked", detail: "blocked by prerequisites: " + unmet.map(j => j?.id + " (" + j?.status + ")").join(", "), output_hashes: {} };
+            save();
+            return;
+        } state.jobs[index] = transitionJob(job, "start", "running"); save(); const result = fn(); state.jobs[index] = transitionJob(state.jobs[index], result.event, result.detail); if (result.event === "succeed")
+            state.jobs[index].output_hashes = Object.fromEntries((result.outputs ?? []).map(path => [resolve(path), fileHash(resolve(path))])); save(); };
+        run("validation", () => { const schema = validateAgentPluginSchema(c.root), structural = validate(c.root), ok = schema.valid && !structural.errors.length; return { event: ok ? "succeed" : "fail", detail: ok ? "validation passed" : "validation failed" }; });
+        run("planning", () => ({ event: "succeed", detail: c.skills.length + " bundled skill(s); deterministic graph " + state.graph_hash }));
+        const missing = c.components.filter(x => !x.available);
+        for (const component of missing)
+            next_actions.push(component.command + " # writes " + component.receipt);
+        run("execution", () => ({ event: missing.length ? "block" : "succeed", detail: missing.length ? missing.length + " component receipt(s) missing" : c.components.length + " component receipt(s) found", outputs: missing.length ? [] : c.components.map(x => x.receipt) }));
+        const benchmark = join(c.integration, "benchmark.json");
+        run("grading", () => { if (!existsSync(benchmark)) {
+            next_actions.push("produce plugin integration outputs at " + q(benchmark) + " and " + q(join(c.integration, "review.html")));
+            return { event: "block", detail: "benchmark missing: " + benchmark };
+        } return { event: "succeed", detail: "benchmark evidence present", outputs: [benchmark] }; });
+        run("aggregation", () => ({ event: options.testsStatus === "fail" ? "fail" : options.testsStatus === "pass" ? "succeed" : "block", detail: "test evidence: " + (options.testsStatus ?? "missing") }));
+        const review = join(c.integration, "review.html");
+        run("review", () => { const ok = existsSync(review) && options.humanReview === "pass"; if (!ok)
+            next_actions.push("review " + q(review) + " then rerun with --human-review pass --resume"); return { event: ok ? "succeed" : "block", detail: !existsSync(review) ? "review output missing" : options.humanReview === "pass" ? "human review complete" : "human review pending", outputs: ok ? [review] : [] }; });
+        run("improvement", () => { mkdirSync(dirname(c.archive), { recursive: true }); const packaged = packagePlugin(c.root, c.archive); return { event: packaged.status === 0 ? "succeed" : "fail", detail: packaged.status === 0 ? c.archive : (packaged.stderr || packaged.stdout || "packaging failed").trim(), outputs: packaged.status === 0 ? [c.archive] : [] }; });
+        run("verification", () => { verification = verifyPlugin({ pluginPath: c.root, profile: "release", componentReceipts: c.components.filter(x => x.available).map(x => x.receipt), integration: c.integration, archive: existsSync(c.archive) ? c.archive : undefined, testsStatus: options.testsStatus, humanReview: options.humanReview, minPassRate: options.minPassRate, minDelta: options.minDelta }); for (const [gate, value] of Object.entries(verification.gates))
+            if (value.status === "blocked")
+                next_actions.push("resolve " + gate + " gate: " + (value.reason ?? "evidence missing")); return { event: verification.status === "pass" ? "succeed" : verification.status === "fail" ? "fail" : "block", detail: "release verification: " + verification.status, outputs: [c.archive, benchmark, review] }; });
+        state.status = state.jobs.some(j => j.status === "failed") ? "failure" : state.jobs.every(j => j.status === "succeeded") ? "success" : "blocked";
+        if (verification !== null)
+            state.verification = verification;
+        save();
+        return output(state, c, next_actions, verification, effective);
+    }
+    finally {
+        release();
+    }
+}

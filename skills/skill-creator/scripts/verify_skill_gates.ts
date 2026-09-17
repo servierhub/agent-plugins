@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { validateSkill } from "./quick_validate.js";
 import { auditSkill } from "./audit_skill.js";
+import { artifactHash, validateExecutionEvidence } from "./evaluation_provenance.js";
 
 export type GateStatus = "pass" | "fail" | "blocked" | "na";
 export type VerificationProfile = "static" | "evaluation" | "release";
@@ -34,7 +35,8 @@ export interface VerifySkillOptions {
 const PROFILES = new Set<VerificationProfile>(["static", "evaluation", "release"]);
 const GATE_STATUSES = new Set<GateStatus>(["pass", "fail", "blocked", "na"]);
 const HUMAN_REVIEW_STATUSES = new Set<HumanReviewStatus>(["pass", "fail", "blocked"]);
-const EXCLUDED = new Set([".git", ".verification", "dist", "node_modules", "vendor", "evaluations"]);
+const EXCLUDED = new Set([".git", ".verification", "dist", "node_modules", "vendor"]);
+const ROOT_EVALUATION_CONTENT = new Set(["evals", "evaluation", "evaluations"]);
 
 function isDir(path: string): boolean {
   try {
@@ -44,19 +46,20 @@ function isDir(path: string): boolean {
   }
 }
 
-function walk(root: string, current: string, out: string[]): void {
+function walk(root: string, current: string, out: string[], excludedPaths: Set<string>): void {
   for (const name of readdirSync(current).sort()) {
-    if (EXCLUDED.has(name)) continue;
+    const isRootEvaluationContent = current === root && ROOT_EVALUATION_CONTENT.has(name);
     const path = join(current, name);
-    if (isDir(path)) walk(root, path, out);
+    if (EXCLUDED.has(name) || isRootEvaluationContent || excludedPaths.has(resolve(path))) continue;
+    if (isDir(path)) walk(root, path, out, excludedPaths);
     else out.push(path);
   }
 }
 
-export function sourceHash(rootArg: string): string {
+export function sourceHash(rootArg: string, excluded: string[] = []): string {
   const root = resolve(rootArg);
   const files: string[] = [];
-  walk(root, root, files);
+  walk(root, root, files, new Set(excluded.map(path => resolve(path))));
   const hash = createHash("sha256");
   for (const path of files) {
     hash.update(relative(root, path).replaceAll("\\", "/"));
@@ -147,6 +150,12 @@ function benchmarkSummary(data: any): {
   };
 }
 
+function hashField(metadata: any, name: string): { value: string | null; malformed: boolean } {
+  const value = metadata?.[name];
+  if (value === undefined) return { value: null, malformed: false };
+  return { value: typeof value === "string" && /^[a-f0-9]{64}$/i.test(value) ? value.toLowerCase() : null, malformed: typeof value !== "string" || !/^[a-f0-9]{64}$/i.test(value) };
+}
+
 function benchmarkSourceHash(benchmark: any): { value: string | null; malformed: boolean } {
   const metadata = benchmark?.metadata;
   if (!metadata || typeof metadata !== "object") return { value: null, malformed: false };
@@ -179,7 +188,9 @@ export function verifySkill(options: VerifySkillOptions) {
   const root = resolve(options.skillPath);
   const name = basename(root);
   const strict = profile !== "static";
-  const currentSourceHash = sourceHash(root);
+  const workspace = options.evaluation ? resolve(options.evaluation) : "";
+  const job = workspace ? loadJson(join(workspace, ".full-eval-job.json")) : null;
+  const currentSourceHash = sourceHash(root, job?.eval_set ? [job.eval_set] : []);
   const [valid, message] = validateSkill(root);
   const authoringAudit = auditSkill(root);
 
@@ -199,10 +210,19 @@ export function verifySkill(options: VerifySkillOptions) {
   const tests = testsInput ?? (strict ? "blocked" : "na");
   const triggeringRequired = profile === "release";
   const triggering = triggeringInput ?? (triggeringRequired ? "blocked" : "na");
-  const workspace = options.evaluation ? resolve(options.evaluation) : "";
   const benchmark = workspace ? loadJson(join(workspace, "benchmark.json")) : null;
   const summary = benchmarkSummary(benchmark);
   const provenance = benchmarkSourceHash(benchmark);
+  const evalPlan = hashField(benchmark?.metadata, "eval_plan_sha256");
+  const evidenceProvenance = hashField(benchmark?.metadata, "execution_evidence_sha256");
+  const declaredEvalPlan = job?.eval_set ? artifactHash(job.eval_set) : null;
+  const evidence = workspace ? validateExecutionEvidence(workspace,{skill_source_sha256:currentSourceHash,...(declaredEvalPlan?{eval_plan_sha256:declaredEvalPlan}:{})}) : null;
+  // Legacy direct gate callers only supplied source provenance. Require the stronger
+  // eval-plan/evidence chain once any state or binding field declares that model.
+  const hasBoundProvenance = Boolean(
+    job || evalPlan.value || evalPlan.malformed || evidenceProvenance.value ||
+    evidenceProvenance.malformed || evidence?.bindings.length,
+  );
   const delta = summary.current !== null && summary.baseline !== null
     ? summary.current - summary.baseline
     : null;
@@ -228,6 +248,18 @@ export function verifySkill(options: VerifySkillOptions) {
     } else if (provenance.value !== currentSourceHash) {
       behavior = "fail";
       behaviorReason = "benchmark source hash does not match current skill sources";
+    } else if (hasBoundProvenance && (evalPlan.malformed || evidenceProvenance.malformed)) {
+      behavior = "fail";
+      behaviorReason = "benchmark execution provenance is malformed";
+    } else if (hasBoundProvenance && (!evalPlan.value || !evidenceProvenance.value || !declaredEvalPlan)) {
+      behavior = "blocked";
+      behaviorReason = "benchmark eval-plan or execution-evidence provenance missing";
+    } else if (hasBoundProvenance && evalPlan.value !== declaredEvalPlan) {
+      behavior = "fail";
+      behaviorReason = "benchmark eval-plan hash does not match the current eval plan";
+    } else if (hasBoundProvenance && (!evidence || evidence.status !== "complete" || evidence.evidence_sha256 !== evidenceProvenance.value)) {
+      behavior = "fail";
+      behaviorReason = evidence?.errors.join("; ") || "benchmark execution evidence hash does not match current evidence";
     } else {
       behavior = summary.current >= minimum && delta! >= minDelta ? "pass" : "fail";
       behaviorReason =

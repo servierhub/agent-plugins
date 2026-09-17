@@ -115,7 +115,7 @@ Never grade hidden deliverables; add criteria to the next iteration and rerun bo
 Start with:
 
 ```bash
-node dist/scripts/cli.js full-eval <plugin-directory> --workspace <directory> --dry-run --format json
+node dist/scripts/cli.js full-eval <plugin-directory> --workspace <plugin-directory>/evaluations/full-eval --dry-run --format json
 ```
 
 Follow returned commands and receipt paths, then rerun with `--resume`. Before a release claim, run `node dist/scripts/cli.js verify ...` with workflow-provided arguments. Ordered `next_actions` in a blocked result are authoritative.

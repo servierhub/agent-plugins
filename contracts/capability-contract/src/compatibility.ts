@@ -918,6 +918,60 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "validatorId": "artifact:full-eval"
   },
   {
+    "id": "skill.full-eval-state.v2",
+    "creator": "skill-creator",
+    "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+    "sourceFieldOrLayout": ".full-eval-job.json",
+    "sourceEvidence": "const STATE_FILE = \".full-eval-job.json\"",
+    "kind": "evaluation-artifact",
+    "readVersionsOrRanges": [
+      "2.0"
+    ],
+    "emittedVersion": "2.0",
+    "versionField": "/schema_version",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "artifactFormat": "json",
+    "validatorId": "artifact:skill-full-eval-state"
+  },
+  {
+    "id": "plugin.full-eval-state.v1",
+    "creator": "plugin-creator",
+    "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+    "sourceFieldOrLayout": "full-eval-state.json",
+    "sourceEvidence": "const STATE_FILE=\"full-eval-state.json\"",
+    "kind": "evaluation-artifact",
+    "readVersionsOrRanges": [
+      "1.0"
+    ],
+    "emittedVersion": "1.0",
+    "versionField": "/schema_version",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "artifactFormat": "json",
+    "validatorId": "artifact:plugin-full-eval-state"
+  },
+  {
+    "id": "skill.execution-evidence.v1",
+    "creator": "skill-creator",
+    "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+    "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/execution-evidence.json",
+    "sourceEvidence": "const manifestPath = join(runDir, \"execution-evidence.json\");",
+    "kind": "evaluation-artifact",
+    "readVersionsOrRanges": [
+      "1.0"
+    ],
+    "emittedVersion": "1.0",
+    "versionField": "/schema_version",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "artifactFormat": "json",
+    "validatorId": "artifact:execution-evidence"
+  },
+  {
     "id": "skill.authoring-audit.v1",
     "creator": "skill-creator",
     "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
@@ -1600,7 +1654,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "creator": "skill-creator",
     "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
     "sourceFieldOrLayout": "workspace.skill-eval.current.v1",
-    "sourceEvidence": "for(const config of [\"with_skill\",baseline])artifacts.push(join(ed,config,\"run-1\",\"outputs\"))",
+    "sourceEvidence": "for(const config of [\"with_skill\",baseline])mkdirSync(join(ed,config,\"run-1\",\"outputs\"),{recursive:true});",
     "kind": "workspace-layout",
     "readVersionsOrRanges": [
       "1.0"
@@ -1661,7 +1715,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "creator": "plugin-creator",
     "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
     "sourceFieldOrLayout": "workspace.plugin-eval.unversioned",
-    "sourceEvidence": "join(root,\"evaluations\",\"plugin\")",
+    "sourceEvidence": "workspace=resolve(options.workspace??join(evaluations,\"plugin\"))",
     "kind": "workspace-layout",
     "readVersionsOrRanges": [
       "unversioned"
@@ -1999,7 +2053,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "creator": "skill-creator",
     "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
     "sourceFieldOrLayout": "post-evaluation-pattern-review.json",
-    "sourceEvidence": "patternReviewPath=join(workspace,\"post-evaluation-pattern-review.json\")",
+    "sourceEvidence": "const path=join(workspace,\"post-evaluation-pattern-review.json\"),analysis=analyzeEvaluation(workspace,skill)",
     "kind": "evaluation-artifact",
     "artifactFormat": "json",
     "readVersionsOrRanges": [
@@ -2036,6 +2090,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "migrationId": null,
     "validatorId": "signature:markdown-document"
   }
+
 ] as CompatibilityEntry[]).map(E)) as readonly CompatibilityEntry[];
 export const RESULT_CONTRACT_REFERENCE=Object.freeze({version:RESULT_CONTRACT_VERSION,schemaId:RESULT_CONTRACT_SCHEMA_ID,mappingExport:"LEGACY_STATUS_MAPPINGS",classifierExport:"classifyResultExit"});
 const D=(code:CompatibilityDiagnostic["code"],severity:CompatibilityDiagnostic["severity"],path:string,message:string,remediation:string):CompatibilityDiagnostic=>({code,severity,path,message,remediation});
