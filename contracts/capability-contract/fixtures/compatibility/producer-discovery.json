@@ -2502,6 +2502,7 @@
       "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
       "expected": [
         "eval_metadata.json",
+        "execution_heartbeats.jsonl",
         "response.md",
         "run_summary.json",
         "timing.json",
@@ -2544,6 +2545,7 @@
       "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
       "expected": [
         "benchmark.json",
+        "full-eval-cancel.json",
         "full-eval-events.jsonl",
         "full-eval-state.json",
         "plugin.json",
@@ -3951,7 +3953,7 @@
       "role": "producer",
       "canonicalArtifactId": "agent.run-summary.unversioned",
       "sourceEvidence": "run_summary.json",
-      "evidenceOccurrences": 1
+      "evidenceOccurrences": 2
     },
     {
       "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::timing.json",
@@ -5315,6 +5317,24 @@
       "sourceEvidence": "full-eval-events.jsonl",
       "evidenceOccurrences": 1,
       "rationale": "The append-only execution stream is governed by its dedicated versioned event module and replay validator; this filename site is structural storage wiring rather than a distinct serialized shape."
+    },
+    {
+      "site": "skills/agent-creator/scripts/run_agent_eval.ts::execution_heartbeats.jsonl",
+      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::execution_heartbeats.jsonl",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrArtifact": "execution_heartbeats.jsonl",
+      "sourceEvidence": "execution_heartbeats.jsonl",
+      "evidenceOccurrences": 1,
+      "rationale": "Heartbeat JSONL records are an operational projection governed by the agent heartbeat module; this filename site is storage wiring rather than a distinct canonical evaluation artifact."
+    },
+    {
+      "site": "skills/plugin-creator/scripts/full_eval.ts::full-eval-cancel.json",
+      "siteId": "skills/plugin-creator/scripts/full_eval.ts::full-eval-cancel.json",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "full-eval-cancel.json",
+      "sourceEvidence": "full-eval-cancel.json",
+      "evidenceOccurrences": 1,
+      "rationale": "The cancellation request is transient reliability control state governed by execution reliability semantics, not durable product evidence."
     }
   ],
   "compatibleSurfaceAliases": [

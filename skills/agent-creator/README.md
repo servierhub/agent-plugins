@@ -139,3 +139,22 @@ agent into a skill or recipe.
 ## Manual or external evidence
 
 For host-neutral evaluation handoff, canonical manifest verification, the closed run schema, safe eval-ID encoding, provenance, and trust semantics, see [`references/manual-external-evidence.md`](references/manual-external-evidence.md).
+
+## Execution heartbeats
+
+Long-running evaluators can consume executor snapshots through `dist/scripts/execution_heartbeat.js`. The API emits the stable `agent-creator.execution-heartbeat/v1` event envelope every 30 seconds by default, marks a snapshot stale after two intervals without an update, and stops before emitting when a terminal snapshot is observed. Counts, actual active workers/models, elapsed time, a privacy-safe checkpoint, and per-unit budget consumption and limits are included. Top-level primitive checkpoints are always redacted; use a structured artifact reference for a publishable checkpoint.
+
+```ts
+import { createExecutionHeartbeat } from "agent-creator/dist/scripts/execution_heartbeat.js";
+
+const heartbeat = createExecutionHeartbeat(
+  () => executor.snapshot(),
+  event => eventBus.emit(event.type, event),
+  { intervalMs: 15_000 } // optional; default is 30 seconds
+);
+// heartbeat.stop() for an externally cancelled execution.
+```
+
+The evaluation runner enables this by default and appends non-terminal event envelopes to `<workspace>/execution_heartbeats.jsonl`. Each event reports runs, turns, and token consumption (with limits where available), and those counters advance as delayed Goose runs complete. Configure it with `--heartbeat-interval <seconds>`, or disable it with `--no-heartbeat`.
+
+The scheduler accepts an injectable clock for deterministic tests. Heartbeat construction is benchmarked in the test suite against an agreed average overhead ceiling of 0.25 ms for a representative 20-task snapshot.

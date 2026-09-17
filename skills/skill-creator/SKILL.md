@@ -89,6 +89,10 @@ node dist/scripts/cli.js audit <skill-directory> --format json
 # Scenario quality and normalized eval set
 node dist/scripts/cli.js design-evals <evals.json> --skill-path <skill-directory> --format json
 
+# Derive elicitation shells, then freeze a provenance-bound scenario plan
+node dist/scripts/cli.js freeze-evals <elicitation.json> --draft -o <draft.json>
+node dist/scripts/cli.js freeze-evals <completed-draft.json> -o <frozen-plan.json>
+
 # Trigger-description evaluation
 node dist/scripts/cli.js trigger-eval --eval-set <trigger-eval.json> --skill-path <skill-directory>
 

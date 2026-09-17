@@ -136,6 +136,21 @@ For a material Skill change, prefer at least:
 4. a missing-capability or error case;
 5. a non-regression case when improving an existing Skill.
 
+## Derive and freeze from elicitation
+
+Before execution, inventory every material capability and create exactly one scenario of each kind: `normal`, `boundary`, `restraint`, `missing-capability`, and `non-regression`. Restraint scenarios test an explicit non-goal; missing-capability scenarios test honest failure or blocking. The derivation command creates incomplete shells and explicit elicitation questions rather than inventing user context:
+
+```bash
+node dist/scripts/cli.js freeze-evals elicitation.json --draft -o draft.json
+node dist/scripts/cli.js freeze-evals completed-draft.json -o frozen-plan.json
+```
+
+Each completed scenario records `execution_level`, `fixtures`, declared `capabilities`, positive `budget`, atomic `assertions`, separate `review_questions`, category-specific `semantics`, explicit `user_edits`, and non-empty `coverage_tags` containing both `capability:<id>` and `category:<kind>`. An empty `user_edits: []` is the required acknowledgement that no edits were made. Each assertion has a stable `id`, non-empty `subject`, an `operator` from the documented enum, a scalar `expected` value, and a typed `locator` (`json-pointer`, `file`, `stdout`, `stderr`, or `exit-code`). Free-form statements are invalid; `because`, `if`, `when`, and an embedded second predicate are rejected so no trailing clause can smuggle in another assertion. Subjective predicates such as *loves*, *feels*, or *seems* belong only in review questions. Prompts must remain natural user requests and must not repeat assertion wording, including short or punctuation/case/Unicode-normalized copies.
+
+Category semantics are substantive, not coverage labels: normal cases name the success path; boundaries name the limiting condition; restraints name a non-goal and decline/leave-unchanged response; missing-capability cases name the unavailable capability and block/honest-failure response. A non-regression case must carry a `preservation_reference` with a concrete baseline id, preserved behavior, and structured locator for baseline evidence.
+
+Freezing accepts only closed, plain JSON shapes and requires complete actor provenance plus real UTC ISO-8601 timestamps supplied by the caller; it never synthesizes the current time. It emits `canonical_content_sha256` over canonical plan content. The same logical input hashes identically regardless of object-key order, while any frozen scenario, assertion, locator, semantic contract, review question, execution context, edit, or provenance change changes the hash and invalidates evidence bound to the previous plan. The module exports `deriveScenarioPlan`, `freezeScenarioPlan`, and `canonicalScenarioHash` for host-independent integrations and uses only the local Node runtime.
+
 ## Assertion guidance
 
 Prefer:

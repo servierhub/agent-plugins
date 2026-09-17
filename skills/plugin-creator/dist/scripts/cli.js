@@ -8,7 +8,7 @@ import { fullEval } from "./full_eval.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--dry-run] [--resume] [--cancel]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -74,11 +74,11 @@ catch {
     console.error((r.stderr ?? raw).trim());
     return r.status === 2 ? 2 : 1;
 } emit(receipt, "Plugin " + receipt.name + ": " + String(receipt.status).toUpperCase() + " (" + receipt.profile + ")", o); return receipt.status === "pass" ? 0 : receipt.status === "blocked" ? 3 : 1; }
-function runFullEval(o) {
+async function runFullEval(o) {
     if (!o.args[0] || o.args[0].startsWith("-"))
         return usage("full-eval requires a plugin directory");
     const options = { pluginPath: o.args[0] }, receipts = [];
-    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--min-pass-rate", "--min-delta"]);
+    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--min-pass-rate", "--min-delta", "--total-budget-ms", "--cancellation-grace-ms"]);
     for (let i = 1; i < o.args.length; i++) {
         const a = o.args[i];
         if (a === "--dry-run")
@@ -105,8 +105,12 @@ function runFullEval(o) {
                 options.humanReview = v;
             else if (a === "--min-pass-rate")
                 options.minPassRate = Number(v);
-            else
+            else if (a === "--min-delta")
                 options.minDelta = Number(v);
+            else if (a === "--total-budget-ms")
+                options.reliability = { ...options.reliability, total_budget_ms: Number(v) };
+            else
+                options.reliability = { ...options.reliability, cancellation_grace_ms: Number(v) };
         }
         else
             return usage("Unknown full-eval option: " + a);
@@ -114,7 +118,7 @@ function runFullEval(o) {
     if (receipts.length)
         options.componentReceipts = receipts;
     try {
-        const result = fullEval(options);
+        const result = await fullEval(options);
         const text = ["full-eval: " + result.status, ...result.phases.map(p => "[" + p.status + "] " + p.name + ": " + p.detail), ...result.next_actions.map(a => "NEXT: " + a)].join("\n");
         emit(result, text, o);
         return result.exit_code;
@@ -124,7 +128,7 @@ function runFullEval(o) {
         return 1;
     }
 }
-export function runCli(argv) { const [command, ...raw] = argv; if (!command || command === "--help" || command === "-h") {
+export async function runCli(argv) { const [command, ...raw] = argv; if (!command || command === "--help" || command === "-h") {
     console.log(HELP);
     return 0;
 } if (!["init", "validate", "migrate", "verify", "package", "full-eval"].includes(command))
@@ -136,6 +140,6 @@ export function runCli(argv) { const [command, ...raw] = argv; if (!command || c
     return runValidate(o); if (command === "migrate")
     return runMigrate(o); if (command === "verify")
     return runVerify(o); if (command === "full-eval")
-    return runFullEval(o); return wrapped(command, o); }
+    return await runFullEval(o); return wrapped(command, o); }
 if (process.argv[1] && resolve(fileURLToPath(import.meta.url)) === resolve(process.argv[1]))
-    process.exitCode = runCli(process.argv.slice(2));
+    process.exitCode = await runCli(process.argv.slice(2));

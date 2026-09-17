@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import type AdmZipType from "adm-zip";
 import { collectPackageFiles } from "./package_manifest.js";
@@ -37,6 +38,9 @@ function validateOfflineSkills(root: string): string[] {
 function fail(message: string): never { console.error("ERROR: " + message); process.exit(1); }
 
 function main(): void {
+  const writer=process.env.PLUGIN_CREATOR_TEST_DETACHED_WRITER_PATH;if(writer){const code=`const fs=require("fs"),p=process.argv[1];setInterval(()=>fs.appendFileSync(p,String(Date.now())+"\\n"),10)`;const child=spawn(process.execPath,["-e",code,writer],{detached:true,stdio:"ignore"});child.unref();if(process.env.PLUGIN_CREATOR_TEST_DETACHED_PID_PATH)writeFileSync(process.env.PLUGIN_CREATOR_TEST_DETACHED_PID_PATH,String(child.pid));}
+  const testDelay=Number(process.env.PLUGIN_CREATOR_TEST_PACKAGE_DELAY_MS??0);
+  if (Number.isFinite(testDelay) && testDelay > 0) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, testDelay);
   const [pluginDirArg, outputArg] = process.argv.slice(2);
   if (!pluginDirArg) { console.error("usage: package_goose_plugin.js <plugin_dir> [output.zip]"); process.exit(2); }
   const root = resolve(pluginDirArg);

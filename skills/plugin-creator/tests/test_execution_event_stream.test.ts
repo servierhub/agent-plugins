@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawn } from "node:child_process";
@@ -46,3 +46,6 @@ test("recursively removes private and system conversation collections",()=>{cons
 test("stale writer instances reload under lock and compare-and-append",()=>{const {dir,path}=temp();try{const a=new ExecutionEventWriter(path,"run-1"),b=new ExecutionEventWriter(path,"run-1");a.append("heartbeat",null,{status:"running"});b.append("heartbeat",null,{status:"running"});a.append("heartbeat",null,{status:"running"});const replay=replayExecutionEvents(path);assert.deepEqual(replay.events.map(e=>e.sequence),[1,2,3]);assert.equal(replay.events[2].causal_event_id,replay.events[1].event_id)}finally{rmSync(dir,{recursive:true,force:true})}});
 
 test("concurrent process writers serialize without lost or corrupt events",async()=>{const {dir,path}=temp();try{const module=resolve("dist/scripts/execution_event_stream.js");const code=`import {ExecutionEventWriter} from ${JSON.stringify(module)};new ExecutionEventWriter(process.argv[1],"run-1").append("heartbeat",null,{status:"running"});`;await Promise.all(Array.from({length:12},()=>new Promise<void>((ok,fail)=>{const child=spawn(process.execPath,["--input-type=module","-e",code,path],{stdio:"pipe"});let err="";child.stderr.on("data",x=>err+=x);child.on("exit",status=>status===0?ok():fail(new Error(err||String(status))))})));const replay=replayExecutionEvents(path);assert.equal(replay.events.length,12);assert.deepEqual(replay.events.map(e=>e.sequence),Array.from({length:12},(_,i)=>i+1))}finally{rmSync(dir,{recursive:true,force:true})}});
+
+
+test("event append recovers a lock abandoned by a dead owner",()=>{const {dir,path}=temp();try{writeFileSync(path+".lock",JSON.stringify({pid:999999999,created_at:new Date(0).toISOString()}));new ExecutionEventWriter(path,"run-1").append("heartbeat",null,{status:"running"});assert.equal(replayExecutionEvents(path).events.length,1);assert.equal(existsSync(path+".lock"),false)}finally{rmSync(dir,{recursive:true,force:true})}});

@@ -25,6 +25,8 @@ npm install && npm run build
 node dist/scripts/cli.js validate /path/to/skill
 node dist/scripts/cli.js audit /path/to/skill --format json
 node dist/scripts/cli.js design-evals /path/to/skill/evals/evals.json --skill-path /path/to/skill --format json
+node dist/scripts/cli.js freeze-evals /path/to/elicitation.json --draft -o /path/to/draft.json
+node dist/scripts/cli.js freeze-evals /path/to/completed-draft.json -o /path/to/frozen-plan.json
 node dist/scripts/cli.js analyze /path/to/workspace --skill-path /path/to/skill --format json
 node dist/scripts/cli.js full-eval /path/to/skill --workspace /path/to/workspace --dry-run
 node dist/scripts/cli.js full-eval /path/to/skill --workspace /path/to/workspace --execute --model <model>
@@ -38,7 +40,7 @@ node dist/scripts/cli.js package /path/to/skill ./dist-out
 
 Every subcommand accepts `--help`, `--format text|json`, and `--quiet`. Exit codes are `0` for success, `1` for failure, `2` for invalid usage, and `3` when verification or execution is blocked. The former script entrypoints remain supported for compatibility.
 
-`validate` checks Agent Skills format conformance. `audit` checks repository authoring policy. `design-evals` checks scenario realism, discrimination, capabilities, atomic assertions, fixtures, and navigation expectations. `analyze` separates completed, unavailable, and blocked evidence, then maps failed assertions and navigation results to authoring patterns. Packaging blocks error-level audit findings and reports warnings.
+`validate` checks Agent Skills format conformance. `audit` checks repository authoring policy. `design-evals` checks scenario realism, discrimination, capabilities, atomic assertions, fixtures, and navigation expectations. `freeze-evals` derives five elicitation shells per material capability and freezes completed scenarios, deterministic assertions, qualitative review questions, execution context, edits, provenance, and a canonical content hash. `analyze` separates completed, unavailable, and blocked evidence, then maps failed assertions and navigation results to authoring patterns. Packaging blocks error-level audit findings and reports warnings.
 
 `full-eval` uses the fixed phase order `validate → authoring-audit → evaluation-design → scaffold → paired-runs-and-grading → aggregate → static-review → receipt → post-evaluation-pattern-review → verify`. Its result always includes `status`, `phases`, and `next_actions`; `--format json` wraps that result in the unified CLI envelope. `--dry-run` is non-mutating. Normal reruns and `--resume` preserve existing artifacts and continue from the first unmet requirement. Without `--execute`, the orchestrator never invokes an LLM itself: exit code `3` identifies the exact paired output, grading, timing, test, or human-review evidence an agent or person must provide before rerunning. With `--execute`, one invocation advances through paired execution, grading, aggregation, static review, analysis, receipt, and gates. When human review is the only decision left, exit code `3` is a non-failing `human-review` checkpoint with ordered `executable_actions`; resume starts at verification without rerunning completed phases. The source-bound `<workspace>/receipt.json` records hashes for the Skill, eval plan, execution evidence, benchmark JSON/Markdown, review, and analysis.
 

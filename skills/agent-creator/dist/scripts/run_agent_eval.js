@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 // Run paired custom-agent evaluations with Goose.
-import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, copyFileSync, cpSync, rmSync, statSync } from "node:fs";
+import { appendFileSync, mkdirSync, mkdtempSync, writeFileSync, readFileSync, copyFileSync, cpSync, rmSync, statSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { parseArgs } from "node:util";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { parseAgent, renderAgent } from "./agent_format.js";
+import { createExecutionHeartbeat } from "./execution_heartbeat.js";
 const execFileAsync = promisify(execFile);
 export function extractAssistantText(document) {
     const chunks = [];
@@ -102,7 +103,8 @@ async function runCase(evalCase, configuration, agentPath, workspace, gooseComma
     writeFileSync(join(runDir, "transcript.json"), `${JSON.stringify(document, null, 2)}\n`, "utf-8");
     const metadata = document.metadata ?? {};
     const timing = {
-        total_tokens: metadata.total_tokens ?? 0,
+        total_tokens: Number.isFinite(metadata.total_tokens) ? metadata.total_tokens : 0,
+        total_turns: Number.isFinite(metadata.total_turns) ? metadata.total_turns : 0,
         total_duration_seconds: Math.round(duration * 1000) / 1000,
     };
     writeFileSync(join(runDir, "timing.json"), `${JSON.stringify(timing, null, 2)}\n`, "utf-8");
@@ -145,14 +147,14 @@ export function validateEvalSet(document) {
 async function mapLimit(items, limit, fn) {
     const results = new Array(items.length);
     let index = 0;
-    async function worker() {
+    async function worker(workerIndex) {
         while (index < items.length) {
             const current = index;
             index += 1;
-            results[current] = await fn(items[current]);
+            results[current] = await fn(items[current], `worker-${workerIndex + 1}`);
         }
     }
-    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, (_, workerIndex) => worker(workerIndex)));
     return results;
 }
 async function main() {
@@ -168,6 +170,8 @@ async function main() {
             timeout: { type: "string", default: "600" },
             "max-turns": { type: "string", default: "20" },
             workers: { type: "string", default: "2" },
+            "heartbeat-interval": { type: "string", default: "30" },
+            "no-heartbeat": { type: "boolean", default: false },
         },
     });
     if (!values.agent || !values["eval-set"] || !values.workspace) {
@@ -222,11 +226,62 @@ async function main() {
         const workers = Number(values.workers);
         const timeoutMs = Number(values.timeout) * 1000;
         const maxTurns = Number(values["max-turns"]);
-        const results = await mapLimit(jobs, workers, async (job) => {
-            const result = await runCase(job.evalCase, job.configuration, job.path, workspace, gooseCommand, values.model, timeoutMs, maxTurns, fixtureRoot);
-            console.log(`Completed eval ${result.eval_id} / ${result.configuration} (${result.total_duration_seconds}s)`);
-            return result;
-        });
+        const jobStates = jobs.map(() => "pending");
+        const jobWorkers = jobs.map(() => undefined);
+        const heartbeatStartedAt = Date.now();
+        let heartbeatUpdatedAt = heartbeatStartedAt;
+        let executionStatus = "running";
+        let consumedTokens = 0;
+        let consumedTurns = 0;
+        const heartbeatPath = join(workspace, "execution_heartbeats.jsonl");
+        const heartbeatIntervalMs = Number(values["heartbeat-interval"]) * 1000;
+        if (!Number.isFinite(heartbeatIntervalMs) || heartbeatIntervalMs <= 0)
+            throw new Error("--heartbeat-interval must be a positive number of seconds");
+        const heartbeat = values["no-heartbeat"] ? undefined : createExecutionHeartbeat(() => ({
+            tasks: jobStates.map((status, index) => ({ status, ...(jobWorkers[index] ? { worker: jobWorkers[index] } : {}), ...(values.model ? { model: values.model } : {}) })),
+            models: values.model ? [values.model] : [],
+            startedAt: heartbeatStartedAt,
+            updatedAt: heartbeatUpdatedAt,
+            checkpoint: { artifact_ref: "run_summary.json", completed_runs: jobStates.filter(status => status === "completed").length },
+            budgets: {
+                runs: { consumed: jobStates.filter(status => status === "completed" || status === "failed").length, limit: jobs.length },
+                turns: { consumed: consumedTurns, limit: jobs.length * maxTurns },
+                tokens: { consumed: consumedTokens },
+            },
+            status: executionStatus,
+        }), event => appendFileSync(heartbeatPath, JSON.stringify(event) + "\n", "utf-8"), { intervalMs: heartbeatIntervalMs });
+        let results;
+        try {
+            results = await mapLimit(jobs.map((job, index) => ({ ...job, index })), workers, async (job, workerId) => {
+                jobWorkers[job.index] = workerId;
+                jobStates[job.index] = "running";
+                heartbeatUpdatedAt = Date.now();
+                try {
+                    const result = await runCase(job.evalCase, job.configuration, job.path, workspace, gooseCommand, values.model, timeoutMs, maxTurns, fixtureRoot);
+                    consumedTokens += result.total_tokens;
+                    consumedTurns += result.total_turns;
+                    jobStates[job.index] = "completed";
+                    console.log(`Completed eval ${result.eval_id} / ${result.configuration} (${result.total_duration_seconds}s)`);
+                    return result;
+                }
+                catch (error) {
+                    jobStates[job.index] = "failed";
+                    throw error;
+                }
+                finally {
+                    heartbeatUpdatedAt = Date.now();
+                }
+            });
+            executionStatus = "completed";
+        }
+        catch (error) {
+            executionStatus = "failed";
+            throw error;
+        }
+        finally {
+            heartbeatUpdatedAt = Date.now();
+            heartbeat?.stop();
+        }
         const summary = {
             agent: agent.name,
             agent_path: agentPath,

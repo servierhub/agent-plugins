@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, unlinkSync, writeSync } from "node:fs";
+import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, statSync, unlinkSync, writeSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 export const EXECUTION_EVENT_SCHEMA_VERSION = "1.0";
 export const EXECUTION_EVENT_TYPES = ["evaluation-created", "phase-transition", "job-transition", "heartbeat", "retry", "checkpoint", "cancellation", "failure", "completion", "approval-requested"];
@@ -194,10 +194,18 @@ export function replayExecutionEvents(path) { const s = emptyReplay(); if (!exis
         }
 } recount(s); return s; }
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+function pidAlive(pid) { try {
+    process.kill(pid, 0);
+    return true;
+}
+catch (error) {
+    return error?.code === "EPERM";
+} }
+/** A dead owner cannot permanently wedge the append-only stream after a crash. */
 function acquire(path) { mkdirSync(dirname(path), { recursive: true }); const deadline = Date.now() + 10000; while (true) {
     try {
         const fd = openSync(path, "wx", 0o600);
-        writeSync(fd, String(process.pid));
+        writeSync(fd, JSON.stringify({ pid: process.pid, created_at: new Date().toISOString() }));
         fsyncSync(fd);
         closeSync(fd);
         return () => { try {
@@ -208,6 +216,24 @@ function acquire(path) { mkdirSync(dirname(path), { recursive: true }); const de
     catch (err) {
         if (err?.code !== "EEXIST")
             throw err;
+        let stale = false;
+        try {
+            const raw = readFileSync(path, "utf8"), record = JSON.parse(raw), age = Date.now() - statSync(path).mtimeMs;
+            stale = Number.isInteger(record.pid) && !pidAlive(record.pid) || age > 30000 && !Number.isInteger(record.pid);
+        }
+        catch {
+            try {
+                stale = Date.now() - statSync(path).mtimeMs > 30000;
+            }
+            catch { }
+        }
+        if (stale) {
+            try {
+                unlinkSync(path);
+                continue;
+            }
+            catch { }
+        }
         if (Date.now() >= deadline)
             throw new Error("timed out acquiring execution event stream lock");
         sleep(5);
