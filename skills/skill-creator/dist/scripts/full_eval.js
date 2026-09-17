@@ -10,6 +10,7 @@ import { sourceHash, verifySkill } from "./verify_skill_gates.js";
 import { auditSkill } from "./audit_skill.js";
 import { designEvals } from "./design_evals.js";
 import { analyzeEvaluation } from "./analyze_evaluation.js";
+import { executePairedRuns } from "./paired_execution.js";
 import { artifactHash, compositeHash, listRunDirs, validateExecutionEvidence, } from "./evaluation_provenance.js";
 const SCHEMA_VERSION = "2.0";
 const STATE_FILE = ".full-eval-job.json";
@@ -49,24 +50,6 @@ function atomicWrite(path, value) {
     }
 }
 function atomicJson(path, value) { atomicWrite(path, JSON.stringify(value, null, 2) + "\n"); }
-function runDirs(workspace) {
-    const result = [];
-    if (!isDir(workspace))
-        return result;
-    for (const en of readdirSync(workspace).filter(n => n.startsWith("eval-")).sort()) {
-        const ed = join(workspace, en);
-        if (!isDir(ed))
-            continue;
-        for (const config of readdirSync(ed).sort()) {
-            const cd = join(ed, config);
-            if (!isDir(cd) || !(config.includes("with_skill") || config.includes("old_skill") || config.includes("without_skill")))
-                continue;
-            const runs = readdirSync(cd).filter(n => /^run-\d+$/.test(n) && isDir(join(cd, n))).sort();
-            result.push(...(runs.length ? runs.map(n => join(cd, n)) : [cd]));
-        }
-    }
-    return result;
-}
 function rel(root, path) { return relative(root, path).replaceAll("\\", "/"); }
 function reconcileScenarioDirs(workspace, evals, evalPlanHash) {
     const active = new Set(evals.map((item, index) => "eval-" + (item?.id ?? index + 1)));
@@ -89,7 +72,7 @@ function reconcileScenarioDirs(workspace, evals, evalPlanHash) {
 }
 function missingRuns(workspace) {
     const missing = { outputs: [], gradings: [], timings: [] };
-    for (const dir of runDirs(workspace)) {
+    for (const dir of listRunDirs(workspace)) {
         const outputs = join(dir, "outputs");
         if (!isDir(outputs) || !readdirSync(outputs).some(n => n !== ".keep"))
             missing.outputs.push(rel(workspace, outputs));
@@ -138,7 +121,10 @@ function phaseInput(name, job, options) {
         case "authoring-audit": return digest([name, source]);
         case "evaluation-design": return digest([name, source, evalHash]);
         case "scaffold": return digest([name, source, evalHash, job.baseline]);
-        case "paired-runs-and-grading": return digest([name, source, evalHash, job.baseline, prior("scaffold")]);
+        case "paired-runs-and-grading": {
+            const baselinePath = options.baselineSkillPath ? resolve(options.baselineSkillPath) : "";
+            return digest([name, source, evalHash, job.baseline, prior("scaffold"), String(options.execute), String(options.runner ?? "goose"), String(options.model ?? "plan-default"), baselinePath, baselinePath ? artifactHash(baselinePath) : ""]);
+        }
         case "aggregate": {
             const evidence = validateExecutionEvidence(job.workspace, { skill_source_sha256: source, eval_plan_sha256: evalHash });
             return digest([name, prior("paired-runs-and-grading"), source, evalHash, evidence.evidence_sha256]);
@@ -149,7 +135,7 @@ function phaseInput(name, job, options) {
         case "verify": return digest([name, source, fileDigest(join(job.workspace, "benchmark.json")), fileDigest(join(job.workspace, "review.html")), String(options.humanReview), String(options.testsStatus), String(options.triggeringStatus), String(options.triggeringReason), String(options.minPassRate ?? 0.8), String(options.minDelta ?? 0)]);
     }
 }
-export function fullEval(options) {
+export async function fullEval(options) {
     const skill = resolve(options.skillPath), evalSet = resolve(options.evalSet ?? join(skill, "evals", "evals.json")), workspace = resolve(options.workspace ?? join(dirname(skill), basename(skill) + "-workspace", "iteration-1")), baseline = options.baseline ?? "without_skill";
     const identity = { skill, workspace, eval_set: evalSet, baseline };
     const statePath = join(workspace, STATE_FILE);
@@ -241,7 +227,7 @@ export function fullEval(options) {
                 const archived = reconcileScenarioDirs(workspace, evals, evalPlan);
                 for (let i = 0; i < evals.length; i++) {
                     const item = evals[i] ?? {}, id = item.id ?? i + 1, ed = join(workspace, "eval-" + id), metadata = join(ed, "eval_metadata.json");
-                    const scenario = { eval_id: id, eval_name: item.name ?? slug(item.prompt), subject: item.subject ?? "", language: item.language ?? "", target: item.target ?? {}, preconditions: item.preconditions ?? [], budget: item.budget ?? {}, prompt: item.prompt ?? item.query ?? "", expected_output: item.expected_output ?? "", assertions: item.assertions ?? [], files: item.files ?? [], capabilities: item.capabilities ?? { filesystem: true, agent_runner: true, browser: false, network: false, tools: [] }, coverage_tags: item.coverage_tags ?? [], navigation_expectations: item.navigation_expectations ?? { must_read: [], read_when_relevant: [], must_not_read: [] } };
+                    const scenario = { eval_id: id, eval_name: item.name ?? slug(item.prompt), subject: item.subject ?? "", language: item.language ?? "", target: item.target ?? {}, preconditions: item.preconditions ?? [], budget: item.budget ?? {}, model: item.model ?? null, prompt: item.prompt ?? item.query ?? "", expected_output: item.expected_output ?? "", assertions: item.assertions ?? [], files: item.files ?? [], capabilities: item.capabilities ?? { filesystem: true, agent_runner: true, browser: false, network: false, tools: [] }, coverage_tags: item.coverage_tags ?? [], navigation_expectations: item.navigation_expectations ?? { must_read: [], read_when_relevant: [], must_not_read: [] } };
                     const normalized = { ...scenario, execution_binding: { skill_source_sha256: source, eval_plan_sha256: evalPlan, scenario_sha256: digest([JSON.stringify(scenario)]) } };
                     artifacts.push(metadata);
                     atomicJson(metadata, normalized);
@@ -252,6 +238,17 @@ export function fullEval(options) {
                 phase.detail = archived.length ? `archived ${archived.length} scenario workspace(s) not present in the current eval plan` : undefined;
             }
             else if (phase.name === "paired-runs-and-grading") {
+                if (options.execute) {
+                    const execution = await executePairedRuns({ skillPath: skill, workspace, baseline, baselineSkillPath: options.baselineSkillPath, runner: options.runner, model: options.model ?? null });
+                    if (execution.status !== "complete") {
+                        phase.status = execution.status === "blocked" ? "blocked" : "failed";
+                        phase.detail = `paired execution ${execution.status}`;
+                        phase.error = execution.failures.map(f => `${rel(workspace, f.run)} [${f.code}]: ${f.message}`).join("; ");
+                        job.status = execution.status === "blocked" ? "blocked" : "failed";
+                        checkpoint(job);
+                        return envelope(options, job, execution.status === "blocked" ? "blocked" : "failure", execution.failures.map(f => `Paired run ${rel(workspace, f.run)} failed (${f.code}, ${f.exit_reason}): ${f.message}. Manual evidence remains supported; preserve or replace artifacts and rerun --resume.`), { execution });
+                    }
+                }
                 const missing = missingRuns(workspace), { source, evalPlan } = planHashes(job);
                 phase.artifacts = listRunDirs(workspace);
                 const binding = validateExecutionEvidence(workspace, { skill_source_sha256: source, eval_plan_sha256: evalPlan });
@@ -352,13 +349,13 @@ export function fullEval(options) {
     verification = verification ?? (existsSync(join(workspace, "receipt.json")) ? loadJson(join(workspace, "receipt.json")) : undefined);
     return envelope(options, job, "success", [], { receipt, verification });
 }
-function main() { try {
-    const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { workspace: { type: "string" }, "eval-set": { type: "string" }, baseline: { type: "string", default: "without_skill" }, "dry-run": { type: "boolean", default: false }, resume: { type: "boolean", default: false }, retry: { type: "boolean", default: false }, cancel: { type: "boolean", default: false }, "human-review": { type: "string" }, "tests-status": { type: "string" }, "triggering-status": { type: "string" }, "triggering-reason": { type: "string" }, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" } } });
+async function main() { try {
+    const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { workspace: { type: "string" }, "eval-set": { type: "string" }, baseline: { type: "string", default: "without_skill" }, "baseline-skill": { type: "string" }, execute: { type: "boolean", default: false }, runner: { type: "string" }, model: { type: "string" }, "dry-run": { type: "boolean", default: false }, resume: { type: "boolean", default: false }, retry: { type: "boolean", default: false }, cancel: { type: "boolean", default: false }, "human-review": { type: "string" }, "tests-status": { type: "string" }, "triggering-status": { type: "string" }, "triggering-reason": { type: "string" }, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" } } });
     if (!positionals[0])
         throw new TypeError("skill directory is required");
     if (values.baseline !== "old_skill" && values.baseline !== "without_skill")
         throw new TypeError("--baseline must be old_skill or without_skill");
-    const result = fullEval({ skillPath: positionals[0], workspace: values.workspace, evalSet: values["eval-set"], baseline: values.baseline, dryRun: values["dry-run"], resume: values.resume, retry: values.retry, cancel: values.cancel, humanReview: values["human-review"], testsStatus: values["tests-status"], triggeringStatus: values["triggering-status"], triggeringReason: values["triggering-reason"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]) });
+    const result = await fullEval({ skillPath: positionals[0], workspace: values.workspace, evalSet: values["eval-set"], baseline: values.baseline, baselineSkillPath: values["baseline-skill"], execute: values.execute, runner: values.runner, model: values.model, dryRun: values["dry-run"], resume: values.resume, retry: values.retry, cancel: values.cancel, humanReview: values["human-review"], testsStatus: values["tests-status"], triggeringStatus: values["triggering-status"], triggeringReason: values["triggering-reason"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]) });
     console.log(JSON.stringify(result, null, 2));
     process.exit(result.exit_code);
 }

@@ -2085,6 +2085,117 @@
       },
       "migrationId": null,
       "validatorId": "signature:markdown-document"
+    },
+    {
+      "id": "skill.paired-stream.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/transcript.json",
+      "sourceEvidence": "writeFileSync(join(runDir,\"transcript.json\"),",
+      "kind": "evaluation-artifact",
+      "artifactFormat": "jsonl",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned paired stream envelope."
+      },
+      "migrationId": null,
+      "validatorId": "artifact:paired-stream"
+    },
+    {
+      "id": "skill.paired-events.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/events.json",
+      "sourceEvidence": "atomic(join(runDir,\"events.json\"),",
+      "kind": "evaluation-artifact",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "artifact:paired-events"
+    },
+    {
+      "id": "skill.paired-failure.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/execution-outcome.json",
+      "sourceEvidence": "atomic(join(runDir,\"execution-outcome.json\"),",
+      "kind": "evaluation-artifact",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "artifact:paired-failure"
+    },
+    {
+      "id": "agent.evidence-job.v1",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrLayout": "portable evidence bundle/job.json",
+      "sourceEvidence": "schema_version: JOB_SCHEMA",
+      "kind": "evaluation-definition",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "agent-creator.evidence-job/v1"
+      ],
+      "emittedVersion": "agent-creator.evidence-job/v1",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "artifact:evidence-job"
+    },
+    {
+      "id": "agent.evidence-run.v1",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrLayout": "portable run.example.json and imported evidence.json",
+      "sourceEvidence": "schema_version: RUN_SCHEMA",
+      "kind": "evaluation-artifact",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "agent-creator.evidence-run/v1"
+      ],
+      "emittedVersion": "agent-creator.evidence-run/v1",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "artifact:evidence-run"
+    },
+    {
+      "id": "plugin.component-evidence-receipt.v1",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFieldOrLayout": "typed Skill, agent, hook, MCP, or integration receipt",
+      "sourceEvidence": "schema_version: \"1.0\";",
+      "kind": "receipt",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "artifact:component-evidence-receipt"
     }
   ],
   "host": {
@@ -2308,6 +2419,22 @@
       "expected": []
     },
     {
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "expected": [
+        "agent.md",
+        "eval_metadata.json",
+        "evals.json",
+        "evidence.json",
+        "evidence_job.json",
+        "job.json",
+        "response.md",
+        "run.example.json",
+        "run.schema.json",
+        "timing.json",
+        "transcript.json"
+      ]
+    },
+    {
       "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
       "expected": [
         "eval_metadata.json",
@@ -2349,6 +2476,14 @@
     {
       "sourceFile": "skills/plugin-creator/scripts/cli.ts",
       "expected": []
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "expected": [
+        "SKILL.md",
+        "hooks.json",
+        "mcp.json"
+      ]
     },
     {
       "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
@@ -2502,7 +2637,8 @@
         "execution-evidence.json",
         "grading.json",
         "navigation.json",
-        "timing.json"
+        "timing.json",
+        "transcript.json"
       ]
     },
     {
@@ -2534,6 +2670,18 @@
         "THIRD_PARTY_NOTICES.md",
         "manifest.json",
         "package.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "expected": [
+        "eval_metadata.json",
+        "events.json",
+        "execution-evidence.json",
+        "execution-outcome.json",
+        "grading.json",
+        "timing.json",
+        "transcript.json"
       ]
     },
     {
@@ -3101,6 +3249,46 @@
       "emittedVersion": "1.0",
       "versionSourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
       "versionEvidence": "schema_version: \"1.0\";"
+    },
+    {
+      "id": "skill.paired-events.v1",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceEvidence": "atomic(join(runDir,\"events.json\"),",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "versionEvidence": "atomic(join(runDir,\"events.json\"),"
+    },
+    {
+      "id": "skill.paired-failure.v1",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceEvidence": "atomic(join(runDir,\"execution-outcome.json\"),",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "versionEvidence": "atomic(join(runDir,\"execution-outcome.json\"),"
+    },
+    {
+      "id": "agent.evidence-job.v1",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceEvidence": "schema_version: JOB_SCHEMA",
+      "emittedVersion": "agent-creator.evidence-job/v1",
+      "versionSourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "versionEvidence": "schema_version: JOB_SCHEMA"
+    },
+    {
+      "id": "agent.evidence-run.v1",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceEvidence": "schema_version: RUN_SCHEMA",
+      "emittedVersion": "agent-creator.evidence-run/v1",
+      "versionSourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "versionEvidence": "schema_version: RUN_SCHEMA"
+    },
+    {
+      "id": "plugin.component-evidence-receipt.v1",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceEvidence": "schema_version: \"1.0\";",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "versionEvidence": "schema_version: \"1.0\";"
     }
   ],
   "producerBackedSurfaceIds": [
@@ -3128,7 +3316,13 @@
     "skill.verification-receipt.v1",
     "skill.full-eval-state.v2",
     "plugin.full-eval-state.v1",
-    "skill.execution-evidence.v1"
+    "skill.execution-evidence.v1",
+    "skill.paired-stream.unversioned",
+    "skill.paired-events.v1",
+    "skill.paired-failure.v1",
+    "agent.evidence-job.v1",
+    "agent.evidence-run.v1",
+    "plugin.component-evidence-receipt.v1"
   ],
   "canonicalArtifacts": [
     {
@@ -3434,6 +3628,48 @@
       "format": "json",
       "validatorId": "artifact:execution-evidence",
       "registrySurfaceId": "skill.execution-evidence.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.paired-stream.unversioned",
+      "format": "jsonl",
+      "validatorId": "artifact:paired-stream",
+      "registrySurfaceId": "skill.paired-stream.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.paired-events.v1",
+      "format": "json",
+      "validatorId": "artifact:paired-events",
+      "registrySurfaceId": "skill.paired-events.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.paired-failure.v1",
+      "format": "json",
+      "validatorId": "artifact:paired-failure",
+      "registrySurfaceId": "skill.paired-failure.v1"
+    },
+    {
+      "canonicalArtifactId": "agent.evidence-job.v1",
+      "format": "json",
+      "validatorId": "artifact:evidence-job",
+      "registrySurfaceId": "agent.evidence-job.v1"
+    },
+    {
+      "canonicalArtifactId": "agent.evidence-run.v1",
+      "format": "json",
+      "validatorId": "artifact:evidence-run",
+      "registrySurfaceId": "agent.evidence-run.v1"
+    },
+    {
+      "canonicalArtifactId": "plugin.component-evidence-receipt.v1",
+      "format": "json",
+      "validatorId": "artifact:component-evidence-receipt",
+      "registrySurfaceId": "plugin.component-evidence-receipt.v1"
+    },
+    {
+      "canonicalArtifactId": "agent.evals-form.unversioned",
+      "format": "json",
+      "validatorId": "artifact:evals-form",
+      "registrySurfaceId": "agent.evals-form.unversioned"
     }
   ],
   "producerSiteAliases": [
@@ -3813,7 +4049,7 @@
       "role": "consumer",
       "canonicalArtifactId": "skill.verification-receipt.v1",
       "sourceEvidence": "receipt.json",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 3
     },
     {
       "siteId": "skills/plugin-creator/scripts/full_eval.ts::review.html",
@@ -4588,6 +4824,186 @@
       "canonicalArtifactId": "skill.timing.unversioned",
       "sourceEvidence": "timing.json",
       "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::transcript.json",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFieldOrArtifact": "transcript.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.paired-stream.unversioned",
+      "sourceEvidence": "transcript.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/paired_execution.ts::eval_metadata.json",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/paired_execution.ts::events.json",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrArtifact": "events.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.paired-events.v1",
+      "sourceEvidence": "events.json",
+      "evidenceOccurrences": 4
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/paired_execution.ts::execution-evidence.json",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrArtifact": "execution-evidence.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.execution-evidence.v1",
+      "sourceEvidence": "execution-evidence.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/paired_execution.ts::execution-outcome.json",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrArtifact": "execution-outcome.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.paired-failure.v1",
+      "sourceEvidence": "execution-outcome.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/paired_execution.ts::grading.json",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/paired_execution.ts::timing.json",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrArtifact": "timing.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.timing.unversioned",
+      "sourceEvidence": "timing.json",
+      "evidenceOccurrences": 6
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/paired_execution.ts::transcript.json",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrArtifact": "transcript.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.paired-stream.unversioned",
+      "sourceEvidence": "transcript.json",
+      "evidenceOccurrences": 6
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::eval_metadata.json",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::evals.json",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "evals.json",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.evals-form.unversioned",
+      "sourceEvidence": "evals.json",
+      "evidenceOccurrences": 5
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::evidence.json",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "evidence.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.evidence-run.v1",
+      "sourceEvidence": "evidence.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::job.json",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "job.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.evidence-job.v1",
+      "sourceEvidence": "job.json",
+      "evidenceOccurrences": 4
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::run.example.json",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "run.example.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.evidence-run.v1",
+      "sourceEvidence": "run.example.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::response.md",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "response.md",
+      "role": "producer",
+      "canonicalArtifactId": "agent.response-markdown.unversioned",
+      "sourceEvidence": "response.md",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::timing.json",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "timing.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.timing.unversioned",
+      "sourceEvidence": "timing.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::transcript.json",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "transcript.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.transcript.unversioned",
+      "sourceEvidence": "transcript.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/component_evidence.ts::SKILL.md",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "role": "consumer",
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "sourceEvidence": "SKILL.md",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/component_evidence.ts::hooks.json",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFieldOrArtifact": "hooks.json",
+      "role": "consumer",
+      "canonicalArtifactId": "hook.document.current.unversioned",
+      "sourceEvidence": "hooks.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/component_evidence.ts::mcp.json",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFieldOrArtifact": "mcp.json",
+      "role": "consumer",
+      "canonicalArtifactId": "plugin.mcp.v1",
+      "sourceEvidence": "mcp.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/component_evidence.ts::typed component evidence receipt",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFieldOrArtifact": "typed component evidence receipt",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.component-evidence-receipt.v1",
+      "sourceEvidence": "export type TypedEvidenceReceipt =",
+      "evidenceOccurrences": 1
     }
   ],
   "structuralExclusions": [
@@ -4766,6 +5182,30 @@
       "sourceEvidence": "navigation.json",
       "evidenceOccurrences": 1,
       "rationale": "Optional navigation telemetry has no stable public serialized contract and is consumed only as best-effort execution-provenance evidence."
+    },
+    {
+      "site": "skills/agent-creator/scripts/evidence_exchange.ts::agent.md",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "agent.md",
+      "sourceEvidence": "agent.md",
+      "evidenceOccurrences": 2,
+      "rationale": "Portable bundle input snapshot; not a standalone creator result surface."
+    },
+    {
+      "site": "skills/agent-creator/scripts/evidence_exchange.ts::evidence_job.json",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "evidence_job.json",
+      "sourceEvidence": "evidence_job.json",
+      "evidenceOccurrences": 1,
+      "rationale": "Workspace pin marker duplicates evidence-job identity and is not an independent exchange document."
+    },
+    {
+      "site": "skills/agent-creator/scripts/evidence_exchange.ts::run.schema.json",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFieldOrArtifact": "run.schema.json",
+      "sourceEvidence": "run.schema.json",
+      "evidenceOccurrences": 1,
+      "rationale": "Generated schema helper for evidence-run; excluded until independently published as a compatibility schema."
     }
   ],
   "compatibleSurfaceAliases": [

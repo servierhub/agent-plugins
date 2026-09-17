@@ -2089,8 +2089,118 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     },
     "migrationId": null,
     "validatorId": "signature:markdown-document"
+  },
+  {
+    "id": "skill.paired-stream.unversioned",
+    "creator": "skill-creator",
+    "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+    "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/transcript.json",
+    "sourceEvidence": "writeFileSync(join(runDir,\"transcript.json\"),",
+    "kind": "evaluation-artifact",
+    "artifactFormat": "jsonl",
+    "readVersionsOrRanges": [
+      "unversioned"
+    ],
+    "emittedVersion": null,
+    "versionField": null,
+    "supportState": "legacy-readable",
+    "deprecation": {
+      "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+      "replacement": "Future versioned paired stream envelope."
+    },
+    "migrationId": null,
+    "validatorId": "artifact:paired-stream"
+  },
+  {
+    "id": "skill.paired-events.v1",
+    "creator": "skill-creator",
+    "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+    "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/events.json",
+    "sourceEvidence": "atomic(join(runDir,\"events.json\"),",
+    "kind": "evaluation-artifact",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0"
+    ],
+    "emittedVersion": "1.0",
+    "versionField": null,
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "artifact:paired-events"
+  },
+  {
+    "id": "skill.paired-failure.v1",
+    "creator": "skill-creator",
+    "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+    "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/execution-outcome.json",
+    "sourceEvidence": "atomic(join(runDir,\"execution-outcome.json\"),",
+    "kind": "evaluation-artifact",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0"
+    ],
+    "emittedVersion": "1.0",
+    "versionField": "/schema_version",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "artifact:paired-failure"
+  },
+  {
+    "id": "agent.evidence-job.v1",
+    "creator": "agent-creator",
+    "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+    "sourceFieldOrLayout": "portable evidence bundle/job.json",
+    "sourceEvidence": "schema_version: JOB_SCHEMA",
+    "kind": "evaluation-definition",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "agent-creator.evidence-job/v1"
+    ],
+    "emittedVersion": "agent-creator.evidence-job/v1",
+    "versionField": "/schema_version",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "artifact:evidence-job"
+  },
+  {
+    "id": "agent.evidence-run.v1",
+    "creator": "agent-creator",
+    "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+    "sourceFieldOrLayout": "portable run.example.json and imported evidence.json",
+    "sourceEvidence": "schema_version: RUN_SCHEMA",
+    "kind": "evaluation-artifact",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "agent-creator.evidence-run/v1"
+    ],
+    "emittedVersion": "agent-creator.evidence-run/v1",
+    "versionField": "/schema_version",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "artifact:evidence-run"
+  },
+  {
+    "id": "plugin.component-evidence-receipt.v1",
+    "creator": "plugin-creator",
+    "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+    "sourceFieldOrLayout": "typed Skill, agent, hook, MCP, or integration receipt",
+    "sourceEvidence": "schema_version: \"1.0\";",
+    "kind": "receipt",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0"
+    ],
+    "emittedVersion": "1.0",
+    "versionField": "/schema_version",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "artifact:component-evidence-receipt"
   }
-
 ] as CompatibilityEntry[]).map(E)) as readonly CompatibilityEntry[];
 export const RESULT_CONTRACT_REFERENCE=Object.freeze({version:RESULT_CONTRACT_VERSION,schemaId:RESULT_CONTRACT_SCHEMA_ID,mappingExport:"LEGACY_STATUS_MAPPINGS",classifierExport:"classifyResultExit"});
 const D=(code:CompatibilityDiagnostic["code"],severity:CompatibilityDiagnostic["severity"],path:string,message:string,remediation:string):CompatibilityDiagnostic=>({code,severity,path,message,remediation});

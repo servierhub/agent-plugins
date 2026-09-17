@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { validate } from "./validate_goose_plugin.js";
 import { sourceHash } from "./package_manifest.js";
-import { componentHash, verifyPlugin } from "./verify_plugin_gates.js";
+import { verifyPlugin } from "./verify_plugin_gates.js";
+import { discoverPluginComponents } from "./component_evidence.js";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PHASES = ["validation", "planning", "execution", "grading", "aggregation", "review", "improvement", "verification"];
 const STATE_FILE = "full-eval-state.json";
@@ -46,23 +47,25 @@ function context(options) {
     } })(), name = manifest?.name ?? basename(root), archive = resolve(options.archive ?? join(workspace, name + ".zip"));
     if (!isPathWithin(workspace, archive))
         throw new Error("full-eval archive must be inside the workspace");
-    const skills = directories(join(root, "skills")), supplied = options.componentReceipts?.map(path => resolve(path)) ?? [], receiptByName = new Map();
+    const discovered = discoverPluginComponents(root), skills = discovered.filter(component => component.kind === "skill").map(component => component.id), supplied = options.componentReceipts?.map(path => resolve(path)) ?? [], receiptByKey = new Map();
     for (const path of supplied) {
-        const n = receiptName(path);
-        if (n)
-            receiptByName.set(n, path);
-    }
-    for (const skill of skills) {
-        const path = join(workspace, "components", skill, "receipt.json");
-        if (!receiptByName.has(skill) && existsSync(path))
-            receiptByName.set(skill, path);
+        try {
+            const value = JSON.parse(requireText(path));
+            if (value?.artifact && value?.name)
+                receiptByKey.set(value.artifact + ":" + value.name, path);
+        }
+        catch { }
     }
     const skillCreatorCli = resolve(HERE, "../../../skill-creator/dist/scripts/cli.js");
-    const components = skills.map(skill => { const skillPath = join(root, "skills", skill), receipt = receiptByName.get(skill) ?? join(workspace, "components", skill, "receipt.json"); return { name: skill, path: skillPath, receipt, available: existsSync(receipt), command: "node " + q(skillCreatorCli) + " full-eval " + q(skillPath) + " --workspace " + q(join(workspace, "components", skill)) + " --resume --format json" }; });
+    const components = discovered.map(component => { const defaultReceipt = join(workspace, "components", component.kind, component.id, "receipt.json"), legacyReceipt = component.kind === "skill" ? join(workspace, "components", component.id, "receipt.json") : defaultReceipt, receipt = receiptByKey.get(component.key) ?? (existsSync(defaultReceipt) ? defaultReceipt : legacyReceipt); const command = component.kind === "skill" ? "node " + q(skillCreatorCli) + " full-eval " + q(component.path) + " --workspace " + q(join(workspace, "components", component.kind, component.id)) + " --resume --format json" : "obtain typed " + component.kind + " evidence from its specialist and write " + q(defaultReceipt); return { kind: component.kind, key: component.key, name: component.id, path: component.path, source_sha256: component.source_sha256, receipt, available: existsSync(receipt), command }; });
+    if (discovered.some(component => component.kind !== "skill")) {
+        const integrationReceipt = receiptByKey.get("integration:" + name) ?? join(workspace, "integration", "receipt.json");
+        components.push({ kind: "integration", key: "integration:" + name, name, path: root, source_sha256: pluginHash(root, archive), receipt: integrationReceipt, available: existsSync(integrationReceipt), command: "run plugin integration scenarios and write typed coverage/handoff evidence to " + q(integrationReceipt) });
+    }
     return { root, workspace, integration, archive, name, skills, components };
 }
 function fingerprints(c, o) {
-    const artifact = pluginHash(c.root, c.archive), componentInputs = c.components.map(x => ({ name: x.name, source: componentHash(x.path), receipt: fileHash(x.receipt) }));
+    const artifact = pluginHash(c.root, c.archive), componentInputs = c.components.map(x => ({ key: x.key, source: x.kind === "integration" ? artifact : x.source_sha256, receipt: fileHash(x.receipt) }));
     const own = { validation: { artifact }, planning: { skills: c.skills, artifact }, execution: componentInputs, grading: { benchmark: fileHash(join(c.integration, "benchmark.json")), artifact, minPassRate: o.minPassRate ?? 0.8, minDelta: o.minDelta ?? 0 }, aggregation: { testsStatus: o.testsStatus ?? "blocked", artifact }, review: { review: fileHash(join(c.integration, "review.html")), humanReview: o.humanReview ?? "pending", artifact }, improvement: { artifact }, verification: { artifact, benchmark: fileHash(join(c.integration, "benchmark.json")), review: fileHash(join(c.integration, "review.html")), testsStatus: o.testsStatus ?? "blocked", humanReview: o.humanReview ?? "pending" } };
     const result = {};
     for (let i = 0; i < PHASES.length; i++) {

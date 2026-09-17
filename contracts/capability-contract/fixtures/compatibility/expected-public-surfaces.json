@@ -1090,6 +1090,66 @@
         "diagnostic": null,
         "validatorId": "artifact:execution-evidence"
       }
+    },
+    {
+      "id": "skill.paired-stream.unversioned",
+      "expectedOutcome": {
+        "mode": "read-legacy",
+        "format": "jsonl",
+        "fixture": "cases/skill.paired-stream.unversioned.jsonl",
+        "diagnostic": "COMPATIBILITY_LEGACY_UNVERSIONED",
+        "validatorId": "artifact:paired-stream"
+      }
+    },
+    {
+      "id": "skill.paired-events.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/skill.paired-events.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:paired-events"
+      }
+    },
+    {
+      "id": "skill.paired-failure.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/skill.paired-failure.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:paired-failure"
+      }
+    },
+    {
+      "id": "agent.evidence-job.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/agent.evidence-job.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:evidence-job"
+      }
+    },
+    {
+      "id": "agent.evidence-run.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/agent.evidence-run.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:evidence-run"
+      }
+    },
+    {
+      "id": "plugin.component-evidence-receipt.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/plugin.component-evidence-receipt.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:component-evidence-receipt"
+      }
     }
   ]
 }

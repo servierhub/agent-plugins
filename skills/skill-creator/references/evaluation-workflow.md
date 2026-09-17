@@ -47,7 +47,16 @@ Metadata format:
 
 ### 2. Launch paired runs together
 
-Launch the current and baseline run for every case in the same turn. Keep inputs and requested outputs identical. Save complete outputs or transcripts in their assigned run directories.
+Launch the current and baseline run for every case in the same turn. Keep inputs and requested outputs identical. Save complete outputs and transcripts in their assigned run directories.
+
+The Goose reference adapter can execute scaffolded pairs directly:
+
+```bash
+node dist/scripts/cli.js full-eval <skill-directory> --workspace <workspace> \
+  --execute --model <model> [--baseline old_skill --baseline-skill <snapshot>]
+```
+
+Each run uses `goose run --no-session` in a fresh temporary workspace. The adapter enforces the scenario model, declared tools, timeout, and `budget.max_turns` (default 40 when omitted). It records the host version, exit reason, duration, reported tokens or an explicit unavailability reason, transcript, output, grading, and bound execution evidence. A missing or failing host returns a typed blocked/failure receipt; omit `--execute` to preserve the manual evidence workflow.
 
 ### 3. Define assertions while runs execute
 

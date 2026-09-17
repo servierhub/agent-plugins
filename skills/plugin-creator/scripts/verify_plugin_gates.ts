@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 import type AdmZipType from "adm-zip";
@@ -9,6 +9,7 @@ import { collectPackageFiles, sourceHash } from "./package_manifest.js";
 import { loadRuntimeDependency } from "./runtime-deps.js";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { validate } from "./validate_goose_plugin.js";
+import { assessEvidenceReceipt, discoverPluginComponents, evidenceSourceHash } from "./component_evidence.js";
 const AdmZip = loadRuntimeDependency<typeof AdmZipType>("adm-zip");
 export type Status = "pass" | "fail" | "blocked" | "na";
 type Profile = "static" | "evaluation" | "release";
@@ -33,7 +34,6 @@ export interface VerifyOptions {
 const PROFILES = new Set<Profile>(["static", "evaluation", "release"]);
 const TEST_STATUSES = new Set<Status>(["pass", "fail", "blocked", "na"]);
 const REVIEW_STATUSES = new Set(["pass", "pending", "na"]);
-const COMPONENT_EXCLUDED = new Set([".git", ".verification", "dist", "node_modules", "vendor", "evaluations"]);
 function isDirectory(path: string): boolean { try {
     return statSync(path).isDirectory();
 }
@@ -70,18 +70,16 @@ function assertOptions(options: VerifyOptions): {
         throw new Error("min-pass-rate must be between 0 and 1");
     return { profile: profile as Profile, testsStatus: testsStatus as Status, humanReview: humanReview as any, minPassRate, minDelta };
 }
-function walkComponent(root: string, current: string, out: string[]): void { for (const name of readdirSync(current).sort()) {
-    if (COMPONENT_EXCLUDED.has(name))
-        continue;
-    const path = join(current, name);
-    isDirectory(path) ? walkComponent(root, path, out) : out.push(path);
-} }
-export function componentHash(rootArg: string): string { const root = resolve(rootArg), files: string[] = []; walkComponent(root, root, files); const crypto = createHash("sha256"); for (const path of files) {
-    crypto.update(relative(root, path).replaceAll("\\", "/"));
-    crypto.update("\0");
-    crypto.update(readFileSync(path));
-    crypto.update("\0");
-} return crypto.digest("hex"); }
+export function componentHash(pathArg: string): string {
+    // Compatibility helper: when handed a canonical component path, return the same
+    // conservative whole-plugin freshness hash used by discovery.
+    const path = resolve(pathArg), skillRoot = basename(dirname(path)) === "skills" ? dirname(dirname(path)) : null;
+    if (skillRoot) {
+        const component = discoverPluginComponents(skillRoot).find(value => value.path === path);
+        if (component) return component.source_sha256;
+    }
+    return evidenceSourceHash(path);
+}
 function aggregate(gates: Record<string, Gate>): Status {
     const required = Object.values(gates).filter(gate => gate.required);
     if (required.some(gate => gate.status === "fail"))
@@ -155,31 +153,46 @@ export function verifyPlugin(options: VerifyOptions) {
     const parsed = assertOptions(options), root = resolve(options.pluginPath), strict = parsed.profile !== "static";
     const manifest = loadJson(join(root, "plugin.json")), name = manifest?.name ?? basename(root);
     const schema = validateAgentPluginSchema(root), operational = validate(root);
-    const receipts = new Map<string, any>();
-    for (const path of options.componentReceipts ?? []) {
-        const receipt = loadJson(resolve(path));
-        if (receipt?.name)
-            receipts.set(receipt.name, receipt);
-    }
-    const skillsRoot = join(root, "skills"), skills = isDirectory(skillsRoot) ? readdirSync(skillsRoot).filter(name => isDirectory(join(skillsRoot, name))).sort() : [];
-    const componentProblems: string[] = [];
-    for (const skill of skills) {
-        const receipt = receipts.get(skill);
+    const receiptList = (options.componentReceipts ?? []).map(path => ({ path: resolve(path), value: loadJson(resolve(path)) }));
+    const receipts = new Map<string, any>(), receiptKeys: string[] = [];
+    for (const { value } of receiptList) if (value?.name && value?.artifact) { const key = value.artifact + ":" + value.name; receiptKeys.push(key); receipts.set(key, value); }
+    const components = discoverPluginComponents(root), componentKeys = components.map(component => component.key);
+    const fullPlugin = components.some(component => component.kind !== "skill");
+    const componentProblems: string[] = [], componentAggregation: Record<string, any> = {};
+    const allowedReceiptKeys = new Set([...componentKeys, "integration:" + name]);
+    for (const key of receiptKeys) if (!allowedReceiptKeys.has(key)) componentProblems.push("unknown component receipt key: " + key);
+    for (const key of new Set(receiptKeys)) if (receiptKeys.filter(candidate => candidate === key).length > 1) componentProblems.push("duplicate component receipt key: " + key);
+    for (const component of components) {
+        const receipt = receipts.get(component.key) ?? receiptList.find(entry => entry.value?.name === component.id && entry.value?.artifact === component.kind)?.value;
         if (!receipt) {
-            componentProblems.push(skill + ": receipt missing");
+            componentProblems.push(component.key + ": receipt missing");
+            componentAggregation[component.key] = { kind: component.kind, name: component.id, status: "blocked", applicable: true, reason: "receipt missing", source_sha256: component.source_sha256 };
             continue;
         }
-        if (receipt.artifact !== "skill" || receipt.schema_version !== "1.0")
-            componentProblems.push(skill + ": invalid schema");
-        if (receipt.status !== "pass")
-            componentProblems.push(skill + ": receipt status " + String(receipt.status));
-        if (receipt.source_sha256 !== componentHash(join(skillsRoot, skill)))
-            componentProblems.push(skill + ": stale source hash");
+        const assessment = assessEvidenceReceipt(receipt, component.kind, component.source_sha256);
+        if (fullPlugin && !assessment.typed) assessment.problems.push("typed evidence envelope required for full plugin");
+        const status: Status = assessment.status;
+        for (const problem of assessment.problems) componentProblems.push(component.key + ": " + problem);
+        componentAggregation[component.key] = { kind: component.kind, name: component.id, status, applicable: receipt.applicability?.status !== "na", ...(receipt.applicability?.reason ? { reason: receipt.applicability.reason } : {}), source_sha256: component.source_sha256, receipt_source_sha256: receipt.source_sha256, fresh: receipt.source_sha256 === component.source_sha256, typed: assessment.typed, checks: receipt.checks ?? [] };
     }
-    const componentStatus: Status = componentProblems.some(p => p.includes("status fail")) ? "fail" : componentProblems.length ? "blocked" : "pass";
+    const componentStatuses = Object.values(componentAggregation).map((value: any) => value.status as Status);
+    const componentStatus: Status = componentStatuses.includes("fail") ? "fail" : componentStatuses.includes("blocked") || componentProblems.length ? "blocked" : "pass";
+    const integrationReceipt = receiptList.find(entry => entry.value?.artifact === "integration")?.value;
+    const integrationAssessment = fullPlugin ? assessEvidenceReceipt(integrationReceipt, "integration", sourceHash(root), componentKeys) : null;
     const archive = options.archive ? resolve(options.archive) : undefined;
     const currentHash = sourceHash(root, archive ? [archive] : []);
     const benchmark = strict ? benchmarkGate(options.integration ? resolve(options.integration) : "", currentHash, parsed.minPassRate, parsed.minDelta) : { status: "na" as Status, reason: "not required" };
+    let integrationStatus: Status = benchmark.status;
+    const integrationEvidence = [benchmark.reason];
+    if (strict && fullPlugin) {
+        if (!integrationAssessment) { integrationStatus = "blocked"; integrationEvidence.push("typed integration receipt missing"); }
+        else {
+            integrationEvidence.push(...integrationAssessment.problems.map(problem => "integration receipt: " + problem));
+            if (integrationAssessment.status === "fail") integrationStatus = "fail";
+            else if (integrationAssessment.status !== "pass" && integrationStatus !== "fail") integrationStatus = "blocked";
+            else if (benchmark.status === "pass") integrationEvidence.push("typed integration coverage and handoffs verified");
+        }
+    }
     const distribution = strict ? distributionGate(root, name, archive) : { status: "na" as Status, reason: "not required" };
     let review: Status = "na", reviewReason = "not required";
     const workspace = options.integration ? resolve(options.integration) : "";
@@ -199,14 +212,14 @@ export function verifyPlugin(options: VerifyOptions) {
     }
     const gates: Record<string, Gate> = {
         identity: makeGate(schema.valid && !operational.errors.length ? "pass" : "fail", true, ["Agent Plugins 1.0.0 schemas pass", "operational validation passes"], [...schema.errors.map(e => e.path + ": " + e.message), ...operational.errors, ...operational.warnings]),
-        components: makeGate(componentStatus, true, ["every skill receipt passes", "receipt hashes are current"], componentProblems.length ? componentProblems : [skills.length + " receipts verified"], componentStatus === "blocked" ? "missing, non-passing, or stale receipt" : undefined),
-        integration: makeGate(benchmark.status, strict, ["paired benchmark rates are valid", "source hash is current", "thresholds pass"], [benchmark.reason], benchmark.status === "blocked" ? benchmark.reason : undefined),
+        components: makeGate(componentStatus, true, ["every discovered component has applicable typed evidence", "component source hashes are current", "N/A has an explicit reason"], componentProblems.length ? componentProblems : [components.length + " component receipts verified"], componentStatus === "blocked" ? "missing, invalid, non-passing, or stale component evidence" : undefined),
+        integration: makeGate(integrationStatus, strict, ["paired benchmark rates are valid", "plugin source hash is current", "all components have integration coverage", "cross-component handoffs are evidenced"], integrationEvidence, integrationStatus === "blocked" ? integrationEvidence.at(-1) : undefined),
         distribution: makeGate(distribution.status, strict, ["entries are safe and unique", "archive matches canonical package manifest"], [distribution.reason], distribution.status === "blocked" ? distribution.reason : undefined),
         regression: makeGate(parsed.testsStatus, strict, ["component and plugin tests pass", "offline smoke passes"], ["reported: " + parsed.testsStatus], parsed.testsStatus === "blocked" ? "test evidence missing" : undefined),
         review: makeGate(review, strict, ["viewer exists", "human review complete"], [reviewReason], review === "blocked" ? reviewReason : undefined)
     };
     const status = aggregate(gates);
-    return { schema_version: "1.0", artifact: "plugin", name, profile: parsed.profile, status, source_sha256: currentHash, generated_at: new Date().toISOString(), gates, critical_failures: Object.entries(gates).filter(([, gate]) => gate.required && gate.status === "fail").map(([gate]) => gate), release_eligible: parsed.profile === "release" && status === "pass", components: Object.fromEntries([...receipts].map(([component, receipt]) => [component, { status: receipt.status, source_sha256: receipt.source_sha256 }])), artifacts: { plugin: root, ...(workspace ? { integration_workspace: workspace, benchmark: join(workspace, "benchmark.json"), review: join(workspace, "review.html") } : {}), ...(archive ? { archive } : {}) } };
+    return { schema_version: "1.0", artifact: "plugin", name, profile: parsed.profile, status, source_sha256: currentHash, generated_at: new Date().toISOString(), gates, critical_failures: Object.entries(gates).filter(([, gate]) => gate.required && gate.status === "fail").map(([gate]) => gate), release_eligible: parsed.profile === "release" && status === "pass", component_summary: { discovered: components.length, pass: Object.values(componentAggregation).filter((value: any) => value.status === "pass").length, fail: Object.values(componentAggregation).filter((value: any) => value.status === "fail").length, blocked: Object.values(componentAggregation).filter((value: any) => value.status === "blocked").length, na: Object.values(componentAggregation).filter((value: any) => value.status === "na").length }, components: componentAggregation, integration_evidence: integrationReceipt ? { status: integrationAssessment?.status, source_sha256: integrationReceipt.source_sha256, covered_components: integrationReceipt.payload?.covered_components ?? [], handoffs: integrationReceipt.payload?.handoffs ?? [] } : null, artifacts: { plugin: root, ...(workspace ? { integration_workspace: workspace, benchmark: join(workspace, "benchmark.json"), review: join(workspace, "review.html") } : {}), ...(archive ? { archive } : {}) } };
 }
 function main() { try {
     const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { profile: { type: "string", default: "release" }, "component-receipt": { type: "string", multiple: true }, integration: { type: "string" }, archive: { type: "string" }, "tests-status": { type: "string" }, "human-review": { type: "string" }, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" }, output: { type: "string", short: "o" } } });

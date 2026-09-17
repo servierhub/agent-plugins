@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+import { readFileSync } from "node:fs";
+const args=process.argv.slice(2),mode=args.includes("--fake-mode")?args[args.indexOf("--fake-mode")+1]:"success";
+if(args.includes("--version")){console.log("fake-goose 2.0.0");process.exit(0);}
+if(mode==="hang"){setInterval(()=>console.log(JSON.stringify({type:"progress",message:"working"})),20);}
+else if(!["success","fixture","split-terminal"].includes(mode)){const messages={"model-unavailable":"model not found","model-rejected":"model access denied","tool-unavailable":"tool unavailable","tool-rejected":"tool not allowed"};console.error(messages[mode]||"host failed");process.exit(9);}
+else {const input=readFileSync(0,"utf8");const fixture=mode==="fixture"?readFileSync("evals/files/input.txt","utf8"):"deterministic paired output";const assertions=input.split("Assertions:\n")[1]?.split("\n").filter(x=>x.startsWith("- ")).map(x=>x.slice(2))??[];console.log(JSON.stringify({type:"message",message:{content:[{type:"text",text:"working"}]}}));const terminal=JSON.stringify({type:"complete",output:JSON.stringify({output:fixture,expectations:assertions.map(text=>({text,passed:true,evidence:"deterministic stub evidence"}))}),usage:{total_tokens:17}});if(mode==="split-terminal"){for(const part of [terminal.slice(0,13),terminal.slice(13,47),terminal.slice(47)]){process.stdout.write(part);await new Promise(resolve=>setTimeout(resolve,10));}}else console.log(terminal);}

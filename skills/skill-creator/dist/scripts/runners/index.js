@@ -2,6 +2,7 @@
 import { RunnerError } from "./base.js";
 import { GooseRunner } from "./goose.js";
 export { RunnerError } from "./base.js";
+export { PairedExecutionError } from "./paired.js";
 const RUNNERS = {
     goose: GooseRunner,
 };

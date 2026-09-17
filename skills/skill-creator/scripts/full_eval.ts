@@ -13,6 +13,7 @@ import { sourceHash, verifySkill, type GateStatus, type HumanReviewStatus } from
 import { auditSkill } from "./audit_skill.js";
 import { designEvals } from "./design_evals.js";
 import { analyzeEvaluation } from "./analyze_evaluation.js";
+import { executePairedRuns } from "./paired_execution.js";
 import {
   artifactHash, compositeHash, listRunDirs,
   validateExecutionEvidence,
@@ -66,6 +67,10 @@ export interface FullEvalOptions {
   triggeringReason?: string;
   minPassRate?: number;
   minDelta?: number;
+  execute?: boolean;
+  runner?: string;
+  model?: string;
+  baselineSkillPath?: string;
 }
 
 function isDir(path: string): boolean { try { return statSync(path).isDirectory(); } catch { return false; } }
@@ -82,18 +87,6 @@ function atomicWrite(path:string, value:string):void {
   const dirfd=openSync(dirname(path),"r"); try{fsyncSync(dirfd);}finally{closeSync(dirfd);}
 }
 function atomicJson(path:string,value:unknown):void{atomicWrite(path,JSON.stringify(value,null,2)+"\n");}
-function runDirs(workspace: string): string[] {
-  const result: string[]=[]; if(!isDir(workspace)) return result;
-  for(const en of readdirSync(workspace).filter(n=>n.startsWith("eval-")).sort()){
-    const ed=join(workspace,en); if(!isDir(ed))continue;
-    for(const config of readdirSync(ed).sort()){
-      const cd=join(ed,config); if(!isDir(cd)||!(config.includes("with_skill")||config.includes("old_skill")||config.includes("without_skill")))continue;
-      const runs=readdirSync(cd).filter(n=>/^run-\d+$/.test(n)&&isDir(join(cd,n))).sort();
-      result.push(...(runs.length?runs.map(n=>join(cd,n)):[cd]));
-    }
-  }
-  return result;
-}
 function rel(root:string,path:string):string{return relative(root,path).replaceAll("\\","/");}
 function reconcileScenarioDirs(workspace:string,evals:any[],evalPlanHash:string):string[]{
   const active=new Set(evals.map((item,index)=>"eval-"+(item?.id??index+1)));
@@ -113,7 +106,7 @@ function reconcileScenarioDirs(workspace:string,evals:any[],evalPlanHash:string)
 }
 function missingRuns(workspace:string){
   const missing={outputs:[] as string[],gradings:[] as string[],timings:[] as string[]};
-  for(const dir of runDirs(workspace)){
+  for(const dir of listRunDirs(workspace)){
     const outputs=join(dir,"outputs");
     if(!isDir(outputs)||!readdirSync(outputs).some(n=>n!==".keep"))missing.outputs.push(rel(workspace,outputs));
     if(!existsSync(join(dir,"grading.json")))missing.gradings.push(rel(workspace,join(dir,"grading.json")));
@@ -143,7 +136,10 @@ function phaseInput(name:PhaseName,job:JobRecord,options:FullEvalOptions):string
     case "validate": case "authoring-audit": return digest([name,source]);
     case "evaluation-design": return digest([name,source,evalHash]);
     case "scaffold": return digest([name,source,evalHash,job.baseline]);
-    case "paired-runs-and-grading": return digest([name,source,evalHash,job.baseline,prior("scaffold")]);
+    case "paired-runs-and-grading": {
+      const baselinePath=options.baselineSkillPath?resolve(options.baselineSkillPath):"";
+      return digest([name,source,evalHash,job.baseline,prior("scaffold"),String(options.execute),String(options.runner??"goose"),String(options.model??"plan-default"),baselinePath,baselinePath?artifactHash(baselinePath):""]);
+    }
     case "aggregate": {const evidence=validateExecutionEvidence(job.workspace,{skill_source_sha256:source,eval_plan_sha256:evalHash});return digest([name,prior("paired-runs-and-grading"),source,evalHash,evidence.evidence_sha256]);}
     case "static-review": return digest([name,fileDigest(join(job.workspace,"benchmark.json"))]);
     case "receipt": return digest([name,fileDigest(join(job.workspace,"benchmark.json")),fileDigest(join(job.workspace,"review.html")),prior("paired-runs-and-grading")]);
@@ -152,7 +148,7 @@ function phaseInput(name:PhaseName,job:JobRecord,options:FullEvalOptions):string
   }
 }
 
-export function fullEval(options:FullEvalOptions){
+export async function fullEval(options:FullEvalOptions){
   const skill=resolve(options.skillPath),evalSet=resolve(options.evalSet??join(skill,"evals","evals.json")),workspace=resolve(options.workspace??join(dirname(skill),basename(skill)+"-workspace","iteration-1")),baseline=options.baseline??"without_skill";
   const identity={skill,workspace,eval_set:evalSet,baseline}; const statePath=join(workspace,STATE_FILE); let job=loadJob(statePath,identity)??newJob(skill,workspace,evalSet,baseline);
   if(options.dryRun){
@@ -185,12 +181,19 @@ export function fullEval(options:FullEvalOptions){
         const archived=reconcileScenarioDirs(workspace,evals,evalPlan);
         for(let i=0;i<evals.length;i++){
           const item=evals[i]??{},id=item.id??i+1,ed=join(workspace,"eval-"+id),metadata=join(ed,"eval_metadata.json");
-          const scenario={eval_id:id,eval_name:item.name??slug(item.prompt),subject:item.subject??"",language:item.language??"",target:item.target??{},preconditions:item.preconditions??[],budget:item.budget??{},prompt:item.prompt??item.query??"",expected_output:item.expected_output??"",assertions:item.assertions??[],files:item.files??[],capabilities:item.capabilities??{filesystem:true,agent_runner:true,browser:false,network:false,tools:[]},coverage_tags:item.coverage_tags??[],navigation_expectations:item.navigation_expectations??{must_read:[],read_when_relevant:[],must_not_read:[]}};
+          const scenario={eval_id:id,eval_name:item.name??slug(item.prompt),subject:item.subject??"",language:item.language??"",target:item.target??{},preconditions:item.preconditions??[],budget:item.budget??{},model:item.model??null,prompt:item.prompt??item.query??"",expected_output:item.expected_output??"",assertions:item.assertions??[],files:item.files??[],capabilities:item.capabilities??{filesystem:true,agent_runner:true,browser:false,network:false,tools:[]},coverage_tags:item.coverage_tags??[],navigation_expectations:item.navigation_expectations??{must_read:[],read_when_relevant:[],must_not_read:[]}};
           const normalized={...scenario,execution_binding:{skill_source_sha256:source,eval_plan_sha256:evalPlan,scenario_sha256:digest([JSON.stringify(scenario)])}};
           artifacts.push(metadata);atomicJson(metadata,normalized);
           for(const config of ["with_skill",baseline])mkdirSync(join(ed,config,"run-1","outputs"),{recursive:true});
         }phase.artifacts=artifacts;phase.detail=archived.length?`archived ${archived.length} scenario workspace(s) not present in the current eval plan`:undefined;
       }else if(phase.name==="paired-runs-and-grading"){
+        if(options.execute){
+          const execution=await executePairedRuns({skillPath:skill,workspace,baseline,baselineSkillPath:options.baselineSkillPath,runner:options.runner,model:options.model??null});
+          if(execution.status!=="complete"){
+            phase.status=execution.status==="blocked"?"blocked":"failed";phase.detail=`paired execution ${execution.status}`;phase.error=execution.failures.map(f=>`${rel(workspace,f.run)} [${f.code}]: ${f.message}`).join("; ");job.status=execution.status==="blocked"?"blocked":"failed";checkpoint(job);
+            return envelope(options,job,execution.status==="blocked"?"blocked":"failure",execution.failures.map(f=>`Paired run ${rel(workspace,f.run)} failed (${f.code}, ${f.exit_reason}): ${f.message}. Manual evidence remains supported; preserve or replace artifacts and rerun --resume.`),{execution});
+          }
+        }
         const missing=missingRuns(workspace),{source,evalPlan}=planHashes(job);phase.artifacts=listRunDirs(workspace);
         const binding=validateExecutionEvidence(workspace,{skill_source_sha256:source,eval_plan_sha256:evalPlan});
         if(missing.outputs.length||missing.gradings.length||missing.timings.length||binding.status!=="complete"){
@@ -215,5 +218,5 @@ export function fullEval(options:FullEvalOptions){
   if(job.status!=="succeeded"){job.status="succeeded";checkpoint(job);}receipt=receipt??validateEvaluationReceipt(workspace);verification=verification??(existsSync(join(workspace,"receipt.json"))?loadJson(join(workspace,"receipt.json")):undefined);return envelope(options,job,"success",[],{receipt,verification});
 }
 
-function main(){try{const {positionals,values}=parseArgs({args:process.argv.slice(2),allowPositionals:true,options:{workspace:{type:"string"},"eval-set":{type:"string"},baseline:{type:"string",default:"without_skill"},"dry-run":{type:"boolean",default:false},resume:{type:"boolean",default:false},retry:{type:"boolean",default:false},cancel:{type:"boolean",default:false},"human-review":{type:"string"},"tests-status":{type:"string"},"triggering-status":{type:"string"},"triggering-reason":{type:"string"},"min-pass-rate":{type:"string",default:"0.8"},"min-delta":{type:"string",default:"0"}}});if(!positionals[0])throw new TypeError("skill directory is required");if(values.baseline!=="old_skill"&&values.baseline!=="without_skill")throw new TypeError("--baseline must be old_skill or without_skill");const result=fullEval({skillPath:positionals[0],workspace:values.workspace,evalSet:values["eval-set"],baseline:values.baseline,dryRun:values["dry-run"],resume:values.resume,retry:values.retry,cancel:values.cancel,humanReview:values["human-review"] as HumanReviewStatus|undefined,testsStatus:values["tests-status"] as GateStatus|undefined,triggeringStatus:values["triggering-status"] as GateStatus|undefined,triggeringReason:values["triggering-reason"],minPassRate:Number(values["min-pass-rate"]),minDelta:Number(values["min-delta"])});console.log(JSON.stringify(result,null,2));process.exit(result.exit_code);}catch(error){console.error("full_eval: "+(error as Error).message);process.exit(2);}}
+async function main(){try{const {positionals,values}=parseArgs({args:process.argv.slice(2),allowPositionals:true,options:{workspace:{type:"string"},"eval-set":{type:"string"},baseline:{type:"string",default:"without_skill"},"baseline-skill":{type:"string"},execute:{type:"boolean",default:false},runner:{type:"string"},model:{type:"string"},"dry-run":{type:"boolean",default:false},resume:{type:"boolean",default:false},retry:{type:"boolean",default:false},cancel:{type:"boolean",default:false},"human-review":{type:"string"},"tests-status":{type:"string"},"triggering-status":{type:"string"},"triggering-reason":{type:"string"},"min-pass-rate":{type:"string",default:"0.8"},"min-delta":{type:"string",default:"0"}}});if(!positionals[0])throw new TypeError("skill directory is required");if(values.baseline!=="old_skill"&&values.baseline!=="without_skill")throw new TypeError("--baseline must be old_skill or without_skill");const result=await fullEval({skillPath:positionals[0],workspace:values.workspace,evalSet:values["eval-set"],baseline:values.baseline,baselineSkillPath:values["baseline-skill"],execute:values.execute,runner:values.runner,model:values.model,dryRun:values["dry-run"],resume:values.resume,retry:values.retry,cancel:values.cancel,humanReview:values["human-review"] as HumanReviewStatus|undefined,testsStatus:values["tests-status"] as GateStatus|undefined,triggeringStatus:values["triggering-status"] as GateStatus|undefined,triggeringReason:values["triggering-reason"],minPassRate:Number(values["min-pass-rate"]),minDelta:Number(values["min-delta"])});console.log(JSON.stringify(result,null,2));process.exit(result.exit_code);}catch(error){console.error("full_eval: "+(error as Error).message);process.exit(2);}}
 const invoked=process.argv[1]?resolve(process.argv[1]):null;if(invoked&&fileURLToPath(import.meta.url)===invoked)main();

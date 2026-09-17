@@ -105,10 +105,11 @@ When asked to evaluate, test, benchmark, compare, or prove improvement, execute 
 1. paired `with_skill` and `old_skill`/`without_skill` outputs;
 2. `grading.json` with `text`, `passed`, and `evidence` for every run;
 3. `timing.json`, using null plus a reason when unavailable;
-4. plugin integration scenarios for routing and cross-component handoffs;
-5. official `benchmark.json` and `benchmark.md`;
-6. live or static review output;
-7. a final receipt with artifact hashes and human-review status.
+4. typed Skill, agent, hook, and MCP receipts with applicability, current component hashes, and explicit per-component aggregation (see [Typed Component Evidence](references/component-evidence.md));
+5. plugin integration scenarios with complete component coverage and evidenced cross-component handoffs;
+6. official `benchmark.json` and `benchmark.md`;
+7. live or static review output;
+8. a final receipt with artifact hashes and human-review status.
 
 Never grade hidden deliverables; add criteria to the next iteration and rerun both variants. If a capability is missing, preserve artifacts and report `evaluation: blocked`. Never substitute an ad-hoc two-agent comparison.
 

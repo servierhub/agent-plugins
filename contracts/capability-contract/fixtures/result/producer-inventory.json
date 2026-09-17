@@ -762,6 +762,79 @@
           "policyValid: servers.every(server => server.policyValid)"
         ]
       }
+    },
+    {
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "field": "ExecutePairOutcome.status",
+      "context": "skill-paired-execution-status",
+      "tokens": [
+        "complete",
+        "blocked",
+        "failed",
+        "cancelled"
+      ],
+      "provenance": {
+        "classification": "current",
+        "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
+        "sourceEvidence": [
+          "export interface ExecutePairOutcome { status:\"complete\"|\"blocked\"|\"failed\"|\"cancelled\""
+        ]
+      }
+    },
+    {
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "field": "importEvidenceRun return status",
+      "context": "agent-evidence-import-status",
+      "tokens": [
+        "imported",
+        "duplicate"
+      ],
+      "provenance": {
+        "classification": "current",
+        "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
+        "sourceEvidence": [
+          "status: \"imported\" | \"duplicate\""
+        ]
+      }
+    },
+    {
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "field": "CommonEvidenceEnvelope.status",
+      "context": "plugin-component-evidence-status",
+      "tokens": [
+        "pass",
+        "fail",
+        "blocked",
+        "na"
+      ],
+      "provenance": {
+        "classification": "current",
+        "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
+        "sourceEvidence": [
+          "status: EvidenceStatus;",
+          "export type EvidenceStatus = \"pass\" | \"fail\" | \"blocked\" | \"na\""
+        ]
+      }
+    },
+    {
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "field": "EvidenceApplicability.status",
+      "context": "plugin-evidence-applicability",
+      "tokens": [
+        "applicable",
+        "na"
+      ],
+      "provenance": {
+        "classification": "current",
+        "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
+        "sourceEvidence": [
+          "status: \"applicable\" | \"na\""
+        ]
+      }
     }
   ],
   "documentedNonCurrent": [
@@ -884,14 +957,15 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
       "field": "verification receipt components.*.status",
-      "canonicalContext": "skill-verification-receipt-status",
+      "canonicalContext": "plugin-component-evidence-status",
       "tokens": [
         "pass",
         "fail",
-        "blocked"
+        "blocked",
+        "na"
       ],
       "sourceEvidence": [
-        "components: Object.fromEntries([...receipts].map(([component, receipt]) => [component, { status: receipt.status"
+        "components: componentAggregation"
       ]
     },
     {
@@ -992,6 +1066,21 @@
       "sourceEvidence": [
         "ok:outcome.status===\"accepted\""
       ]
+    },
+    {
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "field": "verification receipt integration_evidence.status",
+      "canonicalContext": "plugin-component-evidence-status",
+      "tokens": [
+        "pass",
+        "fail",
+        "blocked",
+        "na"
+      ],
+      "sourceEvidence": [
+        "integration_evidence: integrationReceipt ? { status: integrationAssessment?.status"
+      ]
     }
   ],
   "excludedStructuralFields": [
@@ -1024,6 +1113,27 @@
         "duplicated numeric exit_code summaries"
       ],
       "rationale": "Numeric measurements and duplicated summaries are not independent categorical status fields; process exits remain mapped in explicit CLI contexts."
+    },
+    {
+      "fields": [
+        "PairedFailureCode",
+        "PairedExecutionEvidence.exitReason",
+        "paired stream event.type"
+      ],
+      "rationale": "Typed transport and diagnostic discriminators explain execution mechanics but are not independent operation, evaluation, evidence-availability, or approval outcomes."
+    },
+    {
+      "fields": [
+        "EvidenceRun.provenance.source",
+        "EvidenceRun.trust.level"
+      ],
+      "rationale": "Provenance and trust classifications qualify imported evidence; they do not independently assert operation completion, quality verdict, evidence availability, or approval."
+    },
+    {
+      "fields": [
+        "verification receipt component_summary counts"
+      ],
+      "rationale": "Derived numeric aggregation counts are summaries, not independent categorical result axes."
     }
   ]
 }

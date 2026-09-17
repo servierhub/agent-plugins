@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 
 export interface ExecutionBinding {
   schema_version: "1.0";
@@ -45,7 +45,11 @@ export function artifactHash(path: string): string {
 
 export function listRunDirs(workspace: string): string[] {
   const result: string[] = [];
-  if (!isDirectory(workspace)) return result;
+  const absolute = resolve(workspace);
+  // Archives retain the original eval-* layout for auditability, but are never
+  // active evaluation inputs even when a caller points discovery at one.
+  if (absolute.split(sep).includes(".full-eval-archive") || !isDirectory(absolute)) return result;
+  workspace = absolute;
   for (const evalName of readdirSync(workspace).filter(name => name.startsWith("eval-")).sort()) {
     const evalDir = join(workspace, evalName);
     if (!isDirectory(evalDir)) continue;
@@ -67,7 +71,7 @@ export function runCoordinates(runDir: string): { configuration: string; run_ind
 
 export function evidenceArtifactHashes(runDir: string): Record<string, string> {
   const result: Record<string, string> = {};
-  for (const name of ["outputs", "grading.json", "timing.json", "navigation.json"]) {
+  for (const name of ["outputs", "grading.json", "timing.json", "navigation.json", "transcript.json"]) {
     const path = join(runDir, name);
     if (existsSync(path) && (name !== "outputs" || isDirectory(path))) result[name] = artifactHash(path);
   }

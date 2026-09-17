@@ -4,7 +4,9 @@ import type { Runner } from "./base.js";
 import { GooseRunner } from "./goose.js";
 
 export { RunnerError } from "./base.js";
+export { PairedExecutionError } from "./paired.js";
 export type { Runner } from "./base.js";
+export type { PairedRunner, PairedExecutionPlan, PairedExecutionResult } from "./paired.js";
 
 const RUNNERS: Record<string, new (command?: string) => Runner> = {
   goose: GooseRunner,

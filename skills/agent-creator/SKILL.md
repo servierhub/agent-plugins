@@ -264,10 +264,12 @@ An agent is ready only when:
 
 - `references/custom-agents.md`: vendored Goose custom-agents documentation.
 - `references/UPSTREAM.md`: source and refresh instructions for the reference snapshot.
+- `references/manual-external-evidence.md`: secure host-neutral evidence export/import contract, schema, trust, and diagnostics.
 - `dist/scripts/init_agent.js`: create a minimal agent definition.
 - `dist/scripts/validate_agent.js`: validate agent frontmatter and body.
 - `dist/scripts/install_agent.js`: install an agent at project or user scope.
 - `dist/scripts/run_agent_eval.js`: run paired isolated agent and baseline evaluations.
+- `dist/scripts/evidence_exchange.js`: export immutable host-neutral jobs and securely import closed-schema evidence runs.
 - `dist/scripts/grade_agent_eval.js`: grade deterministic and semantic assertions.
 - `dist/scripts/aggregate_benchmark.js`: aggregate pass rate, timing, and token metrics.
 - `dist/eval-viewer/generate_review.js`: review qualitative outputs and benchmark results.

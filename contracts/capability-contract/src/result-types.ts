@@ -27,15 +27,15 @@ export type ResultExitReason = "success" | "quality-failure" | "blocked-capabili
 export interface ResultExit { code: ResultExitCode; reason: ResultExitReason; }
 export type CreatorName = "agent-creator" | "hook-creator" | "plugin-creator" | "skill-creator";
 export type LegacyStatusContext =
-  | "agent-cli-ok" | "agent-cli-exit" | "agent-grading-passed"
+  | "agent-cli-ok" | "agent-cli-exit" | "agent-grading-passed" | "agent-evidence-import-status"
   | "hook-cli-ok" | "hook-cli-usage" | "hook-cli-exit"
   | "plugin-cli-ok" | "plugin-cli-exit" | "plugin-full-eval-status" | "plugin-full-eval-phase"
-  | "plugin-gate-status" | "plugin-verification-receipt-status" | "plugin-human-review-status"
+  | "plugin-gate-status" | "plugin-verification-receipt-status" | "plugin-component-evidence-status" | "plugin-evidence-applicability" | "plugin-human-review-status"
   | "plugin-validation-outcome" | "plugin-component-outcome-status" | "plugin-release-eligible" | "plugin-migration-status"
   | "plugin-migration-classification" | "plugin-schema-version-status" | "plugin-mcp-compatibility" | "plugin-path-containment-status"
   | "plugin-schema-aggregate-valid" | "plugin-schema-document-valid" | "plugin-mcp-aggregate-valid" | "plugin-mcp-aggregate-policy-valid"
   | "skill-cli-status" | "skill-cli-exit" | "skill-full-eval-status" | "skill-full-eval-phase" | "skill-gate-status"
-  | "skill-verification-receipt-status"
+  | "skill-verification-receipt-status" | "skill-paired-execution-status"
   | "skill-human-review-status" | "skill-receipt-status" | "skill-audit-status" | "skill-design-status"
   | "skill-analysis-status" | "skill-navigation-status" | "skill-analysis-decision" | "skill-trigger-result-pass"
   | "skill-grading-passed";

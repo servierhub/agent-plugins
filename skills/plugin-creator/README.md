@@ -75,9 +75,12 @@ freeze baseline
 ```
 
 Integration scenarios should exercise routing between Skills, trigger overlap,
-hook effects, and cross-component handoffs. Every changed Skill supplies its own
-complete evaluation receipt. The plugin-level receipt records artifacts and
-human-review status. Missing execution capabilities produce
+hook effects, and cross-component handoffs. Every discovered Skill, agent, hook,
+and MCP component supplies typed evidence with applicability and a current
+component source hash. Full plugins also supply an integration receipt covering
+all components and explicit handoffs. The plugin-level receipt aggregates each
+component separately and records artifacts and human-review status. See
+[Typed Component Evidence](references/component-evidence.md). Missing execution capabilities produce
 `evaluation: blocked`; static validation or an ad-hoc comparison is not reported
 as a successful behavioral evaluation.
 
@@ -98,7 +101,7 @@ node dist/scripts/cli.js full-eval /path/to/plugin --workspace /path/to/plugin/e
 node dist/scripts/cli.js full-eval /path/to/plugin --workspace /path/to/plugin/evaluations/full-eval --resume --format json
 ```
 
-The fixed phases are validation, bundled-Skill discovery, component evaluation receipt detection, integration output detection, packaging, and release verification. Component commands use the bundled skill-creator CLI by absolute path, so an agent does not depend on a global binary. Each completed Skill evaluation writes `receipt.json` exactly where plugin orchestration expects it. Dry-run is side-effect free. Rerunning (optionally with `--resume`) discovers existing receipts and outputs, making each phase idempotent. The envelope reports exact Skill paths, expected receipt paths, component `skill-creator full-eval` commands, phase statuses, and `next_actions`.
+The fixed phases are validation, typed component discovery, component evaluation receipt detection, integration output detection, packaging, and release verification. Skill commands use the bundled skill-creator CLI by absolute path, while agent, hook, and MCP entries provide explicit specialist handoffs. Each completed component evaluation writes `receipt.json` exactly where plugin orchestration expects it. Dry-run is side-effect free. Rerunning (optionally with `--resume`) discovers existing receipts and outputs, making each phase idempotent. The envelope reports exact Skill paths, expected receipt paths, component `skill-creator full-eval` commands, phase statuses, and `next_actions`.
 
 This command never runs or simulates an LLM. The workspace must be a proper subdirectory of the plugin's `evaluations/` directory; integration and archive paths must stay inside that workspace. Evaluation files are therefore excluded consistently from source fingerprints and release archives. Cancellation requires an existing persisted graph and uses its saved configuration. It stops with exit code 3 when Skill receipts, `integration/benchmark.json`, `integration/review.html`, test evidence, or explicit `--human-review pass` are absent. Once prerequisites exist, it packages the plugin and invokes the existing release verifier. Inputs can be overridden with repeated `--component-receipt`, `--integration`, `--archive`, and `--tests-status pass`.
 

@@ -7,7 +7,9 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
       "field": "SchemaValidationResult.valid (aggregate)",
-      "sourceEvidence": ["valid:documents.every(d=>d.valid)"],
+      "sourceEvidence": [
+        "valid:documents.every(d=>d.valid)"
+      ],
       "classification": "current",
       "context": "plugin-schema-aggregate-valid",
       "rationale": "Autonomous top-level pass/fail signal derived by ANDing every document's independent validity; not copied from any other field."
@@ -17,7 +19,9 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
       "field": "DocumentResult.valid",
-      "sourceEvidence": ["valid=Boolean(check(prepared.value))"],
+      "sourceEvidence": [
+        "valid=Boolean(check(prepared.value))"
+      ],
       "classification": "current",
       "context": "plugin-schema-document-valid",
       "rationale": "Autonomous per-document schema-conformance verdict; the true/false pass/fail domain is emitted directly by the Ajv check, not copied from an aggregate."
@@ -27,7 +31,9 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
       "field": "McpSemanticResult.valid (aggregate)",
-      "sourceEvidence": ["valid: servers.every(server => server.valid)"],
+      "sourceEvidence": [
+        "valid: servers.every(server => server.valid)"
+      ],
       "classification": "current",
       "context": "plugin-mcp-aggregate-valid",
       "rationale": "Autonomous top-level MCP semantic pass/fail signal derived by ANDing every server's independent validity."
@@ -37,7 +43,9 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
       "field": "McpSemanticResult.policyValid (aggregate)",
-      "sourceEvidence": ["policyValid: servers.every(server => server.policyValid)"],
+      "sourceEvidence": [
+        "policyValid: servers.every(server => server.policyValid)"
+      ],
       "classification": "current",
       "context": "plugin-mcp-aggregate-policy-valid",
       "rationale": "Autonomous top-level MCP strict-policy pass/fail signal derived by ANDing every server's independent policy validity."
@@ -47,7 +55,9 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
       "field": "McpServerSemanticResult.valid",
-      "sourceEvidence": ["valid: semanticFindings.length === 0"],
+      "sourceEvidence": [
+        "valid: semanticFindings.length === 0"
+      ],
       "classification": "copied",
       "canonicalContext": "plugin-mcp-aggregate-valid",
       "rationale": "Per-server valid boolean feeds the top-level aggregate via Array.every without changing meaning; it is a copied alias of the same MCP semantic-validity axis, not an independent context."
@@ -57,7 +67,9 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
       "field": "McpServerSemanticResult.policyValid",
-      "sourceEvidence": ["policyValid: strictPolicyFindings.length === 0"],
+      "sourceEvidence": [
+        "policyValid: strictPolicyFindings.length === 0"
+      ],
       "classification": "copied",
       "canonicalContext": "plugin-mcp-aggregate-policy-valid",
       "rationale": "Per-server policyValid boolean feeds the top-level aggregate via Array.every without changing meaning; it is a copied alias of the same MCP strict-policy axis."
@@ -67,7 +79,9 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/path_containment.ts",
       "field": "PathContainmentResult.contained",
-      "sourceEvidence": ["contained: boolean;"],
+      "sourceEvidence": [
+        "contained: boolean;"
+      ],
       "classification": "excluded",
       "rationale": "status is the canonical, already-mapped containment outcome field; contained is a redundant boolean projection of status and does not add an independent result-contract axis."
     },
@@ -76,7 +90,9 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/path_containment.ts",
       "field": "PathContainmentResult.kindOutcome",
-      "sourceEvidence": ["kindOutcome: ExpectedKindOutcome;"],
+      "sourceEvidence": [
+        "kindOutcome: ExpectedKindOutcome;"
+      ],
       "classification": "excluded",
       "rationale": "kindOutcome reports a filesystem-kind observation (match/missing/mismatch against an expected file-vs-directory kind), not an operation, evaluation, evidence, or approval axis."
     },
@@ -85,7 +101,9 @@
       "creator": "skill-creator",
       "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
       "field": "history[].train_results[].pass",
-      "sourceEvidence": ["train_results: trainResultList,"],
+      "sourceEvidence": [
+        "train_results: trainResultList,"
+      ],
       "classification": "copied",
       "canonicalContext": "skill-trigger-result-pass",
       "rationale": "train_results carries the same results[].pass boolean verdict already inventoried under skill-trigger-result-pass; it is a copied split view of the train subset, not a new context."
@@ -95,7 +113,9 @@
       "creator": "skill-creator",
       "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
       "field": "history[].test_results[].pass",
-      "sourceEvidence": ["test_results: testSummary ? testResultList : null,"],
+      "sourceEvidence": [
+        "test_results: testSummary ? testResultList : null,"
+      ],
       "classification": "copied",
       "canonicalContext": "skill-trigger-result-pass",
       "rationale": "test_results carries the same results[].pass boolean verdict already inventoried under skill-trigger-result-pass; it is a copied split view of the held-out subset, not a new context."
@@ -105,7 +125,9 @@
       "creator": "skill-creator",
       "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
       "field": "history[].results[].pass (legacy fallback alias of train_results)",
-      "sourceEvidence": ["results: trainResultList,"],
+      "sourceEvidence": [
+        "results: trainResultList,"
+      ],
       "classification": "copied",
       "canonicalContext": "skill-trigger-result-pass",
       "rationale": "The top-level results field is a backward-compatible fallback alias of train_results (consumed via first.train_results ?? first.results in generate_report.ts) carrying the identical pass boolean; it copies the skill-trigger-result-pass axis rather than introducing one."
@@ -115,7 +137,9 @@
       "creator": "skill-creator",
       "sourceFile": "skills/skill-creator/scripts/improve_description.ts",
       "field": "HistoryEntry.results[].pass",
-      "sourceEvidence": ["const status = r.pass ? \"PASS\" : \"FAIL\";"],
+      "sourceEvidence": [
+        "const status = r.pass ? \"PASS\" : \"FAIL\";"
+      ],
       "classification": "copied",
       "canonicalContext": "skill-trigger-result-pass",
       "rationale": "The improvement prompt renders PASS/FAIL directly from the same results[].pass boolean captured by run_loop history; it is a copied alias of skill-trigger-result-pass used for prompt rendering, not a new verdict domain."
@@ -125,10 +149,94 @@
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/cli.ts",
       "field": "validate command outcome.status",
-      "sourceEvidence": ["ok:outcome.status===\"accepted\""],
+      "sourceEvidence": [
+        "ok:outcome.status===\"accepted\""
+      ],
       "classification": "copied",
       "canonicalContext": "plugin-validation-outcome",
       "rationale": "The portable-load CLI branch forwards ValidationOutcome.status verbatim into its JSON envelope and derives ok from it; it is a copied alias of plugin-validation-outcome, not an independent status domain."
+    },
+    {
+      "id": "paired-execution-status",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "field": "ExecutePairOutcome.status",
+      "sourceEvidence": [
+        "export interface ExecutePairOutcome { status:\"complete\"|\"blocked\"|\"failed\"|\"cancelled\""
+      ],
+      "classification": "current",
+      "context": "skill-paired-execution-status",
+      "rationale": "Aggregate status emitted directly by paired execution."
+    },
+    {
+      "id": "agent-evidence-import-status",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "field": "importEvidenceRun return status",
+      "sourceEvidence": [
+        "status: \"imported\" | \"duplicate\""
+      ],
+      "classification": "current",
+      "context": "agent-evidence-import-status",
+      "rationale": "Direct import operation outcome."
+    },
+    {
+      "id": "component-evidence-status",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "field": "CommonEvidenceEnvelope.status",
+      "sourceEvidence": [
+        "status: EvidenceStatus;"
+      ],
+      "classification": "current",
+      "context": "plugin-component-evidence-status",
+      "rationale": "Direct typed component quality/evidence verdict."
+    },
+    {
+      "id": "component-evidence-applicability",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "field": "EvidenceApplicability.status",
+      "sourceEvidence": [
+        "status: \"applicable\" | \"na\""
+      ],
+      "classification": "current",
+      "context": "plugin-evidence-applicability",
+      "rationale": "Direct applicability outcome."
+    },
+    {
+      "id": "verification-integration-status-copy",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "field": "verification receipt integration_evidence.status",
+      "sourceEvidence": [
+        "integration_evidence: integrationReceipt ? { status: integrationAssessment?.status"
+      ],
+      "classification": "copied",
+      "canonicalContext": "plugin-component-evidence-status",
+      "rationale": "Copies typed integration receipt status."
+    },
+    {
+      "id": "paired-failure-code-excluded",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/runners/paired.ts",
+      "field": "PairedFailureCode",
+      "sourceEvidence": [
+        "export type PairedFailureCode ="
+      ],
+      "classification": "excluded",
+      "rationale": "Diagnostic code, not an independent result axis."
+    },
+    {
+      "id": "evidence-trust-excluded",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "field": "EvidenceRun.trust.level",
+      "sourceEvidence": [
+        "trust: { level: TrustLevel; reason: string; reviewed_by?: string };"
+      ],
+      "classification": "excluded",
+      "rationale": "Evidence provenance qualifier, not approval."
     }
   ]
 }

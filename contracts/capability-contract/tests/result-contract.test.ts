@@ -230,9 +230,9 @@ test("independent expectedConsumerFields fixture maps every field to exactly one
 
   const byClassification = { current: 0, copied: 0, excluded: 0 } as Record<string, number>;
   for (const record of expected.records as any[]) byClassification[record.classification] += 1;
-  assert.equal(byClassification.current, 4);
-  assert.equal(byClassification.copied, 7);
-  assert.equal(byClassification.excluded, 2);
+  assert.equal(byClassification.current, 8);
+  assert.equal(byClassification.copied, 8);
+  assert.equal(byClassification.excluded, 4);
 });
 
 test("non-current status vocabularies remain absent from exact emitting fields and mappings", () => {

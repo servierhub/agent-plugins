@@ -135,3 +135,7 @@ For an existing agent, use `--baseline-agent old-agent.md` to compare the new
 instructions against the previous version. The evaluation preserves the custom
 agent model: tasks run through isolated delegation rather than by converting the
 agent into a skill or recipe.
+
+## Manual or external evidence
+
+For host-neutral evaluation handoff, canonical manifest verification, the closed run schema, safe eval-ID encoding, provenance, and trust semantics, see [`references/manual-external-evidence.md`](references/manual-external-evidence.md).
