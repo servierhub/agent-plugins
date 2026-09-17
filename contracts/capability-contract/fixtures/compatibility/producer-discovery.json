@@ -1,0 +1,4800 @@
+{
+  "manifestVersion": "2.0.0",
+  "surfaces": [
+    {
+      "id": "contract.capability.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/types.ts",
+      "sourceFieldOrLayout": "contract.capability.v1",
+      "sourceEvidence": "CAPABILITY_CONTRACT_VERSION = \"1.0.0\"",
+      "kind": "shared-contract",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/schemaVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "schema:capability-contract"
+    },
+    {
+      "id": "contract.evaluation-plan.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/evaluation-types.ts",
+      "sourceFieldOrLayout": "contract.evaluation-plan.v1",
+      "sourceEvidence": "EVALUATION_PLAN_VERSION = \"1.0.0\"",
+      "kind": "shared-contract",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/schemaVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "schema:evaluation-plan"
+    },
+    {
+      "id": "contract.result.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/result-types.ts",
+      "sourceFieldOrLayout": "contract.result.v1",
+      "sourceEvidence": "RESULT_CONTRACT_VERSION = \"1.0.0\"",
+      "kind": "shared-contract",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/schemaVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "schema:result-contract"
+    },
+    {
+      "id": "schema.host-adapter.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HOST_ADAPTER_SCHEMA_ID",
+      "sourceEvidence": "HOST_ADAPTER_SCHEMA_ID = \"https://agent-plugins.org/schemas/host-execution-adapter/1.0.0/host-execution-adapter.schema.json\"",
+      "kind": "schema-document",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "shape:json-schema-document"
+    },
+    {
+      "id": "schema.host-event.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HOST_EVENT_SCHEMA_ID",
+      "sourceEvidence": "HOST_EVENT_SCHEMA_ID = \"https://agent-plugins.org/schemas/host-execution-adapter/1.0.0/host-execution-event.schema.json\"",
+      "kind": "schema-document",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "shape:json-schema-document"
+    },
+    {
+      "id": "contract.host.adapter-protocol-version.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostAdapterProtocolVersion",
+      "sourceEvidence": "export type HostAdapterProtocolVersion = typeof HOST_ADAPTER_PROTOCOL_VERSION;",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.identity.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostIdentity",
+      "sourceEvidence": "export interface HostIdentity { name: string; version: string; adapterVersion: string; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.capability-report.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostCapabilityReport",
+      "sourceEvidence": "export interface HostCapabilityReport {",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:capability-report"
+    },
+    {
+      "id": "contract.host.capability-name.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostCapabilityName",
+      "sourceEvidence": "export type HostCapabilityName = \"isolation\" | \"streaming\" | \"cancellation\" | \"resume\" | \"model\" | \"tools\" | \"filesystem\" | \"network\" | \"browser\" | \"tokenMetrics\" | \"costMetrics\";",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.capability-requirement.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostCapabilityRequirement",
+      "sourceEvidence": "export interface HostCapabilityRequirement { capability: HostCapabilityName; value?: string | string[]; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.capability-requirements.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostCapabilityRequirements",
+      "sourceEvidence": "export interface HostCapabilityRequirements { required: HostCapabilityRequirement[]; optional: HostCapabilityRequirement[]; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.capability-degradation.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostCapabilityDegradation",
+      "sourceEvidence": "export interface HostCapabilityDegradation { capability: HostCapabilityName; code: \"OPTIONAL_CAPABILITY_UNAVAILABLE\"; message: string; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.negotiation-request.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostNegotiationRequest",
+      "sourceEvidence": "export interface HostNegotiationRequest { supportedProtocolVersions: string[]; capabilities: HostCapabilityRequirements; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:negotiation-request"
+    },
+    {
+      "id": "contract.host.negotiation-accepted.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostNegotiationAccepted",
+      "sourceEvidence": "export interface HostNegotiationAccepted { compatible: true; protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; report: HostCapabilityReport; degradations: HostCapabilityDegradation[]; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:negotiation-result"
+    },
+    {
+      "id": "contract.host.negotiation-blocked.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostNegotiationBlocked",
+      "sourceEvidence": "export interface HostNegotiationBlocked { compatible: false; protocolVersion?: HostAdapterProtocolVersion; host: HostIdentity; report: HostCapabilityReport; errors: HostAdapterErrorData[]; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:negotiation-result"
+    },
+    {
+      "id": "contract.host.negotiation-result.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostNegotiationResult",
+      "sourceEvidence": "export type HostNegotiationResult = HostNegotiationAccepted | HostNegotiationBlocked;",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:negotiation-result"
+    },
+    {
+      "id": "contract.host.file-binding.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostFileBinding",
+      "sourceEvidence": "export interface HostFileBinding { path: string; sha256: string; mediaType: string; size: number; access: \"read\" | \"write\" | \"read-write\"; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.credential-reference.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostCredentialReference",
+      "sourceEvidence": "export interface HostCredentialReference { name: string; reference: string; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.run-identity.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostRunIdentity",
+      "sourceEvidence": "export interface HostRunIdentity { runId: string; planId: string; scenarioId: string; configurationId: string; attempt: number; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.idempotency.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostIdempotency",
+      "sourceEvidence": "export interface HostIdempotency { key: string; resumeToken?: string; afterSequence?: number; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.run-request.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostRunRequest",
+      "sourceEvidence": "export interface HostRunRequest {",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:run-request"
+    },
+    {
+      "id": "contract.host.artifact-descriptor.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostArtifactDescriptor",
+      "sourceEvidence": "export interface HostArtifactDescriptor { artifactId: string; path: string; sha256: string; mediaType: string; size: number; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.artifact-exchange-response.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostArtifactExchange",
+      "sourceEvidence": "export interface HostArtifactExchange { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; artifact: HostArtifactDescriptor; encoding: \"base64\"; content: string; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:artifact-exchange"
+    },
+    {
+      "id": "contract.host.usage-metrics.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostUsageMetrics",
+      "sourceEvidence": "export interface HostUsageMetrics { inputTokens?: number; outputTokens?: number; totalTokens?: number; costUsd?: number; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.event-type.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventType",
+      "sourceEvidence": "export type HostEventType = \"accepted\" | \"started\" | \"progress\" | \"heartbeat\" | \"artifact\" | \"completed\" | \"blocked\" | \"failed\" | \"cancelled\";",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.event-data-by-type.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType",
+      "sourceEvidence": "export interface HostEventDataByType {",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.event-family.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventEnvelope",
+      "sourceEvidence": "export type HostEventEnvelope<T extends HostEventType = HostEventType> = T extends HostEventType ? {",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "contract.host.adapter-error-code.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostAdapterErrorCode",
+      "sourceEvidence": "export type HostAdapterErrorCode = \"PROTOCOL_VERSION_UNSUPPORTED\" | \"REQUIRED_CAPABILITY_MISSING\" | \"RUN_REQUEST_INVALID\" | \"WORKSPACE_BOUNDARY_VIOLATION\" | \"FILE_BOUNDARY_VIOLATION\" | \"TOOL_NOT_ALLOWED\" | \"ENVIRONMENT_NOT_ALLOWED\" | \"CREDENTIAL_VALUE_FORBIDDEN\" | \"SECRET_IN_EVENT\" | \"EVENT_SEQUENCE_INVALID\" | \"ARTIFACT_INVALID\" | \"RUN_NOT_FOUND\" | \"RESUME_INVALID\" | \"RESUME_STALE\" | \"CANCELLATION_UNSUPPORTED\" | \"INTERNAL_ERROR\";",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.adapter-error-data.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostAdapterErrorData",
+      "sourceEvidence": "export interface HostAdapterErrorData { code: HostAdapterErrorCode; message: string; retryable: boolean; details?: Record<string, unknown>; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:error"
+    },
+    {
+      "id": "contract.host.adapter-error.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostAdapterError",
+      "sourceEvidence": "export type HostAdapterErrorCode = \"PROTOCOL_VERSION_UNSUPPORTED\" | \"REQUIRED_CAPABILITY_MISSING\" | \"RUN_REQUEST_INVALID\" | \"WORKSPACE_BOUNDARY_VIOLATION\" | \"FILE_BOUNDARY_VIOLATION\" | \"TOOL_NOT_ALLOWED\" | \"ENVIRONMENT_NOT_ALLOWED\" | \"CREDENTIAL_VALUE_FORBIDDEN\" | \"SECRET_IN_EVENT\" | \"EVENT_SEQUENCE_INVALID\" | \"ARTIFACT_INVALID\" | \"RUN_NOT_FOUND\" | \"RESUME_INVALID\" | \"RESUME_STALE\" | \"CANCELLATION_UNSUPPORTED\" | \"INTERNAL_ERROR\";",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:error"
+    },
+    {
+      "id": "contract.host.cancellation-request.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostCancellationRequest",
+      "sourceEvidence": "export interface HostCancellationRequest { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; reason: string; idempotencyKey: string; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:cancellation-request"
+    },
+    {
+      "id": "contract.host.cancellation-response.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostCancellationResponse",
+      "sourceEvidence": "export interface HostCancellationResponse { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; status: \"cancel-requested\" | \"already-cancelled\" | \"already-terminal\"; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:cancellation-response"
+    },
+    {
+      "id": "contract.host.resume-request.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostResumeRequest",
+      "sourceEvidence": "export interface HostResumeRequest { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; resumeToken: string; afterSequence: number; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:resume-request"
+    },
+    {
+      "id": "contract.host.artifact-exchange-request.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostArtifactRequest",
+      "sourceEvidence": "export interface HostArtifactRequest { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; artifactId: string; }",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:artifact-request"
+    },
+    {
+      "id": "contract.host.execution-adapter.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostExecutionAdapter",
+      "sourceEvidence": "export interface HostExecutionAdapter {",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.host.event-accepted.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType.accepted",
+      "sourceEvidence": "  accepted: { resumeToken?: string; degradations: HostCapabilityDegradation[] };",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "contract.host.event-started.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType.started",
+      "sourceEvidence": "  started: { message?: string };",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "contract.host.event-progress.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType.progress",
+      "sourceEvidence": "  progress: { message: string; completed?: number; total?: number };",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "contract.host.event-heartbeat.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType.heartbeat",
+      "sourceEvidence": "  heartbeat: { message?: string };",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "contract.host.event-artifact.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType.artifact",
+      "sourceEvidence": "  artifact: { artifact: HostArtifactDescriptor };",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "contract.host.event-completed.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType.completed",
+      "sourceEvidence": "  completed: { result: ResultContractV1; metrics?: HostUsageMetrics };",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "contract.host.event-blocked.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType.blocked",
+      "sourceEvidence": "  blocked: { result: ResultContractV1; error: HostAdapterErrorData };",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "contract.host.event-failed.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType.failed",
+      "sourceEvidence": "  failed: { result: ResultContractV1; error: HostAdapterErrorData };",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "contract.host.event-cancelled.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceFieldOrLayout": "HostEventDataByType.cancelled",
+      "sourceEvidence": "  cancelled: { reason: string };",
+      "kind": "protocol-message",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/protocolVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "validatorId": "host:event-envelope"
+    },
+    {
+      "id": "skill.cli.envelope.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceFieldOrLayout": "skill.cli.envelope.unversioned",
+      "sourceEvidence": "JSON.stringify({ command: name, status:",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:cli-envelope"
+    },
+    {
+      "id": "agent.cli.envelope.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceFieldOrLayout": "agent.cli.envelope.unversioned",
+      "sourceEvidence": "JSON.stringify({ ok: exitCode === 0, command:",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:cli-envelope"
+    },
+    {
+      "id": "hook.cli.envelope.unversioned",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFieldOrLayout": "hook.cli.envelope.unversioned",
+      "sourceEvidence": "JSON.stringify({ ok: false, error: error.message, usage })",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:cli-envelope"
+    },
+    {
+      "id": "plugin.cli.envelope.unversioned",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFieldOrLayout": "plugin.cli.envelope.unversioned",
+      "sourceEvidence": "emit({ok:true,command,output}",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:cli-envelope"
+    },
+    {
+      "id": "skill.full-eval.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": "skill.full-eval.v1",
+      "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:full-eval"
+    },
+    {
+      "id": "plugin.full-eval.v1",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": "plugin.full-eval.v1",
+      "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:full-eval"
+    },
+    {
+      "id": "skill.authoring-audit.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "sourceFieldOrLayout": "skill.authoring-audit.v1",
+      "sourceEvidence": "schema_version: \"1.0\"",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:authoring-audit"
+    },
+    {
+      "id": "skill.evaluation-design.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "sourceFieldOrLayout": "skill.evaluation-design.v1",
+      "sourceEvidence": "artifact: \"evaluation-design\"",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:evaluation-design"
+    },
+    {
+      "id": "skill.evaluation-analysis.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFieldOrLayout": "skill.evaluation-analysis.v1",
+      "sourceEvidence": "artifact:\"evaluation-analysis\"",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:evaluation-analysis"
+    },
+    {
+      "id": "skill.evaluation-receipt.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrLayout": "skill.evaluation-receipt.unversioned",
+      "sourceEvidence": "status: \"complete\" | \"blocked\"",
+      "kind": "receipt",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:evaluation-receipt"
+    },
+    {
+      "id": "skill.verification-receipt.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFieldOrLayout": "skill.verification-receipt.v1",
+      "sourceEvidence": "schema_version: \"1.0\"",
+      "kind": "receipt",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:verification-receipt"
+    },
+    {
+      "id": "plugin.verification-receipt.v1",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFieldOrLayout": "plugin.verification-receipt.v1",
+      "sourceEvidence": "schema_version: \"1.0\", artifact: \"plugin\"",
+      "kind": "receipt",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:verification-receipt"
+    },
+    {
+      "id": "plugin.validation-outcome.unversioned",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "sourceFieldOrLayout": "plugin.validation-outcome.unversioned",
+      "sourceEvidence": "export interface ValidationOutcome",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:validation-outcome"
+    },
+    {
+      "id": "plugin.migration-report.unversioned",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFieldOrLayout": "plugin.migration-report.unversioned",
+      "sourceEvidence": "export interface MigrationReport",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:migration-report"
+    },
+    {
+      "id": "skill.evals-form.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/evals/evals.json",
+      "sourceFieldOrLayout": "/evals",
+      "sourceEvidence": "\"evals\": [",
+      "kind": "evaluation-definition",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "contract.evaluation-plan.v1"
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:evals-form"
+    },
+    {
+      "id": "agent.evals-form.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/evals/evals.json",
+      "sourceFieldOrLayout": "/evals",
+      "sourceEvidence": "\"evals\": [",
+      "kind": "evaluation-definition",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "contract.evaluation-plan.v1"
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:evals-form"
+    },
+    {
+      "id": "hook.evals-form.unversioned",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/evals/evals.json",
+      "sourceFieldOrLayout": "/evals",
+      "sourceEvidence": "\"evals\": [",
+      "kind": "evaluation-definition",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "contract.evaluation-plan.v1"
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:evals-form"
+    },
+    {
+      "id": "plugin.evals-form.unversioned",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/evals/evals.json",
+      "sourceFieldOrLayout": "/evals",
+      "sourceEvidence": "\"evals\": [",
+      "kind": "evaluation-definition",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "contract.evaluation-plan.v1"
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:evals-form"
+    },
+    {
+      "id": "skill.eval-metadata.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": "eval-<id>/eval_metadata.json",
+      "sourceEvidence": "eval_metadata.json",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned evaluation metadata."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:eval-metadata"
+    },
+    {
+      "id": "agent.eval-metadata.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrLayout": "eval-<id>/eval_metadata.json",
+      "sourceEvidence": "eval_metadata.json",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned evaluation metadata."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:eval-metadata"
+    },
+    {
+      "id": "skill.grading.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/grading.json",
+      "sourceEvidence": "join(runDir, \"grading.json\")",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned grading result."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:grading"
+    },
+    {
+      "id": "agent.grading.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/grading.json",
+      "sourceEvidence": "writeFileSync(join(runDir, \"grading.json\")",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned grading result."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:grading"
+    },
+    {
+      "id": "skill.timing.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/timing.json",
+      "sourceEvidence": "join(runDir, \"timing.json\")",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned timing result."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:timing"
+    },
+    {
+      "id": "agent.timing.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/timing.json",
+      "sourceEvidence": "writeFileSync(join(runDir, \"timing.json\")",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned timing result."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:timing"
+    },
+    {
+      "id": "skill.review-html.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": "review.html",
+      "sourceEvidence": "join(workspace,\"review.html\")",
+      "kind": "review-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned review artifact."
+      },
+      "migrationId": null,
+      "artifactFormat": "html",
+      "validatorId": "signature:html-document"
+    },
+    {
+      "id": "skill.viewer-html.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrLayout": "eval-viewer/viewer.html",
+      "sourceEvidence": "const templatePath = join(HERE, \"viewer.html\")",
+      "kind": "review-artifact",
+      "artifactFormat": "html",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned review viewer."
+      },
+      "migrationId": null,
+      "validatorId": "signature:html-document"
+    },
+    {
+      "id": "skill.feedback.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrLayout": "feedback.json",
+      "sourceEvidence": "join(workspace, \"feedback.json\")",
+      "kind": "review-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned feedback artifact."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:feedback"
+    },
+    {
+      "id": "agent.transcript.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/transcript.json",
+      "sourceEvidence": "writeFileSync(join(runDir, \"transcript.json\")",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned transcript."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:transcript"
+    },
+    {
+      "id": "agent.review-html.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrLayout": "review.html",
+      "sourceEvidence": "const html = generateHtml(runs, agentName, previous, benchmark)",
+      "kind": "review-artifact",
+      "artifactFormat": "html",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned review artifact."
+      },
+      "migrationId": null,
+      "validatorId": "signature:html-document"
+    },
+    {
+      "id": "agent.feedback.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrLayout": "feedback.json",
+      "sourceEvidence": "const feedbackPath = join(workspace, \"feedback.json\")",
+      "kind": "review-artifact",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned feedback artifact."
+      },
+      "migrationId": null,
+      "validatorId": "artifact:feedback"
+    },
+    {
+      "id": "agent.viewer-html.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrLayout": "eval-viewer/viewer.html",
+      "sourceEvidence": "const templatePath = join(HERE, \"viewer.html\")",
+      "kind": "review-artifact",
+      "artifactFormat": "html",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned review viewer."
+      },
+      "migrationId": null,
+      "validatorId": "signature:html-document"
+    },
+    {
+      "id": "skill.trigger-eval-result.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "sourceFieldOrLayout": "EvalOutput",
+      "sourceEvidence": "interface EvalOutput {",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned trigger evaluation result."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:trigger-eval"
+    },
+    {
+      "id": "skill.run-loop-result.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFieldOrLayout": "<results-dir>/<timestamp>/results.json",
+      "sourceEvidence": "writeFileSync(join(resultsDir, \"results.json\")",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned run-loop result."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:run-loop-result"
+    },
+    {
+      "id": "skill.run-loop-report.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFieldOrLayout": "<results-dir>/<timestamp>/report.html",
+      "sourceEvidence": "writeFileSync(join(resultsDir, \"report.html\")",
+      "kind": "review-artifact",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned run-loop report."
+      },
+      "migrationId": null,
+      "artifactFormat": "html",
+      "validatorId": "signature:html-document"
+    },
+    {
+      "id": "skill.benchmark.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrLayout": "skill.benchmark.unversioned",
+      "sourceEvidence": "join(benchmarkDirArg, \"benchmark.json\")",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:benchmark"
+    },
+    {
+      "id": "skill.benchmark-markdown.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrLayout": "benchmark.md",
+      "sourceEvidence": "const outputMd = outputJson.replace(/\\.json$/, \".md\")",
+      "kind": "evaluation-artifact",
+      "artifactFormat": "markdown",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned benchmark report."
+      },
+      "migrationId": null,
+      "validatorId": "signature:markdown-document"
+    },
+    {
+      "id": "agent.benchmark.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrLayout": "agent.benchmark.unversioned",
+      "sourceEvidence": "join(benchmarkDirArg, \"benchmark.json\")",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:benchmark"
+    },
+    {
+      "id": "agent.benchmark-markdown.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrLayout": "benchmark.md",
+      "sourceEvidence": "const outputMd = outputJson.replace(/\\.json$/, \".md\")",
+      "kind": "evaluation-artifact",
+      "artifactFormat": "markdown",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned benchmark report."
+      },
+      "migrationId": null,
+      "validatorId": "signature:markdown-document"
+    },
+    {
+      "id": "agent.run-summary.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrLayout": "agent.run-summary.unversioned",
+      "sourceEvidence": "join(workspace, \"run_summary.json\")",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:run-summary"
+    },
+    {
+      "id": "workspace.skill-eval.current.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": "workspace.skill-eval.current.v1",
+      "sourceEvidence": "for(const config of [\"with_skill\",baseline])artifacts.push(join(ed,config,\"run-1\",\"outputs\"))",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "workspace.skill-eval.legacy-runs.v0",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrLayout": "workspace.skill-eval.legacy-runs.v0",
+      "sourceEvidence": "const legacyRoot = join(workspace, \"runs\")",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "0",
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "workspace.skill-eval.current.v1"
+      },
+      "migrationId": "workspace.skill-eval.runs-to-root.v1",
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "workspace.agent-eval.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrLayout": "workspace.agent-eval.unversioned",
+      "sourceEvidence": "const runDir = join(workspace",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "workspace.plugin-eval.unversioned",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": "workspace.plugin-eval.unversioned",
+      "sourceEvidence": "join(root,\"evaluations\",\"plugin\")",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "workspace.eval-run-artifacts.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrLayout": "workspace.eval-run-artifacts.unversioned",
+      "sourceEvidence": "join(runDir, \"grading.json\")",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "plugin.manifest.v1",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFieldOrLayout": "plugin.manifest.v1",
+      "sourceEvidence": "DEFAULT_SCHEMA_VERSION = \"1.0.0\"",
+      "kind": "schema-document",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/$schema",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:plugin-manifest"
+    },
+    {
+      "id": "plugin.manifest.draft-v1.1",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFieldOrLayout": "plugin.manifest.draft-v1.1",
+      "sourceEvidence": "\"1.1.0\": registration(\"1.1.0\", \"draft\", false)",
+      "kind": "schema-document",
+      "readVersionsOrRanges": [],
+      "emittedVersion": null,
+      "versionField": "/$schema",
+      "supportState": "unsupported",
+      "deprecation": {
+        "window": "Never activated; diagnostic recognition only.",
+        "replacement": "plugin.manifest.v1"
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:plugin-manifest"
+    },
+    {
+      "id": "plugin.mcp.v1",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFieldOrLayout": "plugin.mcp.v1",
+      "sourceEvidence": "mcp: Object.freeze({ id: schemaId(version, \"mcp.schema.json\")",
+      "kind": "schema-document",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/$schema",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:mcp-document"
+    },
+    {
+      "id": "plugin.mcp.draft-v1.1",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFieldOrLayout": "plugin.mcp.draft-v1.1",
+      "sourceEvidence": "\"1.1.0\": registration(\"1.1.0\", \"draft\", false)",
+      "kind": "schema-document",
+      "readVersionsOrRanges": [],
+      "emittedVersion": null,
+      "versionField": "/$schema",
+      "supportState": "unsupported",
+      "deprecation": {
+        "window": "Never activated; diagnostic recognition only.",
+        "replacement": "plugin.mcp.v1"
+      },
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:mcp-document"
+    },
+    {
+      "id": "hook.document.current.unversioned",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFieldOrLayout": "hook.document.current.unversioned",
+      "sourceEvidence": "doc={hooks:{}}",
+      "kind": "schema-document",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:hook-document"
+    },
+    {
+      "id": "hook.layout.legacy-root.v0",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFieldOrLayout": "hook.layout.legacy-root.v0",
+      "sourceEvidence": "LEGACY_HOOKS_PATH = \"hooks/hooks.json\"",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "hook.layout.historical-namespace.v0",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFieldOrLayout": "hook.layout.historical-namespace.v0",
+      "sourceEvidence": "HISTORICAL_HOOKS_PATH = \"extensions/io.github.block.goose/hooks.json\"",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned replacement."
+      },
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "hook.layout.current.v1",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFieldOrLayout": "hook.layout.current.v1",
+      "sourceEvidence": "CANONICAL_HOOKS_PATH = \"extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json\"",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "1"
+      ],
+      "emittedVersion": "1",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "hook.extension-envelope.v1",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFieldOrLayout": "hook.extension-envelope.v1",
+      "sourceEvidence": "version:GOOSE_ENVELOPE_VERSION",
+      "kind": "envelope",
+      "readVersionsOrRanges": [
+        "1"
+      ],
+      "emittedVersion": "1",
+      "versionField": "/version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:hook-extension"
+    },
+    {
+      "id": "layout.skill-artifact.current",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/AGENTS.md",
+      "sourceFieldOrLayout": "layout.skill-artifact.current",
+      "sourceEvidence": ".agents/skills",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "1"
+      ],
+      "emittedVersion": "1",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "layout.agent-artifact.current",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/AGENTS.md",
+      "sourceFieldOrLayout": "layout.agent-artifact.current",
+      "sourceEvidence": ".agents/agents",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "1"
+      ],
+      "emittedVersion": "1",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "layout.plugin-artifact.current",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/AGENTS.md",
+      "sourceFieldOrLayout": "layout.plugin-artifact.current",
+      "sourceEvidence": ".agents/plugins",
+      "kind": "workspace-layout",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "layout",
+      "validatorId": "shape:workspace-layout"
+    },
+    {
+      "id": "result.exit-family.skill",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceFieldOrLayout": "result.exit-family.skill",
+      "sourceEvidence": "status === \"blocked\" ? 3 : 1",
+      "kind": "status-exit-family",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:exit-family"
+    },
+    {
+      "id": "result.exit-family.agent",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceFieldOrLayout": "result.exit-family.agent",
+      "sourceEvidence": "Exit codes: 0 success, 1 failure, 2 usage error, 3 blocked operation.",
+      "kind": "status-exit-family",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:exit-family"
+    },
+    {
+      "id": "result.exit-family.hook",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFieldOrLayout": "result.exit-family.hook",
+      "sourceEvidence": "return usage ? 2 : 1",
+      "kind": "status-exit-family",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:exit-family"
+    },
+    {
+      "id": "result.exit-family.plugin",
+      "creator": "plugin-creator",
+      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFieldOrLayout": "result.exit-family.plugin",
+      "sourceEvidence": "EXIT_SUCCESS=0, EXIT_FAILURE=1, EXIT_USAGE=2, EXIT_BLOCKED=3",
+      "kind": "status-exit-family",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:exit-family"
+    },
+    {
+      "id": "skill.post-evaluation-pattern-review.unversioned",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": "post-evaluation-pattern-review.json",
+      "sourceEvidence": "patternReviewPath=join(workspace,\"post-evaluation-pattern-review.json\")",
+      "kind": "evaluation-artifact",
+      "artifactFormat": "json",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned evaluation-analysis artifact."
+      },
+      "migrationId": null,
+      "validatorId": "artifact:evaluation-analysis"
+    },
+    {
+      "id": "agent.response-markdown.unversioned",
+      "creator": "agent-creator",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/outputs/response.md",
+      "sourceEvidence": "writeFileSync(join(outputs, \"response.md\")",
+      "kind": "evaluation-artifact",
+      "artifactFormat": "markdown",
+      "readVersionsOrRanges": [
+        "unversioned"
+      ],
+      "emittedVersion": null,
+      "versionField": null,
+      "supportState": "legacy-readable",
+      "deprecation": {
+        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
+        "replacement": "Future versioned agent response artifact."
+      },
+      "migrationId": null,
+      "validatorId": "signature:markdown-document"
+    }
+  ],
+  "host": {
+    "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+    "exports": [
+      {
+        "name": "HostAdapterProtocolVersion",
+        "surfaceId": "contract.host.adapter-protocol-version.v1"
+      },
+      {
+        "name": "HostIdentity",
+        "surfaceId": "contract.host.identity.v1"
+      },
+      {
+        "name": "HostCapabilityReport",
+        "surfaceId": "contract.host.capability-report.v1"
+      },
+      {
+        "name": "HostCapabilityName",
+        "surfaceId": "contract.host.capability-name.v1"
+      },
+      {
+        "name": "HostCapabilityRequirement",
+        "surfaceId": "contract.host.capability-requirement.v1"
+      },
+      {
+        "name": "HostCapabilityRequirements",
+        "surfaceId": "contract.host.capability-requirements.v1"
+      },
+      {
+        "name": "HostCapabilityDegradation",
+        "surfaceId": "contract.host.capability-degradation.v1"
+      },
+      {
+        "name": "HostNegotiationRequest",
+        "surfaceId": "contract.host.negotiation-request.v1"
+      },
+      {
+        "name": "HostNegotiationAccepted",
+        "surfaceId": "contract.host.negotiation-accepted.v1"
+      },
+      {
+        "name": "HostNegotiationBlocked",
+        "surfaceId": "contract.host.negotiation-blocked.v1"
+      },
+      {
+        "name": "HostNegotiationResult",
+        "surfaceId": "contract.host.negotiation-result.v1"
+      },
+      {
+        "name": "HostFileBinding",
+        "surfaceId": "contract.host.file-binding.v1"
+      },
+      {
+        "name": "HostCredentialReference",
+        "surfaceId": "contract.host.credential-reference.v1"
+      },
+      {
+        "name": "HostRunIdentity",
+        "surfaceId": "contract.host.run-identity.v1"
+      },
+      {
+        "name": "HostIdempotency",
+        "surfaceId": "contract.host.idempotency.v1"
+      },
+      {
+        "name": "HostRunRequest",
+        "surfaceId": "contract.host.run-request.v1"
+      },
+      {
+        "name": "HostArtifactDescriptor",
+        "surfaceId": "contract.host.artifact-descriptor.v1"
+      },
+      {
+        "name": "HostArtifactExchange",
+        "surfaceId": "contract.host.artifact-exchange-response.v1"
+      },
+      {
+        "name": "HostUsageMetrics",
+        "surfaceId": "contract.host.usage-metrics.v1"
+      },
+      {
+        "name": "HostEventType",
+        "surfaceId": "contract.host.event-type.v1"
+      },
+      {
+        "name": "HostEventDataByType",
+        "surfaceId": "contract.host.event-data-by-type.v1"
+      },
+      {
+        "name": "HostEventEnvelope",
+        "surfaceId": "contract.host.event-family.v1"
+      },
+      {
+        "name": "HostAdapterErrorCode",
+        "surfaceId": "contract.host.adapter-error-code.v1"
+      },
+      {
+        "name": "HostAdapterErrorData",
+        "surfaceId": "contract.host.adapter-error-data.v1"
+      },
+      {
+        "name": "HostAdapterError",
+        "surfaceId": "contract.host.adapter-error.v1"
+      },
+      {
+        "name": "HostCancellationRequest",
+        "surfaceId": "contract.host.cancellation-request.v1"
+      },
+      {
+        "name": "HostCancellationResponse",
+        "surfaceId": "contract.host.cancellation-response.v1"
+      },
+      {
+        "name": "HostResumeRequest",
+        "surfaceId": "contract.host.resume-request.v1"
+      },
+      {
+        "name": "HostArtifactRequest",
+        "surfaceId": "contract.host.artifact-exchange-request.v1"
+      },
+      {
+        "name": "HostExecutionAdapter",
+        "surfaceId": "contract.host.execution-adapter.v1"
+      }
+    ],
+    "eventVariants": [
+      {
+        "name": "accepted",
+        "surfaceId": "contract.host.event-accepted.v1"
+      },
+      {
+        "name": "started",
+        "surfaceId": "contract.host.event-started.v1"
+      },
+      {
+        "name": "progress",
+        "surfaceId": "contract.host.event-progress.v1"
+      },
+      {
+        "name": "heartbeat",
+        "surfaceId": "contract.host.event-heartbeat.v1"
+      },
+      {
+        "name": "artifact",
+        "surfaceId": "contract.host.event-artifact.v1"
+      },
+      {
+        "name": "completed",
+        "surfaceId": "contract.host.event-completed.v1"
+      },
+      {
+        "name": "blocked",
+        "surfaceId": "contract.host.event-blocked.v1"
+      },
+      {
+        "name": "failed",
+        "surfaceId": "contract.host.event-failed.v1"
+      },
+      {
+        "name": "cancelled",
+        "surfaceId": "contract.host.event-cancelled.v1"
+      }
+    ]
+  },
+  "schemaRegistry": {
+    "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+    "registrations": [
+      {
+        "version": "1.0.0",
+        "status": "published",
+        "active": true,
+        "documents": [
+          "manifest",
+          "mcp"
+        ]
+      },
+      {
+        "version": "1.1.0",
+        "status": "draft",
+        "active": false,
+        "documents": [
+          "manifest",
+          "mcp"
+        ]
+      }
+    ]
+  },
+  "artifactDiscovery": [
+    {
+      "sourceFile": "contracts/capability-contract/src/fake-host-adapter.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "expected": [
+        "eval_metadata.json",
+        "feedback.json",
+        "grading.json",
+        "metrics.json",
+        "transcript.md",
+        "user_notes.md",
+        "viewer.html"
+      ]
+    },
+    {
+      "sourceFile": "skills/agent-creator/scripts/agent_format.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "expected": [
+        "benchmark.json",
+        "eval_metadata.json",
+        "grading.json",
+        "timing.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "expected": [
+        "eval_metadata.json",
+        "grading.json",
+        "response.md",
+        "timing.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "expected": [
+        "eval_metadata.json",
+        "response.md",
+        "run_summary.json",
+        "timing.json",
+        "transcript.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "expected": [
+        "plugin.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "expected": [
+        "plugin.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/hook-creator/scripts/validate_hook.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "expected": [
+        "benchmark.json",
+        "plugin.json",
+        "receipt.json",
+        "review.html"
+      ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/init_goose_plugin.ts",
+      "expected": [
+        "SKILL.md",
+        "hooks.json",
+        "plugin.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "expected": [
+        ".mcp.json",
+        "mcp.json",
+        "plugin.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/mcp_runtime.ts",
+      "expected": [
+        "mcp.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "expected": [
+        ".mcp.json",
+        "mcp.json",
+        "plugin.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "expected": [
+        "THIRD_PARTY_NOTICES.md",
+        "manifest.json",
+        "package.json",
+        "plugin.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/package_manifest.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/plugin_data_lifecycle.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "expected": [
+        "SKILL.md",
+        "manifest.json",
+        "mcp.json",
+        "plugin.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "expected": [
+        "mcp.json",
+        "plugin.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "expected": [
+        ".mcp.json",
+        "SKILL.md",
+        "hooks.json",
+        "mcp.json",
+        "plugin.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "expected": [
+        "benchmark.json",
+        "plugin.json",
+        "review.html"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "expected": [
+        "eval_metadata.json",
+        "feedback.json",
+        "grading.json",
+        "metrics.json",
+        "transcript.md",
+        "user_notes.md",
+        "viewer.html"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "expected": [
+        "benchmark.json",
+        "eval_metadata.json",
+        "grading.json",
+        "timing.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "expected": [
+        "SKILL.md",
+        "benchmark.json",
+        "eval_metadata.json",
+        "grading.json",
+        "navigation.json",
+        "review.html"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "expected": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "expected": [
+        "SKILL.md",
+        "authoring-audit.json",
+        "benchmark.json",
+        "benchmark.md",
+        "eval_metadata.json",
+        "evals.json",
+        "evaluation-design.json",
+        "grading.json",
+        "post-evaluation-pattern-review.json",
+        "receipt.json",
+        "review.html",
+        "timing.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/generate_report.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "expected": [
+        "SKILL.md",
+        "THIRD_PARTY_NOTICES.md",
+        "manifest.json",
+        "package.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "expected": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "expected": [
+        "SKILL.md",
+        "report.html",
+        "results.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "expected": [
+        "benchmark.json",
+        "benchmark.md",
+        "eval_metadata.json",
+        "feedback.json",
+        "grading.json",
+        "review.html",
+        "timing.json"
+      ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "expected": [
+        "THIRD_PARTY_NOTICES.md",
+        "benchmark.json",
+        "package.json",
+        "review.html"
+      ]
+    }
+  ],
+  "versionRules": [
+    {
+      "id": "contract.capability.v1",
+      "sourceFile": "contracts/capability-contract/src/types.ts",
+      "sourceEvidence": "CAPABILITY_CONTRACT_VERSION = \"1.0.0\"",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/types.ts",
+      "versionEvidence": "CAPABILITY_CONTRACT_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.evaluation-plan.v1",
+      "sourceFile": "contracts/capability-contract/src/evaluation-types.ts",
+      "sourceEvidence": "EVALUATION_PLAN_VERSION = \"1.0.0\"",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/evaluation-types.ts",
+      "versionEvidence": "EVALUATION_PLAN_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.result.v1",
+      "sourceFile": "contracts/capability-contract/src/result-types.ts",
+      "sourceEvidence": "RESULT_CONTRACT_VERSION = \"1.0.0\"",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/result-types.ts",
+      "versionEvidence": "RESULT_CONTRACT_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "schema.host-adapter.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "HOST_ADAPTER_SCHEMA_ID = \"https://agent-plugins.org/schemas/host-execution-adapter/1.0.0/host-execution-adapter.schema.json\"",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "schema.host-event.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "HOST_EVENT_SCHEMA_ID = \"https://agent-plugins.org/schemas/host-execution-adapter/1.0.0/host-execution-event.schema.json\"",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.adapter-protocol-version.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export type HostAdapterProtocolVersion = typeof HOST_ADAPTER_PROTOCOL_VERSION;",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.identity.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostIdentity { name: string; version: string; adapterVersion: string; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.capability-report.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostCapabilityReport {",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.capability-name.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export type HostCapabilityName = \"isolation\" | \"streaming\" | \"cancellation\" | \"resume\" | \"model\" | \"tools\" | \"filesystem\" | \"network\" | \"browser\" | \"tokenMetrics\" | \"costMetrics\";",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.capability-requirement.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostCapabilityRequirement { capability: HostCapabilityName; value?: string | string[]; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.capability-requirements.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostCapabilityRequirements { required: HostCapabilityRequirement[]; optional: HostCapabilityRequirement[]; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.capability-degradation.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostCapabilityDegradation { capability: HostCapabilityName; code: \"OPTIONAL_CAPABILITY_UNAVAILABLE\"; message: string; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.negotiation-request.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostNegotiationRequest { supportedProtocolVersions: string[]; capabilities: HostCapabilityRequirements; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.negotiation-accepted.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostNegotiationAccepted { compatible: true; protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; report: HostCapabilityReport; degradations: HostCapabilityDegradation[]; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.negotiation-blocked.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostNegotiationBlocked { compatible: false; protocolVersion?: HostAdapterProtocolVersion; host: HostIdentity; report: HostCapabilityReport; errors: HostAdapterErrorData[]; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.negotiation-result.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export type HostNegotiationResult = HostNegotiationAccepted | HostNegotiationBlocked;",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.file-binding.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostFileBinding { path: string; sha256: string; mediaType: string; size: number; access: \"read\" | \"write\" | \"read-write\"; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.credential-reference.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostCredentialReference { name: string; reference: string; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.run-identity.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostRunIdentity { runId: string; planId: string; scenarioId: string; configurationId: string; attempt: number; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.idempotency.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostIdempotency { key: string; resumeToken?: string; afterSequence?: number; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.run-request.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostRunRequest {",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.artifact-descriptor.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostArtifactDescriptor { artifactId: string; path: string; sha256: string; mediaType: string; size: number; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.artifact-exchange-response.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostArtifactExchange { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; artifact: HostArtifactDescriptor; encoding: \"base64\"; content: string; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.usage-metrics.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostUsageMetrics { inputTokens?: number; outputTokens?: number; totalTokens?: number; costUsd?: number; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-type.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export type HostEventType = \"accepted\" | \"started\" | \"progress\" | \"heartbeat\" | \"artifact\" | \"completed\" | \"blocked\" | \"failed\" | \"cancelled\";",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-data-by-type.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostEventDataByType {",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-family.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export type HostEventEnvelope<T extends HostEventType = HostEventType> = T extends HostEventType ? {",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.adapter-error-code.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export type HostAdapterErrorCode = \"PROTOCOL_VERSION_UNSUPPORTED\" | \"REQUIRED_CAPABILITY_MISSING\" | \"RUN_REQUEST_INVALID\" | \"WORKSPACE_BOUNDARY_VIOLATION\" | \"FILE_BOUNDARY_VIOLATION\" | \"TOOL_NOT_ALLOWED\" | \"ENVIRONMENT_NOT_ALLOWED\" | \"CREDENTIAL_VALUE_FORBIDDEN\" | \"SECRET_IN_EVENT\" | \"EVENT_SEQUENCE_INVALID\" | \"ARTIFACT_INVALID\" | \"RUN_NOT_FOUND\" | \"RESUME_INVALID\" | \"RESUME_STALE\" | \"CANCELLATION_UNSUPPORTED\" | \"INTERNAL_ERROR\";",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.adapter-error-data.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostAdapterErrorData { code: HostAdapterErrorCode; message: string; retryable: boolean; details?: Record<string, unknown>; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.adapter-error.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export type HostAdapterErrorCode = \"PROTOCOL_VERSION_UNSUPPORTED\" | \"REQUIRED_CAPABILITY_MISSING\" | \"RUN_REQUEST_INVALID\" | \"WORKSPACE_BOUNDARY_VIOLATION\" | \"FILE_BOUNDARY_VIOLATION\" | \"TOOL_NOT_ALLOWED\" | \"ENVIRONMENT_NOT_ALLOWED\" | \"CREDENTIAL_VALUE_FORBIDDEN\" | \"SECRET_IN_EVENT\" | \"EVENT_SEQUENCE_INVALID\" | \"ARTIFACT_INVALID\" | \"RUN_NOT_FOUND\" | \"RESUME_INVALID\" | \"RESUME_STALE\" | \"CANCELLATION_UNSUPPORTED\" | \"INTERNAL_ERROR\";",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.cancellation-request.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostCancellationRequest { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; reason: string; idempotencyKey: string; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.cancellation-response.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostCancellationResponse { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; status: \"cancel-requested\" | \"already-cancelled\" | \"already-terminal\"; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.resume-request.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostResumeRequest { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; resumeToken: string; afterSequence: number; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.artifact-exchange-request.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostArtifactRequest { protocolVersion: HostAdapterProtocolVersion; host: HostIdentity; runId: string; artifactId: string; }",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.execution-adapter.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "export interface HostExecutionAdapter {",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-accepted.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "  accepted: { resumeToken?: string; degradations: HostCapabilityDegradation[] };",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-started.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "  started: { message?: string };",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-progress.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "  progress: { message: string; completed?: number; total?: number };",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-heartbeat.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "  heartbeat: { message?: string };",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-artifact.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "  artifact: { artifact: HostArtifactDescriptor };",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-completed.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "  completed: { result: ResultContractV1; metrics?: HostUsageMetrics };",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-blocked.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "  blocked: { result: ResultContractV1; error: HostAdapterErrorData };",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-failed.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "  failed: { result: ResultContractV1; error: HostAdapterErrorData };",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "contract.host.event-cancelled.v1",
+      "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "sourceEvidence": "  cancelled: { reason: string };",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
+      "versionEvidence": "HOST_ADAPTER_PROTOCOL_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "skill.full-eval.v1",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "versionEvidence": "schema_version:\"1.0\",command:\"full-eval\""
+    },
+    {
+      "id": "plugin.full-eval.v1",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "versionEvidence": "schema_version:\"1.0\",command:\"full-eval\""
+    },
+    {
+      "id": "skill.authoring-audit.v1",
+      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "sourceEvidence": "schema_version: \"1.0\"",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "versionEvidence": "schema_version: \"1.0\""
+    },
+    {
+      "id": "skill.evaluation-design.v1",
+      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "sourceEvidence": "artifact: \"evaluation-design\"",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "versionEvidence": "artifact: \"evaluation-design\""
+    },
+    {
+      "id": "skill.evaluation-analysis.v1",
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceEvidence": "artifact:\"evaluation-analysis\"",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "versionEvidence": "artifact:\"evaluation-analysis\""
+    },
+    {
+      "id": "skill.verification-receipt.v1",
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceEvidence": "schema_version: \"1.0\"",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "versionEvidence": "schema_version: \"1.0\""
+    },
+    {
+      "id": "plugin.verification-receipt.v1",
+      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceEvidence": "schema_version: \"1.0\", artifact: \"plugin\"",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "versionEvidence": "schema_version: \"1.0\", artifact: \"plugin\""
+    },
+    {
+      "id": "workspace.skill-eval.current.v1",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceEvidence": "for(const config of [\"with_skill\",baseline])artifacts.push(join(ed,config,\"run-1\",\"outputs\"))",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "versionEvidence": "for(const config of [\"with_skill\",baseline])artifacts.push(join(ed,config,\"run-1\",\"outputs\"))"
+    },
+    {
+      "id": "plugin.manifest.v1",
+      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceEvidence": "DEFAULT_SCHEMA_VERSION = \"1.0.0\"",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "versionEvidence": "DEFAULT_SCHEMA_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "plugin.mcp.v1",
+      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceEvidence": "mcp: Object.freeze({ id: schemaId(version, \"mcp.schema.json\")",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "versionEvidence": "DEFAULT_SCHEMA_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "hook.layout.current.v1",
+      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceEvidence": "CANONICAL_HOOKS_PATH = \"extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json\"",
+      "emittedVersion": "1",
+      "versionSourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "versionEvidence": "CANONICAL_HOOKS_PATH = \"extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json\""
+    },
+    {
+      "id": "hook.extension-envelope.v1",
+      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceEvidence": "version:GOOSE_ENVELOPE_VERSION",
+      "emittedVersion": "1",
+      "versionSourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "versionEvidence": "GOOSE_ENVELOPE_VERSION = 1"
+    },
+    {
+      "id": "layout.skill-artifact.current",
+      "sourceFile": "skills/skill-creator/AGENTS.md",
+      "sourceEvidence": ".agents/skills",
+      "emittedVersion": "1",
+      "versionSourceFile": "skills/skill-creator/AGENTS.md",
+      "versionEvidence": ".agents/skills"
+    },
+    {
+      "id": "layout.agent-artifact.current",
+      "sourceFile": "skills/agent-creator/AGENTS.md",
+      "sourceEvidence": ".agents/agents",
+      "emittedVersion": "1",
+      "versionSourceFile": "skills/agent-creator/AGENTS.md",
+      "versionEvidence": ".agents/agents"
+    },
+    {
+      "id": "layout.plugin-artifact.current",
+      "sourceFile": "skills/plugin-creator/AGENTS.md",
+      "sourceEvidence": ".agents/plugins",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "skills/plugin-creator/AGENTS.md",
+      "versionEvidence": ".agents/plugins"
+    },
+    {
+      "id": "result.exit-family.skill",
+      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceEvidence": "status === \"blocked\" ? 3 : 1",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "skills/skill-creator/scripts/cli.ts",
+      "versionEvidence": "status === \"blocked\" ? 3 : 1"
+    },
+    {
+      "id": "result.exit-family.agent",
+      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceEvidence": "Exit codes: 0 success, 1 failure, 2 usage error, 3 blocked operation.",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "skills/agent-creator/scripts/cli.ts",
+      "versionEvidence": "Exit codes: 0 success, 1 failure, 2 usage error, 3 blocked operation."
+    },
+    {
+      "id": "result.exit-family.hook",
+      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceEvidence": "return usage ? 2 : 1",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "skills/hook-creator/scripts/cli.ts",
+      "versionEvidence": "return usage ? 2 : 1"
+    },
+    {
+      "id": "result.exit-family.plugin",
+      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceEvidence": "EXIT_SUCCESS=0, EXIT_FAILURE=1, EXIT_USAGE=2, EXIT_BLOCKED=3",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "versionEvidence": "EXIT_SUCCESS=0, EXIT_FAILURE=1, EXIT_USAGE=2, EXIT_BLOCKED=3"
+    }
+  ],
+  "producerBackedSurfaceIds": [
+    "agent.benchmark-markdown.unversioned",
+    "agent.benchmark.unversioned",
+    "agent.eval-metadata.unversioned",
+    "agent.feedback.unversioned",
+    "agent.grading.unversioned",
+    "agent.response-markdown.unversioned",
+    "agent.run-summary.unversioned",
+    "agent.timing.unversioned",
+    "agent.transcript.unversioned",
+    "plugin.full-eval.v1",
+    "plugin.verification-receipt.v1",
+    "skill.authoring-audit.v1",
+    "skill.benchmark-markdown.unversioned",
+    "skill.benchmark.unversioned",
+    "skill.eval-metadata.unversioned",
+    "skill.evaluation-analysis.v1",
+    "skill.evaluation-design.v1",
+    "skill.feedback.unversioned",
+    "skill.post-evaluation-pattern-review.unversioned",
+    "skill.run-loop-report.unversioned",
+    "skill.run-loop-result.unversioned",
+    "skill.verification-receipt.v1"
+  ],
+  "canonicalArtifacts": [
+    {
+      "canonicalArtifactId": "agent.benchmark-markdown.unversioned",
+      "format": "markdown",
+      "validatorId": "signature:markdown-document",
+      "registrySurfaceId": "agent.benchmark-markdown.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.benchmark.unversioned",
+      "format": "json",
+      "validatorId": "artifact:benchmark",
+      "registrySurfaceId": "agent.benchmark.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.cli.envelope.unversioned",
+      "format": "json",
+      "validatorId": "artifact:cli-envelope",
+      "registrySurfaceId": "agent.cli.envelope.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.eval-metadata.unversioned",
+      "format": "json",
+      "validatorId": "artifact:eval-metadata",
+      "registrySurfaceId": "agent.eval-metadata.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.feedback.unversioned",
+      "format": "json",
+      "validatorId": "artifact:feedback",
+      "registrySurfaceId": "agent.feedback.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.grading.unversioned",
+      "format": "json",
+      "validatorId": "artifact:grading",
+      "registrySurfaceId": "agent.grading.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.response-markdown.unversioned",
+      "format": "markdown",
+      "validatorId": "signature:markdown-document",
+      "registrySurfaceId": "agent.response-markdown.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.run-summary.unversioned",
+      "format": "json",
+      "validatorId": "artifact:run-summary",
+      "registrySurfaceId": "agent.run-summary.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.timing.unversioned",
+      "format": "json",
+      "validatorId": "artifact:timing",
+      "registrySurfaceId": "agent.timing.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.transcript.unversioned",
+      "format": "json",
+      "validatorId": "artifact:transcript",
+      "registrySurfaceId": "agent.transcript.unversioned"
+    },
+    {
+      "canonicalArtifactId": "agent.viewer-html.unversioned",
+      "format": "html",
+      "validatorId": "signature:html-document",
+      "registrySurfaceId": "agent.viewer-html.unversioned"
+    },
+    {
+      "canonicalArtifactId": "contract.host.artifact-exchange-response.v1",
+      "format": "json",
+      "validatorId": "host:artifact-exchange",
+      "registrySurfaceId": "contract.host.artifact-exchange-response.v1"
+    },
+    {
+      "canonicalArtifactId": "contract.host.cancellation-response.v1",
+      "format": "json",
+      "validatorId": "host:cancellation-response",
+      "registrySurfaceId": "contract.host.cancellation-response.v1"
+    },
+    {
+      "canonicalArtifactId": "creator.metrics.unversioned",
+      "format": "json",
+      "validatorId": "artifact:metrics",
+      "serialized": false,
+      "structuralExclusion": "Embedded or integration-only producer member; it has no independent registry read surface.",
+      "registryAnalogueSurfaceId": "skill.viewer-html.unversioned"
+    },
+    {
+      "canonicalArtifactId": "creator.transcript-markdown.unversioned",
+      "format": "markdown",
+      "validatorId": "signature:markdown-document",
+      "serialized": false,
+      "structuralExclusion": "Embedded or integration-only producer member; it has no independent registry read surface.",
+      "registryAnalogueSurfaceId": "skill.viewer-html.unversioned"
+    },
+    {
+      "canonicalArtifactId": "creator.user-notes-markdown.unversioned",
+      "format": "markdown",
+      "validatorId": "signature:markdown-document",
+      "serialized": false,
+      "structuralExclusion": "Embedded or integration-only producer member; it has no independent registry read surface.",
+      "registryAnalogueSurfaceId": "skill.viewer-html.unversioned"
+    },
+    {
+      "canonicalArtifactId": "hook.cli.envelope.unversioned",
+      "format": "json",
+      "validatorId": "artifact:cli-envelope",
+      "registrySurfaceId": "hook.cli.envelope.unversioned"
+    },
+    {
+      "canonicalArtifactId": "hook.document.current.unversioned",
+      "format": "json",
+      "validatorId": "artifact:hook-document",
+      "registrySurfaceId": "hook.document.current.unversioned"
+    },
+    {
+      "canonicalArtifactId": "hook.extension-envelope.v1",
+      "format": "json",
+      "validatorId": "artifact:hook-extension",
+      "registrySurfaceId": "hook.extension-envelope.v1"
+    },
+    {
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "format": "layout",
+      "validatorId": "shape:workspace-layout",
+      "registrySurfaceId": "layout.skill-artifact.current"
+    },
+    {
+      "canonicalArtifactId": "plugin.cli.envelope.unversioned",
+      "format": "json",
+      "validatorId": "artifact:cli-envelope",
+      "registrySurfaceId": "plugin.cli.envelope.unversioned"
+    },
+    {
+      "canonicalArtifactId": "plugin.full-eval.v1",
+      "format": "json",
+      "validatorId": "artifact:full-eval",
+      "registrySurfaceId": "plugin.full-eval.v1"
+    },
+    {
+      "canonicalArtifactId": "plugin.integration-benchmark.unversioned",
+      "format": "json",
+      "validatorId": "artifact:benchmark",
+      "serialized": false,
+      "structuralExclusion": "Embedded or integration-only producer member; it has no independent registry read surface.",
+      "registryAnalogueSurfaceId": "skill.benchmark.unversioned"
+    },
+    {
+      "canonicalArtifactId": "plugin.integration-review-html.unversioned",
+      "format": "html",
+      "validatorId": "signature:html-document",
+      "serialized": false,
+      "structuralExclusion": "Embedded or integration-only producer member; it has no independent registry read surface.",
+      "registryAnalogueSurfaceId": "skill.review-html.unversioned"
+    },
+    {
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "format": "json",
+      "validatorId": "artifact:plugin-manifest",
+      "registrySurfaceId": "plugin.manifest.v1"
+    },
+    {
+      "canonicalArtifactId": "plugin.mcp.v1",
+      "format": "json",
+      "validatorId": "artifact:mcp-document",
+      "registrySurfaceId": "plugin.mcp.v1"
+    },
+    {
+      "canonicalArtifactId": "plugin.migration-report.unversioned",
+      "format": "json",
+      "validatorId": "artifact:migration-report",
+      "registrySurfaceId": "plugin.migration-report.unversioned"
+    },
+    {
+      "canonicalArtifactId": "plugin.validation-outcome.unversioned",
+      "format": "json",
+      "validatorId": "artifact:validation-outcome",
+      "registrySurfaceId": "plugin.validation-outcome.unversioned"
+    },
+    {
+      "canonicalArtifactId": "plugin.verification-receipt.v1",
+      "format": "json",
+      "validatorId": "artifact:verification-receipt",
+      "registrySurfaceId": "plugin.verification-receipt.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.authoring-audit.v1",
+      "format": "json",
+      "validatorId": "artifact:authoring-audit",
+      "registrySurfaceId": "skill.authoring-audit.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.benchmark-markdown.unversioned",
+      "format": "markdown",
+      "validatorId": "signature:markdown-document",
+      "registrySurfaceId": "skill.benchmark-markdown.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.benchmark.unversioned",
+      "format": "json",
+      "validatorId": "artifact:benchmark",
+      "registrySurfaceId": "skill.benchmark.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.cli.envelope.unversioned",
+      "format": "json",
+      "validatorId": "artifact:cli-envelope",
+      "registrySurfaceId": "skill.cli.envelope.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.eval-metadata.unversioned",
+      "format": "json",
+      "validatorId": "artifact:eval-metadata",
+      "registrySurfaceId": "skill.eval-metadata.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.evals-form.unversioned",
+      "format": "json",
+      "validatorId": "artifact:evals-form",
+      "registrySurfaceId": "skill.evals-form.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.evaluation-analysis.v1",
+      "format": "json",
+      "validatorId": "artifact:evaluation-analysis",
+      "registrySurfaceId": "skill.evaluation-analysis.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.evaluation-design.v1",
+      "format": "json",
+      "validatorId": "artifact:evaluation-design",
+      "registrySurfaceId": "skill.evaluation-design.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.feedback.unversioned",
+      "format": "json",
+      "validatorId": "artifact:feedback",
+      "registrySurfaceId": "skill.feedback.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.grading.unversioned",
+      "format": "json",
+      "validatorId": "artifact:grading",
+      "registrySurfaceId": "skill.grading.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.post-evaluation-pattern-review.unversioned",
+      "format": "json",
+      "validatorId": "artifact:evaluation-analysis",
+      "registrySurfaceId": "skill.post-evaluation-pattern-review.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.review-html.unversioned",
+      "format": "html",
+      "validatorId": "signature:html-document",
+      "registrySurfaceId": "skill.review-html.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.run-loop-report.unversioned",
+      "format": "html",
+      "validatorId": "signature:html-document",
+      "registrySurfaceId": "skill.run-loop-report.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.run-loop-result.unversioned",
+      "format": "json",
+      "validatorId": "artifact:run-loop-result",
+      "registrySurfaceId": "skill.run-loop-result.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.timing.unversioned",
+      "format": "json",
+      "validatorId": "artifact:timing",
+      "registrySurfaceId": "skill.timing.unversioned"
+    },
+    {
+      "canonicalArtifactId": "skill.verification-receipt.v1",
+      "format": "json",
+      "validatorId": "artifact:verification-receipt",
+      "registrySurfaceId": "skill.verification-receipt.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.viewer-html.unversioned",
+      "format": "html",
+      "validatorId": "signature:html-document",
+      "registrySurfaceId": "skill.viewer-html.unversioned"
+    }
+  ],
+  "producerSiteAliases": [
+    {
+      "siteId": "contracts/capability-contract/src/fake-host-adapter.ts::host artifact exchange response",
+      "sourceFile": "contracts/capability-contract/src/fake-host-adapter.ts",
+      "sourceFieldOrArtifact": "host artifact exchange response",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "contract.host.artifact-exchange-response.v1",
+      "sourceEvidence": "encoding: \"base64\"",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "contracts/capability-contract/src/fake-host-adapter.ts::host cancellation response",
+      "sourceFile": "contracts/capability-contract/src/fake-host-adapter.ts",
+      "sourceFieldOrArtifact": "host cancellation response",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "contract.host.cancellation-response.v1",
+      "sourceEvidence": "status: \"cancel-requested\"",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::eval_metadata.json",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::feedback.json",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "feedback.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "agent.feedback.unversioned",
+      "sourceEvidence": "feedback.json",
+      "evidenceOccurrences": 4
+    },
+    {
+      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::grading.json",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::metrics.json",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "metrics.json",
+      "role": "consumer",
+      "canonicalArtifactId": "creator.metrics.unversioned",
+      "sourceEvidence": "metrics.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::transcript.md",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "transcript.md",
+      "role": "consumer",
+      "canonicalArtifactId": "creator.transcript-markdown.unversioned",
+      "sourceEvidence": "transcript.md",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::user_notes.md",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "user_notes.md",
+      "role": "consumer",
+      "canonicalArtifactId": "creator.user-notes-markdown.unversioned",
+      "sourceEvidence": "user_notes.md",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::viewer.html",
+      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "viewer.html",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.viewer-html.unversioned",
+      "sourceEvidence": "viewer.html",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::benchmark.json",
+      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "benchmark.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.benchmark.unversioned",
+      "sourceEvidence": "benchmark.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::benchmark.md",
+      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "benchmark.md",
+      "role": "producer",
+      "canonicalArtifactId": "agent.benchmark-markdown.unversioned",
+      "sourceEvidence": "const outputMd = outputJson.replace(/\\.json$/, \".md\")",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::eval_metadata.json",
+      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::grading.json",
+      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 10
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::timing.json",
+      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "timing.json",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.timing.unversioned",
+      "sourceEvidence": "timing.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/cli.ts::JSON CLI envelope",
+      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceFieldOrArtifact": "JSON CLI envelope",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "agent.cli.envelope.unversioned",
+      "sourceEvidence": "exitCode",
+      "evidenceOccurrences": 9
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/grade_agent_eval.ts::eval_metadata.json",
+      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/grade_agent_eval.ts::grading.json",
+      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/grade_agent_eval.ts::response.md",
+      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFieldOrArtifact": "response.md",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.response-markdown.unversioned",
+      "sourceEvidence": "response.md",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/grade_agent_eval.ts::timing.json",
+      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFieldOrArtifact": "timing.json",
+      "role": "consumer",
+      "canonicalArtifactId": "agent.timing.unversioned",
+      "sourceEvidence": "timing.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::eval_metadata.json",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::response.md",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrArtifact": "response.md",
+      "role": "producer",
+      "canonicalArtifactId": "agent.response-markdown.unversioned",
+      "sourceEvidence": "response.md",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::run_summary.json",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrArtifact": "run_summary.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.run-summary.unversioned",
+      "sourceEvidence": "run_summary.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::timing.json",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrArtifact": "timing.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.timing.unversioned",
+      "sourceEvidence": "timing.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::transcript.json",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrArtifact": "transcript.json",
+      "role": "producer",
+      "canonicalArtifactId": "agent.transcript.unversioned",
+      "sourceEvidence": "transcript.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/hook-creator/scripts/cli.ts::JSON CLI envelope",
+      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFieldOrArtifact": "JSON CLI envelope",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "hook.cli.envelope.unversioned",
+      "sourceEvidence": "JSON.stringify(value)",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/hook-creator/scripts/hook_format.ts::canonical hook document consumer",
+      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFieldOrArtifact": "canonical hook document consumer",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "hook.document.current.unversioned",
+      "sourceEvidence": "CANONICAL_HOOKS_PATH",
+      "evidenceOccurrences": 6
+    },
+    {
+      "siteId": "skills/hook-creator/scripts/hook_format.ts::plugin extension consumer",
+      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFieldOrArtifact": "plugin extension consumer",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "hook.extension-envelope.v1",
+      "sourceEvidence": "extensions",
+      "evidenceOccurrences": 9
+    },
+    {
+      "siteId": "skills/hook-creator/scripts/hook_format.ts::plugin.json",
+      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 8
+    },
+    {
+      "siteId": "skills/hook-creator/scripts/init_hook.ts::canonical hook document producer",
+      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFieldOrArtifact": "canonical hook document producer",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "hook.document.current.unversioned",
+      "sourceEvidence": "CANONICAL_HOOKS_PATH",
+      "evidenceOccurrences": 5
+    },
+    {
+      "siteId": "skills/hook-creator/scripts/init_hook.ts::hook extension envelope producer",
+      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFieldOrArtifact": "hook extension envelope producer",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "hook.extension-envelope.v1",
+      "sourceEvidence": "extensions",
+      "evidenceOccurrences": 6
+    },
+    {
+      "siteId": "skills/hook-creator/scripts/init_hook.ts::plugin manifest producer-consumer",
+      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFieldOrArtifact": "plugin manifest producer-consumer",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 5
+    },
+    {
+      "siteId": "skills/hook-creator/scripts/init_hook.ts::plugin.json",
+      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 5
+    },
+    {
+      "sourceFile": "skills/hook-creator/scripts/validate_hook.ts",
+      "sourceFieldOrArtifact": "hook validation result",
+      "sourceEvidence": "export function validateHook",
+      "siteId": "skills/hook-creator/scripts/validate_hook.ts::hook validation result",
+      "canonicalArtifactId": "hook.document.current.unversioned",
+      "role": "consumer",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/cli.ts::JSON CLI envelope",
+      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFieldOrArtifact": "JSON CLI envelope",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.cli.envelope.unversioned",
+      "sourceEvidence": "function emit",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/cli.ts::full-eval forwarder",
+      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFieldOrArtifact": "full-eval forwarder",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.full-eval.v1",
+      "sourceEvidence": "runFullEval",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/cli.ts::migration report forwarder",
+      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFieldOrArtifact": "migration report forwarder",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.migration-report.unversioned",
+      "sourceEvidence": "runMigrate",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/cli.ts::validation outcome forwarder",
+      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFieldOrArtifact": "validation outcome forwarder",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.validation-outcome.unversioned",
+      "sourceEvidence": "loadPortablePlugin",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/cli.ts::verification receipt forwarder",
+      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFieldOrArtifact": "verification receipt forwarder",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.verification-receipt.v1",
+      "sourceEvidence": "runVerify",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/full_eval.ts::benchmark.json",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "benchmark.json",
+      "role": "consumer",
+      "canonicalArtifactId": "plugin.integration-benchmark.unversioned",
+      "sourceEvidence": "benchmark.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/full_eval.ts::full-eval return envelope",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "full-eval return envelope",
+      "role": "producer",
+      "canonicalArtifactId": "plugin.full-eval.v1",
+      "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/full_eval.ts::plugin.json",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/full_eval.ts::receipt.json",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "receipt.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.verification-receipt.v1",
+      "sourceEvidence": "receipt.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/full_eval.ts::review.html",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "review.html",
+      "role": "consumer",
+      "canonicalArtifactId": "plugin.integration-review-html.unversioned",
+      "sourceEvidence": "review.html",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/init_goose_plugin.ts::SKILL.md",
+      "sourceFile": "skills/plugin-creator/scripts/init_goose_plugin.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "sourceEvidence": "SKILL.md",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/init_goose_plugin.ts::hooks.json",
+      "sourceFile": "skills/plugin-creator/scripts/init_goose_plugin.ts",
+      "sourceFieldOrArtifact": "hooks.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "hook.document.current.unversioned",
+      "sourceEvidence": "hooks.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/init_goose_plugin.ts::plugin.json",
+      "sourceFile": "skills/plugin-creator/scripts/init_goose_plugin.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/mcp_compatibility.ts::mcp.json",
+      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "sourceFieldOrArtifact": "mcp.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.mcp.v1",
+      "sourceEvidence": "mcp.json",
+      "evidenceOccurrences": 5
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/mcp_compatibility.ts::plugin.json",
+      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/mcp_runtime.ts",
+      "sourceFieldOrArtifact": "mcp.json",
+      "sourceEvidence": "sourcePath:\"mcp.json\"",
+      "siteId": "skills/plugin-creator/scripts/mcp_runtime.ts::mcp.json",
+      "canonicalArtifactId": "plugin.validation-outcome.unversioned",
+      "role": "producer",
+      "evidenceOccurrences": 5
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFieldOrArtifact": "mcp semantic configuration",
+      "sourceEvidence": "validateMcpSemantics",
+      "siteId": "skills/plugin-creator/scripts/mcp_semantics.ts::mcp semantic configuration",
+      "canonicalArtifactId": "plugin.mcp.v1",
+      "role": "consumer",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/migrate_plugin.ts::mcp.json",
+      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFieldOrArtifact": "mcp.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.mcp.v1",
+      "sourceEvidence": "mcp.json",
+      "evidenceOccurrences": 13
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/migrate_plugin.ts::migration report return value",
+      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFieldOrArtifact": "migration report return value",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.migration-report.unversioned",
+      "sourceEvidence": "proposedMoves",
+      "evidenceOccurrences": 11
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/migrate_plugin.ts::plugin.json",
+      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 14
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/package_goose_plugin.ts::plugin.json",
+      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/portable_loader.ts::SKILL.md",
+      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "sourceEvidence": "SKILL.md",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/portable_loader.ts::mcp.json",
+      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "sourceFieldOrArtifact": "mcp.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.mcp.v1",
+      "sourceEvidence": "mcp.json",
+      "evidenceOccurrences": 15
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/portable_loader.ts::plugin.json",
+      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 9
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/portable_loader.ts::portable validation outcome",
+      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "sourceFieldOrArtifact": "portable validation outcome",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.validation-outcome.unversioned",
+      "sourceEvidence": "createValidationOutcome",
+      "evidenceOccurrences": 6
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts::mcp.json",
+      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "sourceFieldOrArtifact": "mcp.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.mcp.v1",
+      "sourceEvidence": "mcp.json",
+      "evidenceOccurrences": 4
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts::plugin.json",
+      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/validate_goose_plugin.ts::SKILL.md",
+      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "sourceEvidence": "SKILL.md",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/validate_goose_plugin.ts::hooks.json",
+      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "sourceFieldOrArtifact": "hooks.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "hook.document.current.unversioned",
+      "sourceEvidence": "hooks.json",
+      "evidenceOccurrences": 9
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/validate_goose_plugin.ts::mcp.json",
+      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "sourceFieldOrArtifact": "mcp.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.mcp.v1",
+      "sourceEvidence": "mcp.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/validate_goose_plugin.ts::plugin.json",
+      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 13
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/validation_outcomes.ts::validation outcome return value",
+      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "sourceFieldOrArtifact": "validation outcome return value",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "plugin.validation-outcome.unversioned",
+      "sourceEvidence": "createValidationOutcome",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/verify_plugin_gates.ts::benchmark.json",
+      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFieldOrArtifact": "benchmark.json",
+      "role": "consumer",
+      "canonicalArtifactId": "plugin.integration-benchmark.unversioned",
+      "sourceEvidence": "benchmark.json",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/verify_plugin_gates.ts::plugin.json",
+      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFieldOrArtifact": "plugin.json",
+      "role": "consumer",
+      "canonicalArtifactId": "plugin.manifest.v1",
+      "sourceEvidence": "plugin.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/verify_plugin_gates.ts::review.html",
+      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFieldOrArtifact": "review.html",
+      "role": "consumer",
+      "canonicalArtifactId": "plugin.integration-review-html.unversioned",
+      "sourceEvidence": "review.html",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/plugin-creator/scripts/verify_plugin_gates.ts::verification receipt return value",
+      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFieldOrArtifact": "verification receipt return value",
+      "role": "producer",
+      "canonicalArtifactId": "plugin.verification-receipt.v1",
+      "sourceEvidence": "schema_version: \"1.0\", artifact: \"plugin\"",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::eval_metadata.json",
+      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::feedback.json",
+      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "feedback.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.feedback.unversioned",
+      "sourceEvidence": "feedback.json",
+      "evidenceOccurrences": 4
+    },
+    {
+      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::grading.json",
+      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::metrics.json",
+      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "metrics.json",
+      "role": "consumer",
+      "canonicalArtifactId": "creator.metrics.unversioned",
+      "sourceEvidence": "metrics.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::transcript.md",
+      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "transcript.md",
+      "role": "consumer",
+      "canonicalArtifactId": "creator.transcript-markdown.unversioned",
+      "sourceEvidence": "transcript.md",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::user_notes.md",
+      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "user_notes.md",
+      "role": "consumer",
+      "canonicalArtifactId": "creator.user-notes-markdown.unversioned",
+      "sourceEvidence": "user_notes.md",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::viewer.html",
+      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFieldOrArtifact": "viewer.html",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.viewer-html.unversioned",
+      "sourceEvidence": "viewer.html",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::benchmark.json",
+      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "benchmark.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.benchmark.unversioned",
+      "sourceEvidence": "benchmark.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::benchmark.md",
+      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "benchmark.md",
+      "role": "producer",
+      "canonicalArtifactId": "skill.benchmark-markdown.unversioned",
+      "sourceEvidence": "const outputMd = outputJson.replace(/\\.json$/, \".md\")",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::eval_metadata.json",
+      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::grading.json",
+      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 10
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::timing.json",
+      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFieldOrArtifact": "timing.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.timing.unversioned",
+      "sourceEvidence": "timing.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::analysis return value",
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFieldOrArtifact": "analysis return value",
+      "role": "producer",
+      "canonicalArtifactId": "skill.evaluation-analysis.v1",
+      "sourceEvidence": "schema_version:\"1.0\", artifact:\"evaluation-analysis\"",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::benchmark.json",
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFieldOrArtifact": "benchmark.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.benchmark.unversioned",
+      "sourceEvidence": "benchmark.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::eval_metadata.json",
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::grading.json",
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::review.html",
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFieldOrArtifact": "review.html",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.review-html.unversioned",
+      "sourceEvidence": "review.html",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/audit_skill.ts::SKILL.md",
+      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "sourceEvidence": "SKILL.md",
+      "evidenceOccurrences": 18
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/audit_skill.ts::auditSkill return value",
+      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "sourceFieldOrArtifact": "auditSkill return value",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.authoring-audit.v1",
+      "sourceEvidence": "artifact: \"skill-authoring-audit\"",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/cli.ts::JSON CLI envelope",
+      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceFieldOrArtifact": "JSON CLI envelope",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.cli.envelope.unversioned",
+      "sourceEvidence": "exit_code: code",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/design_evals.ts::designEvals return value",
+      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "sourceFieldOrArtifact": "designEvals return value",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.evaluation-design.v1",
+      "sourceEvidence": "artifact: \"evaluation-design\"",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/design_evals.ts::normalized eval set",
+      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "sourceFieldOrArtifact": "normalized eval set",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.evals-form.unversioned",
+      "sourceEvidence": "skill_name: result.skill_name",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::SKILL.md",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "role": "structural-member",
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "sourceEvidence": "SKILL.md",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::authoring-audit.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "authoring-audit.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.authoring-audit.v1",
+      "sourceEvidence": "authoring-audit.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::benchmark.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "benchmark.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.benchmark.unversioned",
+      "sourceEvidence": "benchmark.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::benchmark.md",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "benchmark.md",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.benchmark-markdown.unversioned",
+      "sourceEvidence": "benchmark.md",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::eval_metadata.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::evals.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "evals.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.evals-form.unversioned",
+      "sourceEvidence": "evals.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::evaluation-design.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "evaluation-design.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.evaluation-design.v1",
+      "sourceEvidence": "evaluation-design.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::grading.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::post-evaluation-pattern-review.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "post-evaluation-pattern-review.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.post-evaluation-pattern-review.unversioned",
+      "sourceEvidence": "post-evaluation-pattern-review.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::receipt.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "receipt.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.verification-receipt.v1",
+      "sourceEvidence": "receipt.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::review.html",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "review.html",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.review-html.unversioned",
+      "sourceEvidence": "review.html",
+      "evidenceOccurrences": 4
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/full_eval.ts::timing.json",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "timing.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.timing.unversioned",
+      "sourceEvidence": "timing.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/generate_report.ts::generated review HTML",
+      "sourceFile": "skills/skill-creator/scripts/generate_report.ts",
+      "sourceFieldOrArtifact": "generated review HTML",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.review-html.unversioned",
+      "sourceEvidence": "generateHtml(data",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/generate_report.ts::report input",
+      "sourceFile": "skills/skill-creator/scripts/generate_report.ts",
+      "sourceFieldOrArtifact": "report input",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.benchmark.unversioned",
+      "sourceEvidence": "generateHtml(data",
+      "evidenceOccurrences": 2
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "sourceEvidence": "SKILL.md",
+      "evidenceOccurrences": 2,
+      "siteId": "skills/skill-creator/scripts/package_skill.ts::SKILL.md",
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "role": "consumer"
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/run_eval.ts::SKILL.md",
+      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "sourceEvidence": "SKILL.md",
+      "evidenceOccurrences": 5
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/run_loop.ts::SKILL.md",
+      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "role": "structural-member",
+      "canonicalArtifactId": "layout.skill-artifact.current",
+      "sourceEvidence": "SKILL.md",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/run_loop.ts::report.html",
+      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFieldOrArtifact": "report.html",
+      "role": "producer",
+      "canonicalArtifactId": "skill.run-loop-report.unversioned",
+      "sourceEvidence": "report.html",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/run_loop.ts::results.json",
+      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFieldOrArtifact": "results.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.run-loop-result.unversioned",
+      "sourceEvidence": "results.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::benchmark.json",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrArtifact": "benchmark.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.benchmark.unversioned",
+      "sourceEvidence": "benchmark.json",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::benchmark.md",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrArtifact": "benchmark.md",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.benchmark-markdown.unversioned",
+      "sourceEvidence": "benchmark.md",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::eval_metadata.json",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrArtifact": "eval_metadata.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.eval-metadata.unversioned",
+      "sourceEvidence": "eval_metadata.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::feedback.json",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrArtifact": "feedback.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.feedback.unversioned",
+      "sourceEvidence": "feedback.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::grading.json",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrArtifact": "grading.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.grading.unversioned",
+      "sourceEvidence": "grading.json",
+      "evidenceOccurrences": 4
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::review.html",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrArtifact": "review.html",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.review-html.unversioned",
+      "sourceEvidence": "review.html",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::timing.json",
+      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFieldOrArtifact": "timing.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.timing.unversioned",
+      "sourceEvidence": "timing.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::authoring audit input",
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFieldOrArtifact": "authoring audit input",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.authoring-audit.v1",
+      "sourceEvidence": "authoring_audit",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::benchmark.json",
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFieldOrArtifact": "benchmark.json",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.benchmark.unversioned",
+      "sourceEvidence": "benchmark.json",
+      "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::review.html",
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFieldOrArtifact": "review.html",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.review-html.unversioned",
+      "sourceEvidence": "review.html",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::verification receipt return value",
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFieldOrArtifact": "verification receipt return value",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "skill.verification-receipt.v1",
+      "sourceEvidence": "schema_version: \"1.0\"",
+      "evidenceOccurrences": 1
+    }
+  ],
+  "structuralExclusions": [
+    {
+      "sourceFile": "skills/agent-creator/scripts/agent_format.ts",
+      "sourceFieldOrArtifact": "agent document parser",
+      "sourceEvidence": "export function parseAgent",
+      "evidenceOccurrences": 1,
+      "site": "skills/agent-creator/scripts/agent_format.ts::agent document parser",
+      "rationale": "Agent frontmatter parser handles an independent YAML/Markdown document with no registered JSON compatibility surface."
+    },
+    {
+      "site": "skills/plugin-creator/scripts/mcp_compatibility.ts::.mcp.json",
+      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "sourceFieldOrArtifact": ".mcp.json",
+      "sourceEvidence": ".mcp.json",
+      "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
+      "evidenceOccurrences": 2
+    },
+    {
+      "site": "skills/plugin-creator/scripts/migrate_plugin.ts::.mcp.json",
+      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFieldOrArtifact": ".mcp.json",
+      "sourceEvidence": ".mcp.json",
+      "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
+      "evidenceOccurrences": 4
+    },
+    {
+      "site": "skills/plugin-creator/scripts/migrate_plugin.ts::.mcp.json legacy input",
+      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFieldOrArtifact": ".mcp.json legacy input",
+      "sourceEvidence": ".mcp.json",
+      "rationale": "Structural or legacy helper/member with no independent serialized compatibility surface.",
+      "evidenceOccurrences": 4
+    },
+    {
+      "site": "skills/plugin-creator/scripts/package_goose_plugin.ts::THIRD_PARTY_NOTICES.md",
+      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "sourceFieldOrArtifact": "THIRD_PARTY_NOTICES.md",
+      "sourceEvidence": "THIRD_PARTY_NOTICES.md",
+      "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
+      "evidenceOccurrences": 2
+    },
+    {
+      "site": "skills/plugin-creator/scripts/package_goose_plugin.ts::manifest.json",
+      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "sourceFieldOrArtifact": "manifest.json",
+      "sourceEvidence": "manifest.json",
+      "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
+      "evidenceOccurrences": 2
+    },
+    {
+      "site": "skills/plugin-creator/scripts/package_goose_plugin.ts::package.json",
+      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "sourceFieldOrArtifact": "package.json",
+      "sourceEvidence": "package.json",
+      "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
+      "evidenceOccurrences": 1
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/package_manifest.ts",
+      "sourceFieldOrArtifact": "package manifest entries",
+      "sourceEvidence": "files.push({",
+      "site": "skills/plugin-creator/scripts/package_manifest.ts::package manifest entries",
+      "rationale": "Runtime, packaging, or lifecycle helper with no independent serialized compatibility document.",
+      "evidenceOccurrences": 1
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/plugin_data_lifecycle.ts",
+      "sourceFieldOrArtifact": "plugin data lifecycle",
+      "sourceEvidence": "preparePluginData",
+      "site": "skills/plugin-creator/scripts/plugin_data_lifecycle.ts::plugin data lifecycle",
+      "rationale": "Runtime, packaging, or lifecycle helper with no independent serialized compatibility document.",
+      "evidenceOccurrences": 1
+    },
+    {
+      "site": "skills/plugin-creator/scripts/portable_loader.ts::SKILL.md structural member",
+      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "sourceFieldOrArtifact": "SKILL.md structural member",
+      "sourceEvidence": "SKILL.md",
+      "rationale": "Structural or legacy helper/member with no independent serialized compatibility surface.",
+      "evidenceOccurrences": 3
+    },
+    {
+      "site": "skills/plugin-creator/scripts/portable_loader.ts::manifest.json",
+      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "sourceFieldOrArtifact": "manifest.json",
+      "sourceEvidence": "manifest.json",
+      "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
+      "evidenceOccurrences": 1
+    },
+    {
+      "site": "skills/plugin-creator/scripts/portable_loader.ts::manifest.json package member",
+      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "sourceFieldOrArtifact": "manifest.json package member",
+      "sourceEvidence": "manifest.json",
+      "rationale": "Structural or legacy helper/member with no independent serialized compatibility surface.",
+      "evidenceOccurrences": 1
+    },
+    {
+      "site": "skills/plugin-creator/scripts/validate_goose_plugin.ts::.mcp.json",
+      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "sourceFieldOrArtifact": ".mcp.json",
+      "sourceEvidence": ".mcp.json",
+      "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
+      "evidenceOccurrences": 1
+    },
+    {
+      "site": "skills/plugin-creator/scripts/validation_outcomes.ts::deriveOutcomeStatus helper",
+      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "sourceFieldOrArtifact": "deriveOutcomeStatus helper",
+      "sourceEvidence": "deriveOutcomeStatus",
+      "rationale": "Structural or legacy helper/member with no independent serialized compatibility surface.",
+      "evidenceOccurrences": 2
+    },
+    {
+      "site": "skills/skill-creator/scripts/analyze_evaluation.ts::SKILL.md",
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFieldOrArtifact": "SKILL.md",
+      "sourceEvidence": "SKILL.md",
+      "rationale": "Skill entrypoint existence is a structural precondition for analysis, not a serialized evaluation artifact at this site.",
+      "evidenceOccurrences": 2
+    },
+    {
+      "site": "skills/skill-creator/scripts/analyze_evaluation.ts::navigation.json",
+      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFieldOrArtifact": "navigation.json",
+      "sourceEvidence": "navigation.json",
+      "rationale": "Optional navigation telemetry has no stable public serialized contract and is consumed only as best-effort analysis evidence.",
+      "evidenceOccurrences": 3
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "sourceFieldOrArtifact": "THIRD_PARTY_NOTICES.md",
+      "sourceEvidence": "THIRD_PARTY_NOTICES.md",
+      "evidenceOccurrences": 2,
+      "site": "skills/skill-creator/scripts/package_skill.ts::THIRD_PARTY_NOTICES.md",
+      "rationale": "Package dependency or notice member; not an independent serialized compatibility result surface."
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "sourceFieldOrArtifact": "manifest.json",
+      "sourceEvidence": "manifest.json",
+      "evidenceOccurrences": 2,
+      "site": "skills/skill-creator/scripts/package_skill.ts::manifest.json",
+      "rationale": "Package dependency or notice member; not an independent serialized compatibility result surface."
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "sourceFieldOrArtifact": "package.json",
+      "sourceEvidence": "package.json",
+      "evidenceOccurrences": 1,
+      "site": "skills/skill-creator/scripts/package_skill.ts::package.json",
+      "rationale": "Package dependency or notice member; not an independent serialized compatibility result surface."
+    },
+    {
+      "site": "skills/skill-creator/scripts/verify_skill_gates.ts::THIRD_PARTY_NOTICES.md",
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFieldOrArtifact": "THIRD_PARTY_NOTICES.md",
+      "sourceEvidence": "THIRD_PARTY_NOTICES.md",
+      "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
+      "evidenceOccurrences": 1
+    },
+    {
+      "site": "skills/skill-creator/scripts/verify_skill_gates.ts::package.json",
+      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFieldOrArtifact": "package.json",
+      "sourceEvidence": "package.json",
+      "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
+      "evidenceOccurrences": 2
+    }
+  ],
+  "compatibleSurfaceAliases": [
+    {
+      "from": "agent.evals-form.unversioned",
+      "to": "hook.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "agent.evals-form.unversioned",
+      "to": "plugin.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "agent.evals-form.unversioned",
+      "to": "skill.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "agent.feedback.unversioned",
+      "to": "skill.feedback.unversioned",
+      "reason": "Current producers intentionally share the same closed wire shape."
+    },
+    {
+      "from": "agent.grading.unversioned",
+      "to": "skill.grading.unversioned",
+      "reason": "Current producers intentionally share the same closed wire shape."
+    },
+    {
+      "from": "agent.timing.unversioned",
+      "to": "skill.timing.unversioned",
+      "reason": "Current producers intentionally share the same closed wire shape."
+    },
+    {
+      "from": "contract.host.event-accepted.v1",
+      "to": "contract.host.event-family.v1",
+      "reason": "A discriminated event branch is assignable to the event-family union."
+    },
+    {
+      "from": "contract.host.event-artifact.v1",
+      "to": "contract.host.event-family.v1",
+      "reason": "A discriminated event branch is assignable to the event-family union."
+    },
+    {
+      "from": "contract.host.event-blocked.v1",
+      "to": "contract.host.event-family.v1",
+      "reason": "A discriminated event branch is assignable to the event-family union."
+    },
+    {
+      "from": "contract.host.event-cancelled.v1",
+      "to": "contract.host.event-family.v1",
+      "reason": "A discriminated event branch is assignable to the event-family union."
+    },
+    {
+      "from": "contract.host.event-completed.v1",
+      "to": "contract.host.event-family.v1",
+      "reason": "A discriminated event branch is assignable to the event-family union."
+    },
+    {
+      "from": "contract.host.event-failed.v1",
+      "to": "contract.host.event-family.v1",
+      "reason": "A discriminated event branch is assignable to the event-family union."
+    },
+    {
+      "from": "contract.host.event-family.v1",
+      "to": "contract.host.event-accepted.v1",
+      "reason": "The family golden is the accepted branch; compatibility is value-specific, not identity."
+    },
+    {
+      "from": "contract.host.event-heartbeat.v1",
+      "to": "contract.host.event-family.v1",
+      "reason": "A discriminated event branch is assignable to the event-family union."
+    },
+    {
+      "from": "contract.host.event-progress.v1",
+      "to": "contract.host.event-family.v1",
+      "reason": "A discriminated event branch is assignable to the event-family union."
+    },
+    {
+      "from": "contract.host.event-started.v1",
+      "to": "contract.host.event-family.v1",
+      "reason": "A discriminated event branch is assignable to the event-family union."
+    },
+    {
+      "from": "contract.host.negotiation-accepted.v1",
+      "to": "contract.host.negotiation-result.v1",
+      "reason": "Accepted is a branch of the negotiation-result union."
+    },
+    {
+      "from": "contract.host.negotiation-result.v1",
+      "to": "contract.host.negotiation-accepted.v1",
+      "reason": "The union golden is the accepted branch; compatibility is value-specific, not identity."
+    },
+    {
+      "from": "hook.evals-form.unversioned",
+      "to": "agent.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "hook.evals-form.unversioned",
+      "to": "plugin.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "hook.evals-form.unversioned",
+      "to": "skill.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "plugin.evals-form.unversioned",
+      "to": "agent.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "plugin.evals-form.unversioned",
+      "to": "hook.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "plugin.evals-form.unversioned",
+      "to": "skill.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "result.exit-family.agent",
+      "to": "result.exit-family.hook",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.agent",
+      "to": "result.exit-family.plugin",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.agent",
+      "to": "result.exit-family.skill",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.hook",
+      "to": "result.exit-family.agent",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.hook",
+      "to": "result.exit-family.plugin",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.hook",
+      "to": "result.exit-family.skill",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.plugin",
+      "to": "result.exit-family.agent",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.plugin",
+      "to": "result.exit-family.hook",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.plugin",
+      "to": "result.exit-family.skill",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.skill",
+      "to": "result.exit-family.agent",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.skill",
+      "to": "result.exit-family.hook",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "result.exit-family.skill",
+      "to": "result.exit-family.plugin",
+      "reason": "All creator CLI adapters use the shared Result exit-code map."
+    },
+    {
+      "from": "skill.evals-form.unversioned",
+      "to": "agent.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "skill.evals-form.unversioned",
+      "to": "hook.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "skill.evals-form.unversioned",
+      "to": "plugin.evals-form.unversioned",
+      "reason": "All four creator eval-set files intentionally share the same closed evals-form wire contract."
+    },
+    {
+      "from": "skill.feedback.unversioned",
+      "to": "agent.feedback.unversioned",
+      "reason": "Current producers intentionally share the same closed wire shape."
+    },
+    {
+      "from": "skill.grading.unversioned",
+      "to": "agent.grading.unversioned",
+      "reason": "Current producers intentionally share the same closed wire shape."
+    },
+    {
+      "from": "skill.timing.unversioned",
+      "to": "agent.timing.unversioned",
+      "reason": "Current producers intentionally share the same closed wire shape."
+    }
+  ]
+}

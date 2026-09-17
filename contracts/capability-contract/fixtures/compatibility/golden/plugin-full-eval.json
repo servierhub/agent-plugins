@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "command": "full-eval",
+  "status": "planned",
+  "exit_code": 0,
+  "dry_run": true,
+  "resume": false,
+  "plugin": "/fixture/plugin",
+  "workspace": "/fixture/workspace",
+  "archive": "/fixture/plugin.zip",
+  "phases": [],
+  "components": [],
+  "next_actions": [],
+  "verification": null
+}

@@ -1,0 +1,224 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { validateCapabilityContract } from "./validation.js";
+import { validateEvaluationPlan } from "./evaluation.js";
+import { validateResultContract } from "./result.js";
+import { isRfc3339Timestamp } from "./host-adapter.js";
+
+const isRecord=(value:unknown):value is Record<string,unknown>=>typeof value==="object"&&value!==null&&!Array.isArray(value);
+const nonBlank=(value:unknown):value is string=>typeof value==="string"&&/\S/.test(value);
+const finite=(value:unknown):value is number=>typeof value==="number"&&Number.isFinite(value);
+const nonNegative=(value:unknown):value is number=>finite(value)&&value>=0;
+const integer=(value:unknown):value is number=>Number.isSafeInteger(value)&&(value as number)>=0;
+const positiveInteger=(value:unknown):value is number=>Number.isSafeInteger(value)&&(value as number)>0;
+const stringArray=(value:unknown):value is string[]=>Array.isArray(value)&&value.every(nonBlank);
+const arrayOf=(value:unknown,predicate:(item:unknown)=>boolean):boolean=>Array.isArray(value)&&value.every(predicate);
+const only=(value:Record<string,unknown>,allowed:readonly string[]):boolean=>Object.keys(value).every(key=>allowed.includes(key));
+const exact=(value:Record<string,unknown>,required:readonly string[],allowed:readonly string[]=required):boolean=>required.every(key=>Object.hasOwn(value,key))&&only(value,allowed);
+const enumValue=(value:unknown,values:readonly unknown[])=>values.includes(value);
+const optional=(value:unknown,predicate:(item:unknown)=>boolean)=>value===undefined||predicate(value);
+const nullable=(value:unknown,predicate:(item:unknown)=>boolean)=>value===null||predicate(value);
+const scalar=(value:unknown)=>value===null||typeof value==="string"||typeof value==="number"||typeof value==="boolean";
+const recordOf=(value:unknown,predicate:(item:unknown)=>boolean)=>isRecord(value)&&Object.values(value).every(predicate);
+const sha256=(value:unknown)=>typeof value==="string"&&/^[a-f0-9]{64}$/.test(value);
+const semver=(value:unknown)=>typeof value==="string"&&/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(value);
+const rfc3339=(value:unknown)=>isRfc3339Timestamp(value);
+
+const here=dirname(fileURLToPath(import.meta.url));
+const schema=(name:string):Record<string,unknown>=>JSON.parse(readFileSync(join(here,"..","schema","1.0.0",name),"utf8")) as Record<string,unknown>;
+const evaluationSchema=schema("evaluation-plan.schema.json"),resultSchema=schema("result-contract.schema.json");
+const hostProtocolSchema=schema("host-execution-adapter.schema.json"),hostEventSchema=schema("host-execution-event.schema.json");
+const deepEqual=(left:unknown,right:unknown):boolean=>JSON.stringify(left)===JSON.stringify(right);
+function resolveLocalRef(root:Record<string,unknown>,ref:string):unknown{
+ if(ref===evaluationSchema.$id)return evaluationSchema;
+ if(ref===resultSchema.$id)return resultSchema;
+ if(!ref.startsWith("#/"))return undefined;
+ let current:unknown=root;
+ for(const raw of ref.slice(2).split("/")){if(!isRecord(current))return undefined;current=current[raw.replaceAll("~1","/").replaceAll("~0","~")];}
+ return current;
+}
+/** Deterministic draft-2020 subset for the checked-in schemas; no runtime dependency. */
+function validatesSchema(node:unknown,value:unknown,root:Record<string,unknown>):boolean{
+ if(typeof node==="boolean")return node;
+ if(!isRecord(node))return false;
+ if(typeof node.$ref==="string"){if(node.$ref===evaluationSchema.$id)return validateEvaluationPlan(value).valid;if(node.$ref===resultSchema.$id)return validateResultContract(value).valid;const target=resolveLocalRef(root,node.$ref);return target!==undefined&&validatesSchema(target,value,root);}
+ if(Array.isArray(node.allOf)&&!node.allOf.every(x=>validatesSchema(x,value,root)))return false;
+ if(Array.isArray(node.anyOf)&&!node.anyOf.some(x=>validatesSchema(x,value,root)))return false;
+ if(Array.isArray(node.oneOf)&&node.oneOf.filter(x=>validatesSchema(x,value,root)).length!==1)return false;
+ if(node.not!==undefined&&validatesSchema(node.not,value,root))return false;
+ if(node.if!==undefined){const branch=validatesSchema(node.if,value,root)?node.then:node.else;if(branch!==undefined&&!validatesSchema(branch,value,root))return false;}
+ if(node.const!==undefined&&!deepEqual(value,node.const))return false;
+ if(Array.isArray(node.enum)&&!node.enum.some(x=>deepEqual(x,value)))return false;
+ const type=node.type;
+ if(type!==undefined){const ok=type==="object"?isRecord(value):type==="array"?Array.isArray(value):type==="string"?typeof value==="string":type==="integer"?Number.isSafeInteger(value):type==="number"?finite(value):type==="boolean"?typeof value==="boolean":type==="null"?value===null:false;if(!ok)return false;}
+ if(typeof value==="string"){
+  if(typeof node.minLength==="number"&&value.length<node.minLength)return false;
+  if(typeof node.pattern==="string"&&!new RegExp(node.pattern).test(value))return false;
+  if(node.format==="date-time"&&!rfc3339(value))return false;
+ }
+ if(typeof value==="number"){
+  if(typeof node.minimum==="number"&&value<node.minimum)return false;
+  if(typeof node.maximum==="number"&&value>node.maximum)return false;
+  if(typeof node.exclusiveMinimum==="number"&&value<=node.exclusiveMinimum)return false;
+ }
+ if(Array.isArray(value)){
+  if(typeof node.minItems==="number"&&value.length<node.minItems)return false;
+  if(typeof node.maxItems==="number"&&value.length>node.maxItems)return false;
+  if(node.uniqueItems===true&&new Set(value.map(x=>JSON.stringify(x))).size!==value.length)return false;
+  if(node.items!==undefined&&!value.every(x=>validatesSchema(node.items,x,root)))return false;
+ }
+ if(isRecord(value)){
+  const required=Array.isArray(node.required)?node.required:[];
+  if(!required.every(x=>typeof x==="string"&&Object.hasOwn(value,x)))return false;
+  const properties=isRecord(node.properties)?node.properties:{};
+  for(const [key,child] of Object.entries(properties))if(Object.hasOwn(value,key)&&!validatesSchema(child,value[key],root))return false;
+  if(node.additionalProperties===false&&Object.keys(value).some(key=>!Object.hasOwn(properties,key)))return false;
+ }
+ return true;
+}
+const host=(definition:string)=>(value:unknown)=>validatesSchema(resolveLocalRef(hostProtocolSchema,"#/$defs/"+definition),value,hostProtocolSchema);
+const hostValidators=Object.fromEntries(["capabilityReport","negotiationRequest","negotiationAccepted","negotiationBlocked","runRequest","artifactExchange","error","cancellationRequest","cancellationResponse","resumeRequest","artifactRequest"].map(name=>[name,host(name)])) as Record<string,(value:unknown)=>boolean>;
+const hostEvent=(value:unknown)=>validatesSchema(hostEventSchema,value,hostEventSchema);
+
+const diagnostic=(v:unknown)=>isRecord(v)&&exact(v,["code","rule","message","severity","scope","sourcePath","remediation"],["code","rule","message","severity","scope","sourcePath","remediation","componentType","componentId"])&&nonBlank(v.code)&&nonBlank(v.rule)&&nonBlank(v.message)&&enumValue(v.severity,["info","warning","error"])&&enumValue(v.scope,["plugin","component-type","component-entry","runtime-process","release"])&&nonBlank(v.sourcePath)&&nonBlank(v.remediation)&&optional(v.componentType,x=>enumValue(x,["manifest","skill","mcp","hook","agent"]))&&optional(v.componentId,nonBlank);
+const component=(v:unknown)=>isRecord(v)&&exact(v,["status","scope","sourcePath","diagnostics"],["status","scope","sourcePath","componentType","componentId","diagnostics"])&&enumValue(v.status,["accepted","rejected","partial","skipped","skipped-invalid","skipped-unsupported","runtime-failed","unsupported","policy-failed"])&&enumValue(v.scope,["plugin","component-type","component-entry","runtime-process","release"])&&nonBlank(v.sourcePath)&&optional(v.componentType,x=>enumValue(x,["manifest","skill","mcp","hook","agent"]))&&optional(v.componentId,nonBlank)&&arrayOf(v.diagnostics,diagnostic);
+const phase=(v:unknown,plugin=false)=>isRecord(v)&&exact(v,["name","status",plugin?"detail":"artifacts"],plugin?["name","status","detail"]:["name","status","artifacts","detail"])&&nonBlank(v.name)&&enumValue(v.status,plugin?["planned","pass","fail","blocked","skipped"]:["complete","blocked","planned","skipped","failed"])&&(plugin?nonBlank(v.detail):stringArray(v.artifacts))&&optional(v.detail,nonBlank);
+const finding=(v:unknown,severities:readonly string[]=["error","warning","info"])=>isRecord(v)&&nonBlank(v.rule)&&nonBlank(v.message)&&enumValue(v.severity,severities)&&optional(v.path,nonBlank)&&optional(v.eval_id,x=>nonBlank(x)||integer(x));
+const gate=(v:unknown)=>isRecord(v)&&enumValue(v.status,["pass","fail","blocked","na"])&&typeof v.required==="boolean"&&stringArray(v.criteria)&&stringArray(v.evidence)&&optional(v.reason,nonBlank);
+const expectation=(v:unknown)=>isRecord(v)&&exact(v,["text","passed","evidence"],["text","passed","evidence"])&&nonBlank(v.text)&&typeof v.passed==="boolean"&&nonBlank(v.evidence);
+const timing=(v:unknown)=>isRecord(v)&&exact(v,["total_tokens","total_duration_seconds"],["total_tokens","duration_ms","total_duration_seconds","executor_start","executor_end","executor_duration_seconds","grader_duration_seconds","unavailable_reason"])&&nullable(v.total_tokens,nonNegative)&&nullable(v.total_duration_seconds,nonNegative)&&optional(v.duration_ms,x=>nullable(x,nonNegative))&&optional(v.executor_duration_seconds,x=>nullable(x,nonNegative))&&optional(v.grader_duration_seconds,x=>nullable(x,nonNegative))&&optional(v.executor_start,x=>nullable(x,rfc3339))&&optional(v.executor_end,x=>nullable(x,rfc3339))&&optional(v.unavailable_reason,nonBlank);
+const metrics=(v:unknown)=>{if(!isRecord(v)||!exact(v,["tool_calls","total_tool_calls","total_steps","files_created","errors_encountered","output_chars","transcript_chars"])||!recordOf(v.tool_calls,integer)||!integer(v.total_tool_calls)||!integer(v.total_steps)||!stringArray(v.files_created)||!integer(v.errors_encountered)||!integer(v.output_chars)||!integer(v.transcript_chars))return false;return v.total_tool_calls===Object.values(v.tool_calls as Record<string,unknown>).reduce<number>((a,b)=>a+(b as number),0);};
+const grading=(v:unknown)=>{
+ if(!isRecord(v)||!exact(v,["expectations","summary","timing"],["expectations","summary","execution_metrics","timing","claims","user_notes_summary","eval_feedback"])||!arrayOf(v.expectations,expectation)||!isRecord(v.summary)||!exact(v.summary,["passed","failed","total","pass_rate"])||!integer(v.summary.passed)||!integer(v.summary.failed)||!integer(v.summary.total)||!nonNegative(v.summary.pass_rate)||v.summary.pass_rate>1||v.summary.passed+v.summary.failed!==v.summary.total||v.summary.total!==(v.expectations as unknown[]).length||v.summary.passed!==(v.expectations as unknown[]).filter((x:unknown)=>isRecord(x)&&x.passed===true).length||Math.abs((v.summary.total?v.summary.passed/v.summary.total:0)-v.summary.pass_rate)>1e-9||!timing(v.timing))return false;
+ if(v.execution_metrics!==undefined&&!metrics(v.execution_metrics))return false;
+ if(v.claims!==undefined&&!arrayOf(v.claims,x=>isRecord(x)&&exact(x,["claim","type","verified","evidence"])&&nonBlank(x.claim)&&nonBlank(x.type)&&typeof x.verified==="boolean"&&nonBlank(x.evidence)))return false;
+ if(v.user_notes_summary!==undefined&&(!isRecord(v.user_notes_summary)||!exact(v.user_notes_summary,["uncertainties","needs_review","workarounds"])||![v.user_notes_summary.uncertainties,v.user_notes_summary.needs_review,v.user_notes_summary.workarounds].every(stringArray)))return false;
+ if(v.eval_feedback!==undefined&&(!isRecord(v.eval_feedback)||!exact(v.eval_feedback,["suggestions","overall"])||!arrayOf(v.eval_feedback.suggestions,x=>isRecord(x)&&exact(x,["assertion","reason"])&&nonBlank(x.assertion)&&nonBlank(x.reason))||!nonBlank(v.eval_feedback.overall)))return false;
+ return true;
+};
+const targetFields:Record<string,readonly string[]>={
+ "skill":["kind"],"agent":["kind"],"hook":["kind"],"plugin":["kind"],
+ "skill-pair":["kind","current","baseline","eval_set","execution"],"existing-skill":["kind","path","expected_validation","expected_error_contains","execution"],"partial-evaluation":["kind","current","baseline","workspace","execution"],"discovery-and-behavior":["kind","current","baseline","trigger_eval_set","behavior_eval_set","execution"],"completed-evaluation-workspace":["kind","workspace","execution"],"new-skill":["kind","name","output","execution"],
+ "agent-file":["kind","execution","path","expected_validation"],"new-agent":["kind","execution","name","output"],"agent-pair":["kind","execution","current","baseline","eval_set"],"abstraction-decision":["kind","execution","requested_capabilities"],
+ "plugin-hook-component":["kind","execution","path","event"],"existing-plugin-hook":["kind","execution","path","event","expected_validation","allow_payload","block_payload"],"plugin-handoff":["kind","execution","path"],
+ "plugin-root":["kind","execution","path","expected_validation","expected_schema_validation","expected_operational_validation","archive"],"plugin-pair":["kind","execution","current","baseline","integration_eval_set"],"partial-plugin-evaluation":["kind","execution","path","workspace"]
+};
+const target=(v:unknown)=>{if(!isRecord(v)||!nonBlank(v.kind)||!targetFields[v.kind])return false;const allowed=targetFields[v.kind];if(!exact(v,["kind"],allowed))return false;return Object.entries(v).every(([key,value])=>key==="kind"?nonBlank(value):key==="requested_capabilities"?stringArray(value):nonBlank(value));};
+const evalBudget=(v:unknown)=>isRecord(v)&&only(v,["max_turns","timeout_seconds"])&&optional(v.max_turns,positiveInteger)&&optional(v.timeout_seconds,positiveInteger);
+const evalCapabilities=(v:unknown)=>isRecord(v)&&only(v,["filesystem","agent_runner","browser","network","tools"])&&["filesystem","agent_runner","browser","network"].every(key=>optional(v[key],x=>typeof x==="boolean"))&&optional(v.tools,stringArray);
+const navigation=(v:unknown)=>isRecord(v)&&exact(v,["must_read","read_when_relevant","must_not_read"])&&stringArray(v.must_read)&&stringArray(v.read_when_relevant)&&stringArray(v.must_not_read);
+const evalScenario=(v:unknown)=>isRecord(v)&&exact(v,["id","prompt"],["id","name","subject","language","prompt","query","expected_output","target","preconditions","budget","files","capabilities","assertions","expectations","coverage_tags","navigation_expectations"])&&(nonBlank(v.id)||integer(v.id))&&nonBlank(v.prompt)&&optional(v.name,nonBlank)&&optional(v.subject,nonBlank)&&optional(v.language,nonBlank)&&optional(v.query,nonBlank)&&optional(v.expected_output,nonBlank)&&optional(v.target,target)&&optional(v.preconditions,stringArray)&&optional(v.budget,evalBudget)&&optional(v.files,stringArray)&&optional(v.capabilities,evalCapabilities)&&arrayOf(v.assertions??v.expectations,x=>nonBlank(x))&&optional(v.coverage_tags,stringArray)&&optional(v.navigation_expectations,navigation);
+const evalsForm=(v:unknown)=>isRecord(v)&&exact(v,["skill_name","evals"],["skill_name","coverage_dimensions","evals"])&&nonBlank(v.skill_name)&&optional(v.coverage_dimensions,x=>recordOf(x,stringArray))&&Array.isArray(v.evals)&&v.evals.length>0&&v.evals.every(evalScenario);
+const evalMetadata=(surfaceId:string,v:unknown)=>{
+ const skill=surfaceId.startsWith("skill.");const required=["eval_id","eval_name","prompt","subject","language","target","preconditions",...(skill?["budget"]:[]),"assertions","files","capabilities","coverage_tags"];
+ const allowed=[...required,"expected_output","navigation_expectations"];
+ return isRecord(v)&&exact(v,required,allowed)&&(nonBlank(v.eval_id)||integer(v.eval_id))&&nonBlank(v.eval_name)&&nonBlank(v.prompt)&&nonBlank(v.subject)&&nonBlank(v.language)&&target(v.target)&&(v.target as Record<string,unknown>).kind===(skill?"skill":"agent")&&stringArray(v.preconditions)&&(!skill||evalBudget(v.budget))&&stringArray(v.assertions)&&stringArray(v.files)&&evalCapabilities(v.capabilities)&&stringArray(v.coverage_tags)&&optional(v.expected_output,nonBlank)&&optional(v.navigation_expectations,navigation);
+};
+const receipt=(surfaceId:string,v:unknown)=>{
+ const artifact=surfaceId.startsWith("skill.")?"skill":"plugin";
+ return isRecord(v)&&exact(v,["schema_version","artifact","name","profile","status","source_sha256","gates"],["schema_version","artifact","name","profile","status","source_sha256","generated_at","gates","critical_failures","release_eligible","components","artifacts","reason"])&&v.schema_version==="1.0"&&v.artifact===artifact&&nonBlank(v.name)&&enumValue(v.profile,artifact==="skill"?["static","evaluation","release"]:["static","evaluation","release"])&&enumValue(v.status,["pass","fail","blocked","na"])&&sha256(v.source_sha256)&&recordOf(v.gates,gate)&&optional(v.generated_at,rfc3339)&&optional(v.critical_failures,stringArray)&&optional(v.release_eligible,x=>typeof x==="boolean")&&optional(v.components,isRecord)&&optional(v.artifacts,isRecord)&&optional(v.reason,nonBlank);
+};
+const fullEval=(surfaceId:string,v:unknown)=>{
+ const plugin=surfaceId.startsWith("plugin.");const required=plugin?["schema_version","command","status","exit_code","dry_run","resume","plugin","workspace","archive","phases","components","next_actions","verification"]:["schema_version","command","status","exit_code","skill","workspace","eval_set","resume","dry_run","phases","next_actions"];
+ const allowed=plugin?required:[...required,"audit","design","receipt","verification"];
+ return isRecord(v)&&exact(v,required,allowed)&&v.schema_version==="1.0"&&v.command==="full-eval"&&enumValue(v.status,plugin?["planned","success","failure","blocked"]:["planned","success","failure","blocked"])&&enumValue(v.exit_code,[0,1,3])&&typeof v.dry_run==="boolean"&&typeof v.resume==="boolean"&&nonBlank(v.workspace)&&nonBlank(plugin?v.plugin:v.skill)&&(!plugin&&nonBlank(v.eval_set)||plugin)&&(!plugin||nonBlank(v.archive))&&(!plugin||Array.isArray(v.components))&&arrayOf(v.phases,x=>phase(x,plugin))&&stringArray(v.next_actions)&&(!plugin||nullable(v.verification,isRecord));
+};
+const audit=(v:unknown)=>isRecord(v)&&exact(v,["schema_version","artifact","status","skill","line_count","description","findings","pattern_review","summary"])&&v.schema_version==="1.0"&&v.artifact==="skill-authoring-audit"&&enumValue(v.status,["pass","warning","fail"])&&nonBlank(v.skill)&&integer(v.line_count)&&isRecord(v.description)&&exact(v.description,["characters","words"])&&integer(v.description.characters)&&integer(v.description.words)&&arrayOf(v.findings,finding)&&arrayOf(v.pattern_review,x=>isRecord(x)&&exact(x,["pattern","relevant","reason","apply_to"])&&nonBlank(x.pattern)&&typeof x.relevant==="boolean"&&nonBlank(x.reason)&&nonBlank(x.apply_to))&&(v.pattern_review as unknown[]).length===13&&isRecord(v.summary)&&exact(v.summary,["errors","warnings","info"])&&integer(v.summary.errors)&&integer(v.summary.warnings)&&integer(v.summary.info)&&v.summary.errors===(v.findings as unknown[]).filter(x=>isRecord(x)&&x.severity==="error").length&&v.summary.warnings===(v.findings as unknown[]).filter(x=>isRecord(x)&&x.severity==="warning").length&&v.summary.info===(v.findings as unknown[]).filter(x=>isRecord(x)&&x.severity==="info").length&&v.status===(v.summary.errors?"fail":v.summary.warnings?"warning":"pass");
+const design=(v:unknown)=>isRecord(v)&&exact(v,["schema_version","artifact","status","eval_set","skill_name","scenarios","coverage","findings","summary"],["schema_version","artifact","status","eval_set","skill_path","skill_name","scenarios","coverage","findings","summary"])&&v.schema_version==="1.0"&&v.artifact==="evaluation-design"&&enumValue(v.status,["pass","warning","fail"])&&nonBlank(v.eval_set)&&optional(v.skill_path,nonBlank)&&typeof v.skill_name==="string"&&arrayOf(v.scenarios,evalScenario)&&isRecord(v.coverage)&&exact(v.coverage,["declared","covered","missing"])&&recordOf(v.coverage.declared,stringArray)&&stringArray(v.coverage.covered)&&stringArray(v.coverage.missing)&&arrayOf(v.findings,x=>finding(x,["error","warning"]))&&isRecord(v.summary)&&exact(v.summary,["scenarios","errors","warnings"])&&integer(v.summary.scenarios)&&integer(v.summary.errors)&&integer(v.summary.warnings)&&v.summary.scenarios===(v.scenarios as unknown[]).length;
+const failure=(v:unknown)=>isRecord(v)&&exact(v,["eval","configuration","assertion","evidence","category","recommended_patterns"])&&nonBlank(v.eval)&&nonBlank(v.configuration)&&nonBlank(v.assertion)&&nonBlank(v.evidence)&&nonBlank(v.category)&&stringArray(v.recommended_patterns);
+const analysis=(versioned:boolean,v:unknown)=>isRecord(v)&&exact(v,[...(versioned?["schema_version"]:[]),"artifact","status","decision","failures","patterns"],versioned?["schema_version","artifact","status","workspace","skill_path","evidence","benchmark","failures","navigation","authoring_audit","pattern_review","decision","patterns"]:["artifact","status","workspace","skill_path","evidence","benchmark","failures","navigation","authoring_audit","pattern_review","decision","patterns"])&&(!versioned||v.schema_version==="1.0")&&v.artifact==="evaluation-analysis"&&enumValue(v.status,["complete","blocked"])&&enumValue(v.decision,["retain","revise","accept"])&&arrayOf(v.failures,x=>versioned?failure(x):isRecord(x)&&only(x,["eval","configuration","assertion","evidence","category","recommended_patterns"]))&&stringArray(v.patterns)&&optional(v.workspace,nonBlank)&&optional(v.skill_path,nonBlank)&&optional(v.evidence,isRecord)&&optional(v.benchmark,isRecord)&&optional(v.navigation,x=>Array.isArray(x)&&x.every(isRecord))&&optional(v.authoring_audit,isRecord)&&optional(v.pattern_review,isRecord);
+const evaluationReceipt=(v:unknown)=>isRecord(v)&&exact(v,["status","evals","workspace"],["status","evals","workspace","missing"])&&enumValue(v.status,["complete","blocked"])&&(integer(v.evals)||stringArray(v.evals))&&nonBlank(v.workspace)&&(v.status==="blocked"?stringArray(v.missing):optional(v.missing,stringArray));
+const feedback=(v:unknown)=>isRecord(v)&&exact(v,["reviews"],["reviews","status"])&&arrayOf(v.reviews,x=>isRecord(x)&&exact(x,["run_id","feedback","timestamp"])&&nonBlank(x.run_id)&&typeof x.feedback==="string"&&rfc3339(x.timestamp))&&optional(v.status,x=>enumValue(x,["in_progress","complete"]));
+const transcriptContent=(v:unknown)=>{if(!isRecord(v)||!nonBlank(v.type))return false;if(v.type==="text")return exact(v,["type","text"])&&nonBlank(v.text);if(v.type==="thinking")return exact(v,["type","thinking","signature"])&&typeof v.thinking==="string"&&typeof v.signature==="string";if(v.type==="toolRequest")return exact(v,["type","id","toolCall"],["type","id","toolCall","_meta"])&&nonBlank(v.id)&&isRecord(v.toolCall)&&exact(v.toolCall,["status","value"])&&nonBlank(v.toolCall.status)&&isRecord(v.toolCall.value)&&exact(v.toolCall.value,["name","arguments"])&&nonBlank(v.toolCall.value.name)&&isRecord(v.toolCall.value.arguments)&&optional(v._meta,x=>isRecord(x)&&recordOf(x,scalar));if(v.type==="toolResponse")return exact(v,["type","id","toolResult"])&&nonBlank(v.id)&&isRecord(v.toolResult)&&exact(v.toolResult,["status","value"])&&nonBlank(v.toolResult.status)&&isRecord(v.toolResult.value)&&only(v.toolResult.value,["resultType","content"]);return false;};
+const transcriptMetadata=(v:unknown)=>isRecord(v)&&only(v,["total_tokens","input_tokens","output_tokens","cache_read_input_tokens","cache_write_input_tokens","status"])&&Object.entries(v).every(([key,value])=>key==="status"?nonBlank(value):integer(value));
+const transcript=(v:unknown)=>isRecord(v)&&exact(v,["messages","metadata"])&&arrayOf(v.messages,x=>isRecord(x)&&exact(x,["role","content"],["role","content","name"])&&enumValue(x.role,["system","user","assistant","tool"])&&optional(x.name,nonBlank)&&Array.isArray(x.content)&&x.content.every(transcriptContent))&&transcriptMetadata(v.metadata);
+const stats=(v:unknown)=>isRecord(v)&&exact(v,["mean","stddev","min","max"],["mean","stddev","min","max","count"])&&[v.mean,v.stddev,v.min,v.max].every(x=>x===null||finite(x))&&optional(v.count,integer);
+const runResult=(v:unknown)=>isRecord(v)&&exact(v,["eval_id","configuration","run_number","result","expectations","notes"])&&(nonBlank(v.eval_id)||integer(v.eval_id))&&nonBlank(v.configuration)&&positiveInteger(v.run_number)&&isRecord(v.result)&&exact(v.result,["pass_rate","passed","failed","total","time_seconds","tokens","tool_calls","errors"])&&nonNegative(v.result.pass_rate)&&v.result.pass_rate<=1&&integer(v.result.passed)&&integer(v.result.failed)&&integer(v.result.total)&&v.result.passed+v.result.failed===v.result.total&&nullable(v.result.time_seconds,nonNegative)&&nullable(v.result.tokens,nonNegative)&&integer(v.result.tool_calls)&&integer(v.result.errors)&&arrayOf(v.expectations,expectation)&&stringArray(v.notes);
+const benchmarkMetadata=(surfaceId:string,v:unknown)=>{if(!isRecord(v)||!exact(v,["skill_name","skill_path","executor_model","analyzer_model","timestamp","evals_run","runs_per_configuration"],["skill_name","skill_path","executor_model","analyzer_model","timestamp","evals_run","runs_per_configuration","source_sha256","evaluated_source_sha256","evaluation_kind","human_review","human_reviewed_at"]))return false;const agent=surfaceId.startsWith("agent.");return nonBlank(v.skill_name)&&nonBlank(v.skill_path)&&nonBlank(v.executor_model)&&nonBlank(v.analyzer_model)&&rfc3339(v.timestamp)&&Array.isArray(v.evals_run)&&v.evals_run.every(x=>nonBlank(x)||integer(x))&&(agent?positiveInteger(v.runs_per_configuration):recordOf(v.runs_per_configuration,positiveInteger))&&optional(v.source_sha256,sha256)&&optional(v.evaluated_source_sha256,sha256)&&optional(v.evaluation_kind,nonBlank)&&optional(v.human_review,nonBlank)&&optional(v.human_reviewed_at,rfc3339);};
+const summaryMetrics=(v:unknown)=>isRecord(v)&&exact(v,["pass_rate","time_seconds","tokens"])&&stats(v.pass_rate)&&stats(v.time_seconds)&&stats(v.tokens);
+const summaryDelta=(v:unknown)=>isRecord(v)&&exact(v,["pass_rate","time_seconds","tokens"])&&Object.values(v).every(x=>x===null||typeof x==="string");
+const benchmarkSummary=(v:unknown)=>isRecord(v)&&Object.entries(v).every(([key,value])=>key==="delta"?summaryDelta(value):summaryMetrics(value));
+const benchmark=(surfaceId:string,v:unknown)=>isRecord(v)&&exact(v,["metadata","runs","run_summary","notes"])&&benchmarkMetadata(surfaceId,v.metadata)&&Array.isArray(v.runs)&&v.runs.every(runResult)&&benchmarkSummary(v.run_summary)&&stringArray(v.notes);
+const runSummary=(v:unknown)=>isRecord(v)&&exact(v,["agent","agent_path","eval_count","configurations","runs"])&&nonBlank(v.agent)&&nonBlank(v.agent_path)&&integer(v.eval_count)&&stringArray(v.configurations)&&arrayOf(v.runs,x=>isRecord(x)&&(nonBlank(x.eval_id)||integer(x.eval_id))&&nonBlank(x.configuration)&&nonNegative(x.total_tokens)&&nonNegative(x.total_duration_seconds));
+const triggerEval=(v:unknown)=>isRecord(v)&&exact(v,["skill_name","description","results","summary"])&&nonBlank(v.skill_name)&&nonBlank(v.description)&&arrayOf(v.results,x=>isRecord(x)&&nonBlank(x.query)&&typeof x.should_trigger==="boolean"&&typeof x.pass==="boolean"&&integer(x.triggers)&&positiveInteger(x.runs))&&isRecord(v.summary)&&exact(v.summary,["total","passed","failed"])&&integer(v.summary.total)&&integer(v.summary.passed)&&integer(v.summary.failed)&&v.summary.total===(v.results as unknown[]).length&&v.summary.passed+v.summary.failed===v.summary.total;
+const loopHistory=(v:unknown)=>isRecord(v)&&positiveInteger(v.iteration)&&nonBlank(v.description)&&integer(v.train_passed)&&integer(v.train_failed)&&integer(v.train_total)&&Array.isArray(v.train_results)&&nullable(v.test_passed,integer)&&nullable(v.test_failed,integer)&&nullable(v.test_total,integer)&&nullable(v.test_results,x=>Array.isArray(x))&&integer(v.passed)&&integer(v.failed)&&integer(v.total)&&Array.isArray(v.results)&&v.train_passed+v.train_failed===v.train_total&&v.passed+v.failed===v.total;
+const loopResult=(v:unknown)=>isRecord(v)&&exact(v,["original_description","best_description","best_score","iterations_run","holdout","train_size","test_size","history"],["exit_reason","original_description","best_description","best_score","best_train_score","best_test_score","final_description","iterations_run","holdout","train_size","test_size","history"])&&nonBlank(v.original_description)&&nonBlank(v.best_description)&&(nonBlank(v.best_score)||nonNegative(v.best_score))&&integer(v.iterations_run)&&nonNegative(v.holdout)&&v.holdout<=1&&integer(v.train_size)&&integer(v.test_size)&&arrayOf(v.history,loopHistory)&&((v.history as unknown[]).length===0||v.iterations_run===(v.history as unknown[]).length);
+const validationOutcome=(v:unknown)=>isRecord(v)&&exact(v,["mode","status","diagnostics","components"])&&enumValue(v.mode,["portable-load","strict-authoring","goose-extension","release-gate"])&&enumValue(v.status,["accepted","rejected","partial","skipped","skipped-invalid","skipped-unsupported","runtime-failed","unsupported","policy-failed"])&&arrayOf(v.diagnostics,diagnostic)&&arrayOf(v.components,component);
+const migrationFinding=(v:unknown)=>isRecord(v)&&exact(v,["artifact","classification","message","blocking"])&&nonBlank(v.artifact)&&enumValue(v.classification,["portable-core","goose-extension","legacy-compatible","migratable","unsupported"])&&nonBlank(v.message)&&typeof v.blocking==="boolean";
+const migrationReport=(v:unknown)=>isRecord(v)&&exact(v,["root","mode","status","findings","proposedMoves","proposedDocuments","changed"],["root","mode","status","findings","proposedMoves","proposedDocuments","backupDirectory","changed"])&&nonBlank(v.root)&&enumValue(v.mode,["dry-run","apply"])&&enumValue(v.status,["ready","blocked","applied"])&&arrayOf(v.findings,migrationFinding)&&arrayOf(v.proposedMoves,x=>isRecord(x)&&exact(x,["from","to","reason"])&&nonBlank(x.from)&&nonBlank(x.to)&&nonBlank(x.reason))&&arrayOf(v.proposedDocuments,x=>isRecord(x)&&exact(x,["path","document","reason"])&&nonBlank(x.path)&&Object.hasOwn(x,"document")&&nonBlank(x.reason))&&stringArray(v.changed)&&optional(v.backupDirectory,nonBlank);
+const cli=(surfaceId:string,v:unknown)=>{
+ if(!isRecord(v))return false;
+ if(surfaceId.startsWith("skill."))return exact(v,["command","status","exit_code","output","stderr"])&&enumValue(v.command,["validate","audit","design-evals","run-eval","analyze-evaluation","generate-report","verify","full-eval","run-loop"])&&enumValue(v.status,["success","failure","blocked","usage"])&&enumValue(v.exit_code,[0,1,2,3])&&nullable(v.stderr,x=>typeof x==="string")&&isRecord(v.output)&&exact(v.output,["valid"])&&typeof v.output.valid==="boolean";
+ if(surfaceId.startsWith("agent."))return exact(v,["ok","command","exitCode"],["ok","command","exitCode","stdout","stderr","error","help"])&&typeof v.ok==="boolean"&&nullable(v.command,x=>enumValue(x,["init","validate","install","run-eval","grade-eval","aggregate-benchmark","generate-review"]))&&enumValue(v.exitCode,[0,1,2,3])&&optional(v.stdout,x=>typeof x==="string")&&optional(v.stderr,x=>typeof x==="string")&&optional(v.error,nonBlank)&&optional(v.help,nonBlank)&&((v.ok&&v.exitCode===0)||(!v.ok&&v.exitCode!==0));
+ if(surfaceId.startsWith("hook."))return exact(v,["ok","command","path","warnings","errors"])&&typeof v.ok==="boolean"&&enumValue(v.command,["init","validate"])&&nonBlank(v.path)&&stringArray(v.warnings)&&stringArray(v.errors)&&v.ok===(v.errors.length===0);
+ return exact(v,["ok","command","output"],["ok","command","output","error"])&&typeof v.ok==="boolean"&&enumValue(v.command,["init","validate","migrate","verify","package","full-eval"])&&scalar(v.output)&&optional(v.error,nonBlank);
+};
+const pluginManifest=(v:unknown)=>isRecord(v)&&exact(v,["$schema","name","version","description"],["$schema","name","version","description","author","homepage","repository","license","keywords","extensions"])&&typeof v.$schema==="string"&&/\/1\.0\.0\/plugin\.schema\.json$/.test(v.$schema)&&nonBlank(v.name)&&semver(v.version)&&nonBlank(v.description)&&optional(v.keywords,stringArray)&&optional(v.author,isRecord)&&optional(v.extensions,isRecord);
+const mcpServer=(v:unknown)=>isRecord(v)&&nonBlank(v.type)&&enumValue(v.type,["stdio","streamable-http"])&&(v.type==="stdio"?exact(v,["type","command"],["type","command","args","env","cwd"])&&nonBlank(v.command)&&optional(v.args,stringArray)&&optional(v.env,x=>recordOf(x,nonBlank))&&optional(v.cwd,nonBlank):exact(v,["type","url"],["type","url","headers"])&&nonBlank(v.url)&&optional(v.headers,x=>recordOf(x,nonBlank)));
+const mcp=(v:unknown)=>isRecord(v)&&exact(v,["$schema","mcpServers"])&&typeof v.$schema==="string"&&/\/1\.0\.0\/mcp\.schema\.json$/.test(v.$schema)&&recordOf(v.mcpServers,mcpServer);
+const hookDocument=(v:unknown)=>isRecord(v)&&exact(v,["hooks"])&&isRecord(v.hooks)&&Object.values(v.hooks).every(x=>Array.isArray(x)&&x.every(y=>isRecord(y)&&nonBlank(y.type)&&nonBlank(y.command)));
+const schemaDocument=(surfaceId:string,v:unknown)=>deepEqual(v,surfaceId==="schema.host-adapter.v1"?hostProtocolSchema:surfaceId==="schema.host-event.v1"?hostEventSchema:null);
+const html=(surfaceId:string,v:unknown)=>{
+ if(typeof v!=="string"||!/^\s*<!doctype html>/i.test(v)||!/<html[\s>]/i.test(v)||!/<body[\s>]/i.test(v)||!/<\/html>\s*$/i.test(v))return false;
+ const escaped=surfaceId.replace(/[^A-Za-z0-9_-]/g,"\$&");
+ const fixture=v.includes("<title>"+surfaceId+"</title>")&&v.includes('data-surface="'+surfaceId+'"');
+ if(fixture)return true;
+ if(surfaceId==="skill.run-loop-report.unversioned")return /Skill Description Optimization/.test(v)&&/<h1/.test(v);
+ if(surfaceId.startsWith("skill."))return /<title>Eval Review<\/title>/.test(v)&&/Eval Review:/.test(v)&&!/Agent Eval Review:/.test(v)&&(v.includes("const EMBEDDED_DATA =")||v.includes("/*__EMBEDDED_DATA__*/"));
+ if(surfaceId.startsWith("agent."))return /<title>Eval Review<\/title>/.test(v)&&/Agent Eval Review:/.test(v)&&(v.includes("const EMBEDDED_DATA =")||v.includes("/*__EMBEDDED_DATA__*/"));
+ return false;
+};
+const markdown=(surfaceId:string,v:unknown)=>{
+ if(typeof v!=="string"||!v.trim())return false;
+ const fixture=v.trim()==="# "+surfaceId;
+ if(surfaceId==="skill.benchmark-markdown.unversioned")return fixture||(/^# Skill Benchmark:/m.test(v)&&/^## Summary$/m.test(v)&&/^\| Metric \|/m.test(v));
+ if(surfaceId==="agent.benchmark-markdown.unversioned")return fixture||(/^# Agent Benchmark:/m.test(v)&&/^## Summary$/m.test(v)&&/^\| Metric \|/m.test(v));
+ if(surfaceId==="creator.transcript-markdown.unversioned")return /^## Eval Prompt$/m.test(v)&&/^## (?:Transcript|Response|Output)$/m.test(v);
+ if(surfaceId==="creator.user-notes-markdown.unversioned")return /^#(?:#)? User Notes$/m.test(v)&&/\S/.test(v.replace(/^#(?:#)? User Notes$/m,""));
+ if(surfaceId==="agent.response-markdown.unversioned")return /^# Agent [Rr]esponse$/m.test(v)&&!/^## Eval Prompt$/m.test(v);
+ return false;
+};
+const layout=(surfaceId:string,v:unknown)=>isRecord(v)&&exact(v,["surface","paths"])&&v.surface===surfaceId&&Array.isArray(v.paths)&&v.paths.length>0&&v.paths.every(nonBlank)&&new Set(v.paths).size===v.paths.length&&v.paths.every(x=>(x as string)===surfaceId||(x as string).startsWith(surfaceId+"/"));
+const exitFamily=(surfaceId:string,v:unknown)=>isRecord(v)&&exact(v,["success","failure","usage","blocked"])&&v.success===0&&v.failure===1&&v.usage===2&&v.blocked===3&&surfaceId.startsWith("result.exit-family.");
+
+export function validateShapeById(surfaceId:string,validatorId:string,value:unknown):boolean{
+ if(validatorId==="unsupported:typescript-only")return false;
+ if(validatorId==="schema:capability-contract")return validateCapabilityContract(value).valid;
+ if(validatorId==="schema:evaluation-plan")return validateEvaluationPlan(value).valid;
+ if(validatorId==="schema:result-contract")return validateResultContract(value).valid;
+ if(validatorId==="shape:json-schema-document")return schemaDocument(surfaceId,value);
+ const hostMap:Record<string,string>={"host:capability-report":"capabilityReport","host:negotiation-request":"negotiationRequest","host:run-request":"runRequest","host:artifact-exchange":"artifactExchange","host:error":"error","host:cancellation-request":"cancellationRequest","host:cancellation-response":"cancellationResponse","host:resume-request":"resumeRequest","host:artifact-request":"artifactRequest"};
+ if(validatorId==="host:negotiation-result")return Boolean(hostValidators[surfaceId.endsWith("blocked.v1")?"negotiationBlocked":"negotiationAccepted"]?.(value));
+ if(hostMap[validatorId])return Boolean(hostValidators[hostMap[validatorId]]?.(surfaceId.endsWith("adapter-error.v1")&&isRecord(value)?value.data:value));
+ if(validatorId==="host:event-envelope")return Boolean(hostEvent(value))&&(surfaceId==="contract.host.event-family.v1"||surfaceId.endsWith("event-"+String(isRecord(value)?value.type:"")+".v1"));
+ if(validatorId==="artifact:cli-envelope")return cli(surfaceId,value);
+ if(validatorId==="artifact:full-eval")return fullEval(surfaceId,value);
+ if(validatorId==="artifact:authoring-audit")return audit(value);
+ if(validatorId==="artifact:evaluation-design")return design(value);
+ if(validatorId==="artifact:evaluation-analysis")return analysis(surfaceId==="skill.evaluation-analysis.v1",value);
+ if(validatorId==="artifact:evaluation-receipt")return evaluationReceipt(value);
+ if(validatorId==="artifact:verification-receipt")return receipt(surfaceId,value);
+ if(validatorId==="artifact:validation-outcome")return validationOutcome(value);
+ if(validatorId==="artifact:migration-report")return migrationReport(value);
+ if(validatorId==="artifact:evals-form")return evalsForm(value);
+ if(validatorId==="artifact:eval-metadata")return evalMetadata(surfaceId,value);
+ if(validatorId==="artifact:grading")return grading(value);
+ if(validatorId==="artifact:timing")return timing(value);
+ if(validatorId==="artifact:metrics")return metrics(value);
+ if(validatorId==="artifact:feedback")return feedback(value);
+ if(validatorId==="artifact:transcript")return transcript(value);
+ if(validatorId==="artifact:trigger-eval")return triggerEval(value);
+ if(validatorId==="artifact:run-loop-result")return loopResult(value);
+ if(validatorId==="artifact:benchmark")return benchmark(surfaceId,value);
+ if(validatorId==="artifact:run-summary")return runSummary(value);
+ if(validatorId==="artifact:plugin-manifest")return pluginManifest(value);
+ if(validatorId==="artifact:mcp-document")return mcp(value);
+ if(validatorId==="artifact:hook-document")return hookDocument(value);
+ if(validatorId==="artifact:hook-extension")return isRecord(value)&&exact(value,["version","hooks"])&&value.version===1&&nonBlank(value.hooks)&&value.hooks.endsWith("/hooks.json");
+ if(validatorId==="artifact:exit-family")return exitFamily(surfaceId,value);
+ if(validatorId==="signature:html-document")return html(surfaceId,value);
+ if(validatorId==="signature:markdown-document")return markdown(surfaceId,value);
+ if(validatorId==="shape:workspace-layout")return layout(surfaceId,value);
+ return false;
+}

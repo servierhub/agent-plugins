@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "command": "full-eval",
+  "status": "planned",
+  "exit_code": 0,
+  "skill": "/fixture/skill",
+  "workspace": "/fixture/workspace",
+  "eval_set": "/fixture/evals.json",
+  "resume": false,
+  "dry_run": true,
+  "phases": [],
+  "next_actions": []
+}

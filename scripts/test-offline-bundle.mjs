@@ -64,6 +64,14 @@ try {
     "contracts/capability-contract/HOST_ADAPTER_SPECIFICATION.md",
     "contracts/capability-contract/RESULT_SPECIFICATION.md",
     "contracts/capability-contract/PRODUCER_INVENTORY_SPECIFICATION.md",
+    "contracts/capability-contract/COMPATIBILITY_SPECIFICATION.md",
+    "contracts/capability-contract/RELEASE_NOTES.md",
+    "contracts/capability-contract/fixtures/compatibility/expected-public-surfaces.json",
+    "contracts/capability-contract/fixtures/compatibility/fixture-hashes.sha256.json",
+    "contracts/capability-contract/dist/compatibility.js",
+    "contracts/capability-contract/dist/compatibility.d.ts",
+    "contracts/capability-contract/dist/compatibility-types.js",
+    "contracts/capability-contract/dist/compatibility-types.d.ts",
     "contracts/capability-contract/fixtures/result/producer-inventory.json",
     "contracts/capability-contract/fixtures/result/expected-consumer-fields.json",
     "contracts/capability-contract/fixtures/result/valid/pending-human-review-mappings.json",
@@ -105,7 +113,7 @@ try {
   }
 
   const contractIndex = path.join(plugin, "contracts", "capability-contract", "dist", "index.js");
-  const contractProbe = `import { mapLegacyStatus, classifyResultExit, FakeHostAdapter, HOST_ADAPTER_PROTOCOL_VERSION } from ${JSON.stringify(contractIndex)}; const mapped = mapLegacyStatus({ creator: "skill-creator", context: "skill-receipt-status", token: "complete" }); if (!mapped.ok || mapped.mapping.result.approval.state !== "not-applicable") throw new Error("offline legacy mapping failed"); const exit = classifyResultExit({ schemaVersion: "1.0.0", operation: { state: "completed" }, evaluation: { applicable: true, verdict: "pass" }, evidence: { applicable: true, availability: "available" }, approval: { applicable: true, state: "pending", context: "production-review" } }); if (exit.code !== 4) throw new Error("offline exit mapping failed"); const adapter = new FakeHostAdapter(); const negotiation = await adapter.discover({ supportedProtocolVersions: [HOST_ADAPTER_PROTOCOL_VERSION], capabilities: { required: [{ capability: "streaming" }], optional: [{ capability: "browser" }] } }); if (!negotiation.compatible || negotiation.degradations[0]?.capability !== "browser") throw new Error("offline host adapter negotiation failed");`;
+  const contractProbe = `import { mapLegacyStatus, classifyResultExit, FakeHostAdapter, HOST_ADAPTER_PROTOCOL_VERSION, readPublicSurface, previewMigration } from ${JSON.stringify(contractIndex)}; const mapped = mapLegacyStatus({ creator: "skill-creator", context: "skill-receipt-status", token: "complete" }); if (!mapped.ok || mapped.mapping.result.approval.state !== "not-applicable") throw new Error("offline legacy mapping failed"); const exit = classifyResultExit({ schemaVersion: "1.0.0", operation: { state: "completed" }, evaluation: { applicable: true, verdict: "pass" }, evidence: { applicable: true, availability: "available" }, approval: { applicable: true, state: "pending", context: "production-review" } }); if (exit.code !== 4) throw new Error("offline exit mapping failed"); const legacy = readPublicSurface('{"ok":true,"command":"validate","exitCode":0,"stdout":"VALID","stderr":""}', "agent.cli.envelope.unversioned"); if (!legacy.ok || legacy.supportState !== "legacy-readable") throw new Error("offline compatibility reader failed"); const preview = previewMigration({ migrationId: "workspace.skill-eval.runs-to-root.v1", files: [{ path: "runs/eval-1/with_skill/run-1/timing.json", bytes: "{}\\n", entryType: "regular-file" }] }); if (preview.status !== "ready") throw new Error("offline migration preview failed"); const adapter = new FakeHostAdapter(); const negotiation = await adapter.discover({ supportedProtocolVersions: [HOST_ADAPTER_PROTOCOL_VERSION], capabilities: { required: [{ capability: "streaming" }], optional: [{ capability: "browser" }] } }); if (!negotiation.compatible || negotiation.degradations[0]?.capability !== "browser") throw new Error("offline host adapter negotiation failed");`;
   run("--input-type=module", ["--eval", contractProbe]);
 
   run(path.join(plugin, "skills", "skill-creator", "dist", "scripts", "quick_validate.js"), [path.join(plugin, "skills", "skill-creator")]);

@@ -7,3 +7,5 @@ export * from "./result.js";
 export * from "./host-adapter-types.js";
 export * from "./host-adapter.js";
 export * from "./fake-host-adapter.js";
+export * from "./compatibility-types.js";
+export * from "./compatibility.js";
