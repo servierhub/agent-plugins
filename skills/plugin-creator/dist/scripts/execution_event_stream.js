@@ -50,7 +50,20 @@ function required(value, keys, line) { for (const key of keys)
         fail(line, `missing data field ${key}`); }
 function str(value) { return typeof value === "string" && value.length > 0; }
 function enumValue(value, values) { return typeof value === "string" && values.has(value); }
-function budget(value) { return object(value) && Object.keys(value).every(k => ["consumed_ms", "total_ms", "remaining_ms"].includes(k)) && [value.consumed_ms, value.total_ms, value.remaining_ms].every(x => typeof x === "number" && Number.isFinite(x) && x >= 0); }
+function finiteNonnegative(value) { return typeof value === "number" && Number.isFinite(value) && value >= 0; }
+function budget(value) { return object(value) && Object.keys(value).every(k => ["consumed_ms", "total_ms", "remaining_ms"].includes(k)) && [value.consumed_ms, value.total_ms, value.remaining_ms].every(finiteNonnegative); }
+const COUNT_KEYS = ["total", "planned", "running", "succeeded", "failed", "blocked", "cancelled", "skipped", "completed"];
+function counts(value) { return object(value) && Object.keys(value).length === COUNT_KEYS.length && Object.keys(value).every(k => COUNT_KEYS.includes(k)) && COUNT_KEYS.every(k => Number.isInteger(value[k]) && Number(value[k]) >= 0); }
+function retry(value) { return object(value) && Object.keys(value).every(k => ["attempts", "retries", "max_attempts"].includes(k)) && [value.attempts, value.retries, value.max_attempts].every(x => Number.isInteger(x) && Number(x) >= 0); }
+function activeWorker(value) { return object(value) && Object.keys(value).every(k => ["worker_id", "job_id", "phase", "attempt"].includes(k)) && str(value.worker_id) && str(value.job_id) && str(value.phase) && Number.isInteger(value.attempt) && Number(value.attempt) >= 1; }
+function checkpointSummary(value) { return object(value) && Object.keys(value).every(k => ["revision", "timestamp"].includes(k)) && Number.isInteger(value.revision) && Number(value.revision) >= 0 && (value.timestamp === null || typeof value.timestamp === "string" && RFC3339_UTC.test(value.timestamp) && new Date(value.timestamp).toISOString() === value.timestamp); }
+function stale(value) { return object(value) && Object.keys(value).every(k => ["status", "age_ms", "threshold_ms"].includes(k)) && ["fresh", "stale", "unavailable"].includes(String(value.status)) && finiteNonnegative(value.age_ms) && finiteNonnegative(value.threshold_ms); }
+function etaComponent(value) { if (!object(value) || !Object.keys(value).every(k => ["status", "reason", "sample_count", "range", "name"].includes(k)) || !["calculating", "available", "unavailable"].includes(String(value.status)) || !Number.isInteger(value.sample_count) || Number(value.sample_count) < 0)
+    return false; if (value.status !== "available")
+    return typeof value.reason === "string" && value.range === undefined; const r = value.range; if (!object(r) || !object(r.remaining_ms) || !["low", "medium", "high"].includes(String(r.confidence)))
+    return false; return [r.remaining_ms.low, r.remaining_ms.likely, r.remaining_ms.high].every(finiteNonnegative) && Number(r.remaining_ms.low) <= Number(r.remaining_ms.likely) && Number(r.remaining_ms.likely) <= Number(r.remaining_ms.high) && [r.estimate_at, r.earliest_at, r.latest_at].every(x => typeof x === "string" && RFC3339_UTC.test(x)); }
+function eta(value) { if (!object(value) || !Object.keys(value).every(k => ["schema_version", "timestamp", "last_update", "current_phase", "total", "basis"].includes(k)) || value.schema_version !== "plugin-creator.execution-eta/v1" || typeof value.timestamp !== "string" || typeof value.last_update !== "string" || !RFC3339_UTC.test(value.timestamp) || !RFC3339_UTC.test(value.last_update) || !etaComponent(value.current_phase) || !etaComponent(value.total) || !object(value.basis))
+    return false; const b = value.basis; return typeof b.comparable_kind === "string" && Number.isInteger(b.comparable_jobs) && Number(b.comparable_jobs) >= 0 && Number.isInteger(b.minimum_samples) && Number(b.minimum_samples) >= 2 && Number.isInteger(b.current_concurrency) && Number(b.current_concurrency) >= 0 && Number.isInteger(b.current_retries) && Number(b.current_retries) >= 0 && b.method === "phase-history-concurrency-normalized" && object(b.phase_samples) && Object.values(b.phase_samples).every(x => Number.isInteger(x) && Number(x) >= 0); }
 function artifact(value) { return object(value) && value.kind === "protected-artifact-ref" && typeof value.ref === "string" && /^sha256:[a-f0-9]{64}$/.test(value.ref) && Object.keys(value).every(k => ["kind", "ref", "sha256"].includes(k)) && (value.sha256 === undefined || typeof value.sha256 === "string" && /^[a-f0-9]{64}$/.test(value.sha256)); }
 function validateData(event, line) {
     const d = event.data;
@@ -78,10 +91,9 @@ function validateData(event, line) {
                 fail(line, "invalid job-transition data");
             break;
         case "heartbeat":
-            allowed = ["status", "resume"];
-            req = ["status"];
+            allowed = req = ["status", "resume", "counts", "retry", "elapsed_ms", "active_workers", "active_models", "checkpoint", "budget", "stale", "eta"];
             required(d, req, line);
-            if (!enumValue(d.status, RUN_STATUS) || (d.resume !== undefined && typeof d.resume !== "boolean"))
+            if (!enumValue(d.status, RUN_STATUS) || typeof d.resume !== "boolean" || !counts(d.counts) || !retry(d.retry) || !finiteNonnegative(d.elapsed_ms) || !Array.isArray(d.active_workers) || !d.active_workers.every(activeWorker) || !Array.isArray(d.active_models) || !d.active_models.every(str) || !checkpointSummary(d.checkpoint) || !budget(d.budget) || !stale(d.stale) || !eta(d.eta))
                 fail(line, "invalid heartbeat data");
             break;
         case "retry":

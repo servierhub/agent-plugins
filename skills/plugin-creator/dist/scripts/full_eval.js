@@ -11,6 +11,7 @@ import { verifyPlugin } from "./verify_plugin_gates.js";
 import { discoverPluginComponents } from "./component_evidence.js";
 import { ExecutionEventWriter, protectedArtifactRef, replayExecutionEvents } from "./execution_event_stream.js";
 import { projectExecutionProgress } from "./progress_projections.js";
+import { createEtaEstimatorState, updateEtaEstimator } from "./execution_eta.js";
 import { ExecutionLease, atomicCheckpoint, beginAttempt, chargeBudget, cleanupCheckpointPartials, clearCancellation, elapsedBudgetMs, finishAttempt, forceTerminate, mayRetry, newReliabilityLedger, normalizePlan, readCancellation, readLease, remainingBudgetMs, repairInterruptedJsonl, requestCancellation, sleep } from "./execution_reliability.js";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PHASES = ["validation", "planning", "execution", "grading", "aggregation", "review", "improvement", "verification"];
@@ -103,7 +104,7 @@ export function planFullEval(options) {
     const c = context(options), fp = fingerprints(c, options);
     const jobs = PHASES.map((phase, i) => { const id = "full-eval/" + phase, depends_on = i ? ["full-eval/" + PHASES[i - 1]] : []; return { id, phase, depends_on, input_hash: fp[phase], idempotency_key: hash({ artifact: fp.validation, plan: fp.planning, scenario: phase, configuration: fp[phase], run_index: 0 }), status: "planned", attempts: 0, attempt_records: [], detail: "pending", output_hashes: {} }; });
     const reliability_plan = normalizePlan(options.reliability);
-    return { context: c, state: { schema_version: "1.0", command: "full-eval", run_id: randomUUID(), graph_hash: hash(jobs.map(({ id, depends_on, input_hash, idempotency_key }) => ({ id, depends_on, input_hash, idempotency_key }))), revision: 0, status: "planned", configuration: persistedConfiguration(c, options), reliability_plan, reliability: newReliabilityLedger(), jobs } };
+    return { context: c, state: { schema_version: "1.0", command: "full-eval", run_id: randomUUID(), graph_hash: hash(jobs.map(({ id, depends_on, input_hash, idempotency_key }) => ({ id, depends_on, input_hash, idempotency_key }))), revision: 0, status: "planned", configuration: persistedConfiguration(c, options), reliability_plan, reliability: newReliabilityLedger(), eta_state: createEtaEstimatorState(), jobs } };
 }
 export function transitionJob(job, event, detail = job.detail) {
     const allowed = { planned: ["start", "cancel", "skip"], running: ["succeed", "fail", "block", "cancel", "skip"], succeeded: ["succeed"], failed: ["fail", "retry"], blocked: ["block", "resume", "cancel"], cancelled: ["cancel", "resume"], skipped: ["skip", "resume"] };
@@ -119,6 +120,7 @@ function loadState(path) { try {
         return null;
     value.reliability_plan = normalizePlan(value.reliability_plan);
     value.reliability = value.reliability ?? newReliabilityLedger();
+    value.eta_state = value.eta_state ?? createEtaEstimatorState();
     value.jobs = value.jobs.map((job) => ({ ...job, attempt_records: job.attempt_records ?? [] }));
     return value;
 }
@@ -132,6 +134,7 @@ function mergeState(plan, old, resume) {
     plan.run_id = old.run_id ?? old.graph_hash;
     plan.reliability_plan = normalizePlan(old.reliability_plan);
     plan.reliability = old.reliability ?? newReliabilityLedger();
+    plan.eta_state = old.eta_state ?? createEtaEstimatorState();
     let stale = false;
     const jobs = plan.jobs.map(job => { const prior = old.jobs.find(x => x.id === job.id); const records = prior?.attempt_records ?? []; if (stale || !prior || prior.input_hash !== job.input_hash || (prior.status === "succeeded" && !outputsCurrent(prior.output_hashes))) {
         stale = true;
@@ -162,6 +165,36 @@ function checkpoint(path, state, expectedRevision, lease) {
 function legacyStatus(status) { return status === "succeeded" ? "pass" : status === "failed" ? "fail" : status === "cancelled" || status === "skipped" ? "skipped" : status; }
 function output(state, c, next_actions, verification, o) { const status = state.status, exit_code = status === "success" ? 0 : status === "blocked" || status === "cancelled" ? 3 : status === "planned" ? 0 : 1; const phases = state.jobs.map(j => ({ name: j.phase, status: legacyStatus(j.status), detail: j.detail })); const event_file = join(c.workspace, EVENT_FILE), progress = o.dryRun ? null : projectExecutionProgress(replayExecutionEvents(event_file).events); return { schema_version: "1.0", command: "full-eval", status, exit_code, dry_run: Boolean(o.dryRun), resume: Boolean(o.resume), plugin: c.root, workspace: c.workspace, archive: c.archive, state_file: join(c.workspace, STATE_FILE), event_file, progress, graph_hash: state.graph_hash, revision: state.revision, jobs: state.jobs, phases, components: c.components, next_actions, verification }; }
 function reliabilityFor(state, options) { return state?.reliability_plan ?? normalizePlan(options.reliability); }
+const DONE_STATUSES = new Set(["succeeded", "failed", "blocked", "cancelled", "skipped"]);
+function progressCounts(jobs) { const out = { total: jobs.length, planned: 0, running: 0, succeeded: 0, failed: 0, blocked: 0, cancelled: 0, skipped: 0, completed: 0 }; for (const job of jobs) {
+    out[job.status]++;
+    if (DONE_STATUSES.has(job.status))
+        out.completed++;
+} return out; }
+/** Builds the canonical M4.3 snapshot from durable phase history. Numeric ETA is
+ * withheld until five comparable completed full-eval runs exist. */
+function runningEtaJob(state, now) {
+    const active = state.jobs.find(job => job.status === "running"), phases = state.jobs.map(job => { const record = job.attempt_records.at(-1); if (job.status === "succeeded" && record?.completed_at)
+        return { name: job.phase, status: "completed", startedAt: record.started_at, completedAt: record.completed_at, retries: Math.max(0, job.attempts - 1) }; if (job === active && record)
+        return { name: job.phase, status: "running", startedAt: record.started_at, retries: Math.max(0, job.attempts - 1) }; return { name: job.phase, status: "pending" }; });
+    return { id: state.run_id + ":" + state.reliability.started_at, kind: "plugin-full-eval", startedAt: state.reliability.started_at, updatedAt: now, concurrency: Math.max(1, state.jobs.filter(job => job.status === "running").length), retries: Math.max(0, state.jobs.reduce((n, job) => n + job.attempts, 0) - state.jobs.filter(job => job.attempts > 0).length), currentPhase: active?.phase, phasePlan: [...PHASES], phases, terminal: !active };
+}
+function completedEtaJob(state, completedAt) { const phases = []; for (const job of state.jobs) {
+    const record = job.attempt_records.at(-1);
+    if (!record?.completed_at || record.status !== "succeeded")
+        return null;
+    phases.push({ name: job.phase, startedAt: record.started_at, completedAt: record.completed_at, retries: Math.max(0, job.attempts - 1) });
+} return { id: state.run_id + ":" + state.reliability.started_at, kind: "plugin-full-eval", startedAt: state.reliability.started_at, completedAt, concurrency: 1, retries: Math.max(0, state.jobs.reduce((n, job) => n + job.attempts, 0) - state.jobs.length), phases }; }
+function heartbeatData(state, resume, lastCheckpoint, now = Date.now()) { const elapsed = elapsedBudgetMs(state.reliability, now), active = state.jobs.filter(job => job.status === "running"), retries = Math.max(0, state.jobs.reduce((n, job) => n + job.attempts, 0) - state.jobs.filter(job => job.attempts > 0).length), checkpointAge = lastCheckpoint.timestamp === null ? elapsed : Math.max(0, now - Date.parse(lastCheckpoint.timestamp)), etaUpdate = updateEtaEstimator(state.eta_state, { type: "snapshot", timestamp: now, job: runningEtaJob(state, now) }), eta = etaUpdate.estimate; state.eta_state = etaUpdate.state; return { status: state.status, resume, counts: progressCounts(state.jobs), retry: { attempts: state.jobs.reduce((n, job) => n + job.attempts, 0), retries, max_attempts: state.reliability_plan.max_attempts }, elapsed_ms: elapsed, active_workers: active.map(job => ({ worker_id: "plugin-creator", job_id: job.id, phase: job.phase, attempt: job.attempts })), active_models: [], checkpoint: lastCheckpoint, budget: { consumed_ms: elapsed, total_ms: state.reliability_plan.total_budget_ms, remaining_ms: Math.max(0, state.reliability_plan.total_budget_ms - elapsed) }, stale: { status: lastCheckpoint.timestamp === null ? "unavailable" : checkpointAge >= state.reliability_plan.stale_after_ms ? "stale" : "fresh", age_ms: checkpointAge, threshold_ms: state.reliability_plan.stale_after_ms }, eta }; }
+export class FullEvalTelemetryError extends Error {
+    operation;
+    code = "FULL_EVAL_TELEMETRY_FAILURE";
+    constructor(operation, cause) {
+        super(`full-eval ${operation} telemetry failed: ${cause instanceof Error ? cause.message : String(cause)}`, { cause });
+        this.operation = operation;
+        this.name = "FullEvalTelemetryError";
+    }
+}
 export async function fullEval(options) {
     const locator = context({ pluginPath: options.pluginPath, workspace: options.workspace }), statePath = join(locator.workspace, STATE_FILE), lockPath = join(locator.workspace, LOCK_FILE);
     if (options.dryRun) {
@@ -209,27 +242,34 @@ export async function fullEval(options) {
         }
     }
     const lease = ExecutionLease.acquire(lockPath, reliabilityFor(preexisting, options));
-    lease.startHeartbeat();
     try {
         const existing = loadState(statePath);
         const effective = options.resume && existing ? { ...optionsFromState(existing), ...options, pluginPath: existing.configuration.pluginPath, workspace: existing.configuration.workspace, componentReceipts: options.componentReceipts ?? existing.configuration.componentReceipts } : options;
         const planned = planFullEval(effective), c = planned.context;
         let state = mergeState(planned.state, existing, Boolean(options.resume));
-        if (existing && !options.resume)
+        if (existing && !options.resume) {
             state.revision = existing.revision;
+            state.eta_state = existing.eta_state ?? createEtaEstimatorState();
+        }
         const next_actions = [];
         let verification = state.verification ?? null;
         const eventPath = join(c.workspace, EVENT_FILE), priorEvents = replayExecutionEvents(eventPath), runId = priorEvents.run_id ?? state.run_id, events = new ExecutionEventWriter(eventPath, runId);
         state.run_id = runId;
         if (!priorEvents.events.length)
             events.append("evaluation-created", null, { status: "planned", graph_hash: state.graph_hash, plugin: protectedArtifactRef(c.root), workspace: protectedArtifactRef(c.workspace), job_count: state.jobs.length, budget: { consumed_ms: elapsedBudgetMs(state.reliability), total_ms: state.reliability_plan.total_budget_ms, remaining_ms: remainingBudgetMs(state.reliability, state.reliability_plan) } });
-        else {
+        let lastCheckpoint = { revision: state.revision, timestamp: null };
+        if (priorEvents.events.length) {
+            const priorCheckpoint = [...priorEvents.events].reverse().find(event => event.event_type === "checkpoint");
+            if (priorCheckpoint)
+                lastCheckpoint = { revision: Number(priorCheckpoint.data.revision), timestamp: priorCheckpoint.timestamp };
             const divergent = state.jobs.some(job => priorEvents.job_statuses[job.id] !== job.status);
-            if (divergent)
-                events.append("checkpoint", null, { revision: Math.max(1, state.revision), status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })), budget: { consumed_ms: elapsedBudgetMs(state.reliability), total_ms: state.reliability_plan.total_budget_ms, remaining_ms: remainingBudgetMs(state.reliability, state.reliability_plan) } });
-            events.append("heartbeat", null, { status: state.status, resume: Boolean(options.resume) });
+            if (divergent) {
+                const event = events.append("checkpoint", null, { revision: Math.max(1, state.revision), status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })), budget: { consumed_ms: elapsedBudgetMs(state.reliability), total_ms: state.reliability_plan.total_budget_ms, remaining_ms: remainingBudgetMs(state.reliability, state.reliability_plan) } });
+                lastCheckpoint = { revision: Number(event.data.revision), timestamp: event.timestamp };
+            }
+            events.append("heartbeat", null, heartbeatData(state, Boolean(options.resume), lastCheckpoint));
         }
-        const save = () => { lease.heartbeat(); state.reliability = { ...state.reliability, consumed_ms: elapsedBudgetMs(state.reliability) }; const expected = state.revision; state.revision++; checkpoint(statePath, state, expected, lease); events.append("checkpoint", null, { revision: state.revision, status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })), budget: { consumed_ms: elapsedBudgetMs(state.reliability), total_ms: state.reliability_plan.total_budget_ms, remaining_ms: remainingBudgetMs(state.reliability, state.reliability_plan) } }); };
+        const save = () => { lease.heartbeat(); state.reliability = { ...state.reliability, consumed_ms: elapsedBudgetMs(state.reliability) }; const expected = state.revision; state.revision++; checkpoint(statePath, state, expected, lease); const event = events.append("checkpoint", null, { revision: state.revision, status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })), budget: { consumed_ms: elapsedBudgetMs(state.reliability), total_ms: state.reliability_plan.total_budget_ms, remaining_ms: remainingBudgetMs(state.reliability, state.reliability_plan) } }); lastCheckpoint = { revision: state.revision, timestamp: event.timestamp }; };
         const cancelPath = join(c.workspace, CANCEL_FILE), deadline = Date.parse(state.reliability.started_at) + state.reliability_plan.total_budget_ms;
         const run = async (phase, fn) => { const index = state.jobs.findIndex(j => j.phase === phase); let job = state.jobs[index]; if (job.status === "succeeded")
             return; if (readCancellation(join(c.workspace, CANCEL_FILE))) {
@@ -262,11 +302,21 @@ export async function fullEval(options) {
                 save();
                 return;
             }
-        } const started = Date.now(); job = transitionJob(job, "start", "running"); job.attempt_records = beginAttempt(job.attempt_records, started); state.jobs[index] = job; state.status = "running"; events.append("job-transition", job.id, { phase, status: "running", attempt: job.attempts }); events.append("phase-transition", job.id, { phase, status: "running" }); save(); let result; try {
-            result = await fn();
+        } const started = Date.now(); job = transitionJob(job, "start", "running"); job.attempt_records = beginAttempt(job.attempt_records, started); state.jobs[index] = job; state.status = "running"; events.append("job-transition", job.id, { phase, status: "running", attempt: job.attempts }); events.append("phase-transition", job.id, { phase, status: "running" }); save(); let result; let rejectTelemetry; const telemetryFailure = new Promise((_resolve, reject) => { rejectTelemetry = reject; }); const heartbeatTimer = setInterval(() => { try {
+            lease.heartbeat();
+            events.append("heartbeat", null, heartbeatData(state, Boolean(options.resume), lastCheckpoint));
         }
         catch (error) {
-            result = { event: "fail", detail: error.message };
+            clearInterval(heartbeatTimer);
+            rejectTelemetry(new FullEvalTelemetryError("heartbeat", error));
+        } }, state.reliability_plan.heartbeat_ms); heartbeatTimer.unref(); try {
+            result = await Promise.race([Promise.resolve().then(fn), telemetryFailure]);
+        }
+        catch (error) {
+            result = { event: "fail", detail: error instanceof FullEvalTelemetryError ? error.message : error.message, stop_reason: error instanceof FullEvalTelemetryError ? error.code : undefined };
+        }
+        finally {
+            clearInterval(heartbeatTimer);
         } if (Date.now() >= deadline && result.event !== "cancel")
             result = { event: "fail", detail: "total-budget-exhausted", stop_reason: "total-budget-exhausted" }; state.reliability = chargeBudget(state.reliability, Math.max(1, Date.now() - started), state.reliability_plan); job = transitionJob(state.jobs[index], result.event, result.detail); const retryable = false, stopReason = result.stop_reason ?? (result.event === "fail" ? "nonretryable" : result.event === "cancel" ? "cancelled" : undefined); job.attempt_records = finishAttempt(job.attempt_records, result.event === "succeed" ? "succeeded" : result.event === "fail" ? "failed" : "cancelled", { retryable, stop_reason: stopReason }); if (result.event === "fail" || result.event === "cancel")
             job.stop_reason = stopReason; if (stopReason === "total-budget-exhausted")
@@ -298,6 +348,13 @@ export async function fullEval(options) {
         state.status = state.jobs.some(j => j.status === "failed") ? "failure" : state.jobs.every(j => j.status === "succeeded") ? "success" : "blocked";
         if (verification !== null)
             state.verification = verification;
+        if (state.status === "success") {
+            const completed = completedEtaJob(state, Date.now());
+            if (completed && !state.eta_state.completed_jobs.some(job => job.id === completed.id)) {
+                const update = updateEtaEstimator(state.eta_state, { type: "completed", job: completed });
+                state.eta_state = update.state;
+            }
+        }
         save();
         if (state.status === "success")
             events.append("completion", null, { status: "success", archive: protectedArtifactRef(c.archive, fileHash(c.archive)) });

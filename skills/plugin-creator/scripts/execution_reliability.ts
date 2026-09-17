@@ -31,7 +31,7 @@ export class ExecutionLease {private timer:NodeJS.Timeout|null=null;private cons
  private assertCurrentUnlocked():LeaseRecord{const current=readLease(this.path),fence=this.path+".fence";if(!current||current.owner!==this.owner||current.generation!==this.generation||current.fencing_token!==this.fencingToken||fenceGeneration(fence)!==this.generation)throw new Error("full-eval execution lease was fenced");return current}
  heartbeat(now=Date.now()):void{withMutex(this.path+".mutex",()=>{const current=this.assertCurrentUnlocked();replaceJson(this.path,{...current,heartbeat_at:new Date(now).toISOString(),expires_at:new Date(now+this.plan.lease_ms).toISOString()})})}
  checkpoint(fn:()=>void):void{withMutex(this.path+".mutex",()=>{this.assertCurrentUnlocked();fn()})}
- startHeartbeat():void{if(this.timer)return;this.timer=setInterval(()=>{try{this.heartbeat()}catch{}},this.plan.heartbeat_ms);this.timer.unref()}
+ startHeartbeat(onError?:(error:unknown)=>void):void{if(this.timer)return;this.timer=setInterval(()=>{try{this.heartbeat()}catch(error){if(onError)onError(error);else queueMicrotask(()=>{throw error})}},this.plan.heartbeat_ms);this.timer.unref()}
  release():void{if(this.timer){clearInterval(this.timer);this.timer=null}withMutex(this.path+".mutex",()=>{const current=readLease(this.path);if(current?.owner===this.owner&&current.generation===this.generation)rmSync(this.path,{force:true})})}
 }
 

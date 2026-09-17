@@ -110,11 +110,16 @@ export class ExecutionLease {
         throw new Error("full-eval execution lease was fenced"); return current; }
     heartbeat(now = Date.now()) { withMutex(this.path + ".mutex", () => { const current = this.assertCurrentUnlocked(); replaceJson(this.path, { ...current, heartbeat_at: new Date(now).toISOString(), expires_at: new Date(now + this.plan.lease_ms).toISOString() }); }); }
     checkpoint(fn) { withMutex(this.path + ".mutex", () => { this.assertCurrentUnlocked(); fn(); }); }
-    startHeartbeat() { if (this.timer)
+    startHeartbeat(onError) { if (this.timer)
         return; this.timer = setInterval(() => { try {
         this.heartbeat();
     }
-    catch { } }, this.plan.heartbeat_ms); this.timer.unref(); }
+    catch (error) {
+        if (onError)
+            onError(error);
+        else
+            queueMicrotask(() => { throw error; });
+    } }, this.plan.heartbeat_ms); this.timer.unref(); }
     release() { if (this.timer) {
         clearInterval(this.timer);
         this.timer = null;

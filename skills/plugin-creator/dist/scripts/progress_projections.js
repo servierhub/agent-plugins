@@ -35,9 +35,30 @@ function eventState(event, state) { const status = String(event.data.status ?? "
 } if ((event.event_type === "job-transition" || event.event_type === "phase-transition") && status === "running")
     return "running"; return state; }
 /** Pure canonical projection. It never reads checkpoints, clocks, environment, or the terminal. */
-export function projectExecutionProgress(events) { const statuses = new Map(); let phaseName = null, phaseState = null, state = "planned", budget = { consumed_ms: 0, total_ms: 0, remaining_ms: 0, percent: 0 }; const failures = [], artifacts = []; let declaredTotal = 0; for (const event of events) {
+export function projectExecutionProgress(events) { const statuses = new Map(); let phaseName = null, phaseState = null, state = "planned", budget = { consumed_ms: 0, total_ms: 0, remaining_ms: 0, percent: 0 }, retry = { attempts: 0, retries: 0, max_attempts: 0 }, elapsed_ms = 0, active_workers = [], active_models = [], checkpoint = { revision: 0, timestamp: null }, stale = { status: "unavailable", age_ms: 0, threshold_ms: 0 }, eta = null; const failures = [], artifacts = []; let declaredTotal = 0; for (const event of events) {
     state = eventState(event, state);
     budget = progressBudget(event.data, budget);
+    if (event.event_type === "heartbeat") {
+        const d = event.data;
+        if (object(d.retry))
+            retry = d.retry;
+        if (typeof d.elapsed_ms === "number")
+            elapsed_ms = d.elapsed_ms;
+        if (Array.isArray(d.active_workers))
+            active_workers = d.active_workers;
+        if (Array.isArray(d.active_models))
+            active_models = d.active_models.filter(x => typeof x === "string");
+        if (object(d.checkpoint))
+            checkpoint = d.checkpoint;
+        if (object(d.stale))
+            stale = d.stale;
+        if (object(d.eta))
+            eta = d.eta;
+    }
+    if (event.event_type === "checkpoint") {
+        checkpoint = { revision: Number(event.data.revision), timestamp: event.timestamp };
+        elapsed_ms = Math.max(elapsed_ms, budget.consumed_ms);
+    }
     if (Number.isInteger(event.data.job_count))
         declaredTotal = Math.max(declaredTotal, Number(event.data.job_count));
     const phase = typeof event.data.phase === "string" ? event.data.phase : null, status = typeof event.data.status === "string" ? event.data.status : null;
@@ -64,8 +85,11 @@ export function projectExecutionProgress(events) { const statuses = new Map(); l
     }
 } const counts = emptyCounts(); counts.total = Math.max(declaredTotal, statuses.size); for (const status of statuses.values())
     if (status in counts)
-        counts[status]++; counts.planned += Math.max(0, counts.total - statuses.size); counts.completed = [...statuses.values()].filter(x => DONE.has(x)).length; const last = events.at(-1) ?? null, lifecycle = last && TERMINAL_EVENTS.has(last.event_type) || ["completed", "cancelled", "failed"].includes(state) ? "completed" : "live", resumable = state === "blocked" || state === "cancelled" || state === "failed"; return { schema_version: "1.0", run_id: last?.run_id ?? null, sequence: last?.sequence ?? 0, timestamp: last?.timestamp ?? null, lifecycle, state, phase: { name: phaseName, state: phaseState }, counts, budget, failures, artifacts: [...new Map(artifacts.map(x => [x.ref, x])).values()], resume: { available: resumable, guidance: resumable ? "Resolve the reported condition, then run plugin-creator full-eval with --resume." : null } }; }
-function summary(s, surface = "terminal") { return `state=${s.state} lifecycle=${s.lifecycle} phase=${safe(s.phase.name ?? "none", surface)} phase_state=${safe(s.phase.state ?? "none", surface)} jobs=${s.counts.completed}/${s.counts.total} running=${s.counts.running} blocked=${s.counts.blocked} failed=${s.counts.failed} budget=${s.budget.consumed_ms}/${s.budget.total_ms}ms (${s.budget.percent}%)`; }
+        counts[status]++; counts.planned += Math.max(0, counts.total - statuses.size); counts.completed = [...statuses.values()].filter(x => DONE.has(x)).length; const last = events.at(-1) ?? null, lifecycle = last && TERMINAL_EVENTS.has(last.event_type) || ["completed", "cancelled", "failed"].includes(state) ? "completed" : "live", resumable = state === "blocked" || state === "cancelled" || state === "failed"; if (lifecycle === "completed") {
+    active_workers = [];
+    active_models = [];
+} return { schema_version: "1.0", run_id: last?.run_id ?? null, sequence: last?.sequence ?? 0, timestamp: last?.timestamp ?? null, lifecycle, state, phase: { name: phaseName, state: phaseState }, counts, budget, retry, elapsed_ms, active_workers, active_models, checkpoint, stale, eta, failures, artifacts: [...new Map(artifacts.map(x => [x.ref, x])).values()], resume: { available: resumable, guidance: resumable ? "Resolve the reported condition, then run plugin-creator full-eval with --resume." : null } }; }
+function summary(s, surface = "terminal") { const eta = !s.eta ? "unavailable" : s.eta.total.status === "available" ? `${s.eta.total.range.remaining_ms.low}-${s.eta.total.range.remaining_ms.high}ms/${s.eta.total.range.confidence}` : `${s.eta.total.status}:${s.eta.total.reason}`; return `state=${s.state} lifecycle=${s.lifecycle} phase=${safe(s.phase.name ?? "none", surface)} phase_state=${safe(s.phase.state ?? "none", surface)} jobs=${s.counts.completed}/${s.counts.total} running=${s.counts.running} blocked=${s.counts.blocked} failed=${s.counts.failed} retries=${s.retry.retries} elapsed=${s.elapsed_ms}ms workers=${s.active_workers.length} models=${s.active_models.length} checkpoint=${s.checkpoint.revision} stale=${s.stale.status} eta=${eta} budget=${s.budget.consumed_ms}/${s.budget.total_ms}ms (${s.budget.percent}%)`; }
 export function renderTerminalProgress(events, verbosity = "normal") { const snapshot = projectExecutionProgress(events); if (verbosity === "quiet")
     return { snapshot, output: "" }; const lines = [`full-eval progress: ${summary(snapshot)}`]; if (snapshot.failures.length)
     lines.push(...snapshot.failures.map(x => `failure: phase=${safe(x.phase ?? "unknown")} job=${safe(x.job_id ?? "run")}`)); if (snapshot.resume.guidance)

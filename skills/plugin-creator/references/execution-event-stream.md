@@ -34,7 +34,7 @@ column are rejected. Status values are enumerated rather than free text.
 | `evaluation-created` | `status=planned`, `graph_hash`, `plugin`, `workspace` | none |
 | `phase-transition` | `phase`, `status` in planned/running/pass/fail/blocked/skipped/succeeded/failed/cancelled | none |
 | `job-transition` | `phase`, `status` in planned/running/succeeded/failed/blocked/cancelled/skipped | positive `attempt`, protected-artifact `outputs[]` |
-| `heartbeat` | run `status` in planned/running/blocked/failure/success/cancelled | boolean `resume` |
+| `heartbeat` | run `status`, `resume`, closed job `counts`, retry counters, `elapsed_ms`, active worker/model arrays, checkpoint summary, budget, stale status, and canonical ETA snapshot (separate current-phase and total status, reasons, timestamps, sample counts, ranges, confidence, and basis/method) | none |
 | `retry` | `phase`, positive `attempt` | none |
 | `checkpoint` | positive `revision`, run `status`, protected `state`, closed `jobs[]` snapshots | none |
 | `cancellation` | `status=cancelled` | none |
@@ -81,4 +81,4 @@ separate authorization to resolve.
 - CI log: `--format ci` (groups summary, failures, protected artifact links, and resume guidance);
 - historical review: `--format review` (accessible, script-free HTML replay with explicit `live` or `completed` lifecycle labels).
 
-`evaluation-created` may include `job_count` and a budget snapshot. Checkpoints may include a budget snapshot. These optional v1 fields are emitted by `full_eval` so count and budget projections remain event-derived; protected artifact references never reveal local paths.
+`evaluation-created` may include `job_count` and a budget snapshot. Checkpoints may include a budget snapshot. While a phase is active, `full_eval` emits rich heartbeats at the plugin-local reliability heartbeat interval. ETA remains `calculating` until five comparable completed full-eval jobs exist, becomes a cautious range with explicit confidence, and is `unavailable` when no worker is active; no heartbeat is emitted after a terminal event. Counts, retries, elapsed time, workers/models, checkpoint freshness, budget, and ETA are all replayed consistently by every projection. Protected artifact references never reveal local paths.

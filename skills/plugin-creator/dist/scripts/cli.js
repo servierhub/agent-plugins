@@ -10,7 +10,7 @@ import { replayExecutionEvents } from "./execution_event_stream.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -81,7 +81,7 @@ async function runFullEval(o) {
         return usage("full-eval requires a plugin directory");
     const options = { pluginPath: o.args[0] }, receipts = [];
     let progressMode = o.quiet ? "quiet" : "normal";
-    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--min-pass-rate", "--min-delta", "--total-budget-ms", "--cancellation-grace-ms", "--progress"]);
+    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--min-pass-rate", "--min-delta", "--total-budget-ms", "--heartbeat-ms", "--stale-after-ms", "--lease-ms", "--cancellation-grace-ms", "--progress"]);
     for (let i = 1; i < o.args.length; i++) {
         const a = o.args[i];
         if (a === "--dry-run")
@@ -117,6 +117,12 @@ async function runFullEval(o) {
                 options.minDelta = Number(v);
             else if (a === "--total-budget-ms")
                 options.reliability = { ...options.reliability, total_budget_ms: Number(v) };
+            else if (a === "--heartbeat-ms")
+                options.reliability = { ...options.reliability, heartbeat_ms: Number(v) };
+            else if (a === "--stale-after-ms")
+                options.reliability = { ...options.reliability, stale_after_ms: Number(v) };
+            else if (a === "--lease-ms")
+                options.reliability = { ...options.reliability, lease_ms: Number(v) };
             else
                 options.reliability = { ...options.reliability, cancellation_grace_ms: Number(v) };
         }
