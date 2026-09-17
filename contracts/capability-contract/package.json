@@ -23,7 +23,16 @@
       "types": "./dist/recommendation-types.d.ts",
       "default": "./dist/recommendation-types.js"
     },
-    "./recommendation-schema/1.0.0": "./schema/recommendation/1.0.0/artifact-recommendation.schema.json"
+    "./recommendation-schema/1.0.0": "./schema/recommendation/1.0.0/artifact-recommendation.schema.json",
+    "./elicitation": {
+      "types": "./dist/elicitation.d.ts",
+      "default": "./dist/elicitation.js"
+    },
+    "./elicitation-types": {
+      "types": "./dist/elicitation-types.d.ts",
+      "default": "./dist/elicitation-types.js"
+    },
+    "./elicitation-schema/1.0.0": "./schema/elicitation/1.0.0/adaptive-elicitation.schema.json"
   },
   "files": [
     "dist",
@@ -39,7 +48,9 @@
     "RELEASE_NOTES.md",
     "fixtures/compatibility",
     "ARTIFACT_RECOMMENDATION_SPECIFICATION.md",
-    "fixtures/recommendation"
+    "fixtures/recommendation",
+    "ADAPTIVE_ELICITATION_SPECIFICATION.md",
+    "fixtures/elicitation"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

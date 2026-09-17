@@ -2544,6 +2544,7 @@
       "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
       "expected": [
         "benchmark.json",
+        "full-eval-events.jsonl",
         "full-eval-state.json",
         "plugin.json",
         "receipt.json",
@@ -5305,6 +5306,15 @@
       "sourceEvidence": "run.schema.json",
       "evidenceOccurrences": 1,
       "rationale": "Generated schema helper for evidence-run; excluded until independently published as a compatibility schema."
+    },
+    {
+      "site": "skills/plugin-creator/scripts/full_eval.ts::full-eval-events.jsonl",
+      "siteId": "skills/plugin-creator/scripts/full_eval.ts::full-eval-events.jsonl",
+      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFieldOrArtifact": "full-eval-events.jsonl",
+      "sourceEvidence": "full-eval-events.jsonl",
+      "evidenceOccurrences": 1,
+      "rationale": "The append-only execution stream is governed by its dedicated versioned event module and replay validator; this filename site is structural storage wiring rather than a distinct serialized shape."
     }
   ],
   "compatibleSurfaceAliases": [

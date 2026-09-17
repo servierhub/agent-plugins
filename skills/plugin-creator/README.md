@@ -105,6 +105,8 @@ The fixed phases are validation, typed component discovery, component evaluation
 
 This command never runs or simulates an LLM. The workspace must be a proper subdirectory of the plugin's `evaluations/` directory; integration and archive paths must stay inside that workspace. Evaluation files are therefore excluded consistently from source fingerprints and release archives. Cancellation requires an existing persisted graph and uses its saved configuration. It stops with exit code 3 when Skill receipts, `integration/benchmark.json`, `integration/review.html`, test evidence, or explicit `--human-review pass` are absent. Once prerequisites exist, it packages the plugin and invokes the existing release verifier. Inputs can be overridden with repeated `--component-receipt`, `--integration`, `--archive`, and `--tests-status pass`.
 
+Non-dry runs also append a versioned durable history to `full-eval-events.jsonl` without changing CLI human output. Replay reconstructs phase and job status counts, detects interrupted tails, tolerates unknown additive event types, and rejects unknown schema majors. Sensitive values and full/private prompts are excluded or redacted; artifacts use opaque protected references. See [Durable full-eval execution event stream](references/execution-event-stream.md).
+
 ## Package
 
 ```bash

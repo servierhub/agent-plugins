@@ -1,0 +1,75 @@
+import { createHash, randomUUID } from "node:crypto";
+import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, unlinkSync, writeSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+
+export const EXECUTION_EVENT_SCHEMA_VERSION = "1.0" as const;
+export const EXECUTION_EVENT_TYPES = ["evaluation-created","phase-transition","job-transition","heartbeat","retry","checkpoint","cancellation","failure","completion","approval-requested"] as const;
+export type ExecutionEventType = typeof EXECUTION_EVENT_TYPES[number];
+export interface ProtectedArtifactRef { kind:"protected-artifact-ref"; ref:string; sha256?:string }
+export interface ExecutionEvent { schema_version:string; event_id:string; event_type:string; run_id:string; job_id:string|null; sequence:number; timestamp:string; causal_event_id:string|null; data:Record<string,unknown> }
+export interface ReplayState { run_id:string|null; last_sequence:number; last_event_id:string|null; last_timestamp:string|null; current_phase:string|null; phase_statuses:Record<string,string>; phase_counts:Record<string,number>; job_statuses:Record<string,string>; job_counts:Record<string,number>; interrupted_tail:boolean; unknown_events:Array<{sequence:number;event_type:string}>; events:ExecutionEvent[] }
+
+const KNOWN=new Set<string>(EXECUTION_EVENT_TYPES);
+const ENVELOPE_KEYS=["causal_event_id","data","event_id","event_type","job_id","run_id","schema_version","sequence","timestamp"];
+const EVENT_ID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const RFC3339_UTC=/^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d\.\d{3}Z$/;
+const JOB_STATUS=new Set(["planned","running","succeeded","failed","blocked","cancelled","skipped"]);
+const PHASE_STATUS=new Set(["planned","running","pass","fail","blocked","skipped","succeeded","failed","cancelled"]);
+const RUN_STATUS=new Set(["planned","running","blocked","failure","success","cancelled"]);
+const REDACTED="[REDACTED]";
+// Redact whole values: partial masking may retain recoverable credential material.
+// Labels are normalized before matching so separators, camel case, and arbitrary
+// application/vendor prefixes or suffixes cannot hide a credential family.
+const CREDENTIAL_LABELS=["openaiapikey","awssecretaccesskey","azureclientsecret","googleapikey","githubtoken","apikey","accesskey","secretkey","privatekey","clientsecret","secretaccesskey","refreshtoken","idtoken","bearertoken","password","passwd","credential","credentials","authorization","cookie","jwt","secret","token"];
+const INLINE_CREDENTIAL=/(?:\b(?:bearer|basic)\s+[A-Za-z0-9._~+\/=-]+|\bAKIA[0-9A-Z]{16}\b|\bASIA[0-9A-Z]{16}\b|\bgh(?:[opusr]_[A-Za-z0-9]{20,}|p_[A-Za-z0-9_]{20,})\b|\bgithub_pat_[A-Za-z0-9_]{20,}\b|\bAIza[0-9A-Za-z_-]{30,}\b|\bxox[baprs]-[A-Za-z0-9-]{10,}\b|\bsk_(?:live|test)_[A-Za-z0-9]{16,}\b|\bsk-[A-Za-z0-9_-]{16,}\b|-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----)/i;
+const JWT_VALUE=/\beyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/;
+const URL_USERINFO=/\b[a-z][a-z0-9+.-]*:\/\/[^\s\/@:]+(?::[^\s\/@]*)?@[^\s/]+/i;
+function keyWords(key:string):string[]{return key.replace(/([a-z0-9])([A-Z])/g,"$1 $2").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)}
+function normalizedLabel(label:string):string{return keyWords(label).join("")}
+function containsCredentialLabel(label:string):boolean{const normalized=normalizedLabel(label);return CREDENTIAL_LABELS.some(secret=>normalized.includes(secret))}
+function sensitiveKey(key:string):boolean {
+ const words=keyWords(key);
+ if(words.includes("prompt")||containsCredentialLabel(key))return true;
+ return (words.includes("private")||words.includes("system"))&&words.some(word=>["message","messages","conversation","conversations","chat","chats","transcript","transcripts"].includes(word));
+}
+function hasCredentialAssignment(value:string):boolean{for(const match of value.matchAll(/([^:=,;\r\n]+)\s*[:=]/g))if(containsCredentialLabel(match[1]))return true;return false}
+function sanitize(value:unknown,key="",ancestors=new Set<object>()):unknown { if(sensitiveKey(key))return REDACTED;if(typeof value==="string")return hasCredentialAssignment(value)||INLINE_CREDENTIAL.test(value)||JWT_VALUE.test(value)||URL_USERINFO.test(value)?REDACTED:value;if(value===null||typeof value!=="object")return value;if(ancestors.has(value))return "[CIRCULAR]";const next=new Set(ancestors);next.add(value);if(Array.isArray(value))return value.map(item=>sanitize(item,"",next));const out:Record<string,unknown>={};for(const [k,v] of Object.entries(value as Record<string,unknown>))out[k]=sanitize(v,k,next);return out; }
+export function sanitizeExecutionEventData(data:Record<string,unknown>):Record<string,unknown>{return sanitize(data) as Record<string,unknown>}
+export function protectedArtifactRef(identifier:string,sha256?:string):ProtectedArtifactRef { const ref=createHash("sha256").update(resolve(identifier)).digest("hex");return{kind:"protected-artifact-ref",ref:"sha256:"+ref,...(sha256?{sha256}:{})}; }
+
+function emptyReplay():ReplayState{return{run_id:null,last_sequence:0,last_event_id:null,last_timestamp:null,current_phase:null,phase_statuses:{},phase_counts:{},job_statuses:{},job_counts:{},interrupted_tail:false,unknown_events:[],events:[]}}
+function fail(line:number,message:string):never{throw new Error(`invalid execution event at line ${line}: ${message}`)}
+function object(value:unknown):value is Record<string,unknown>{return value!==null&&typeof value==="object"&&!Array.isArray(value)}
+function exactKeys(value:Record<string,unknown>,allowed:string[],line:number,where:string):void{for(const key of Object.keys(value))if(!allowed.includes(key))fail(line,`unknown ${where} field ${key}`)}
+function required(value:Record<string,unknown>,keys:string[],line:number):void{for(const key of keys)if(!(key in value))fail(line,`missing data field ${key}`)}
+function str(value:unknown):value is string{return typeof value==="string"&&value.length>0}
+function enumValue(value:unknown,values:Set<string>):boolean{return typeof value==="string"&&values.has(value)}
+function artifact(value:unknown):boolean{return object(value)&&value.kind==="protected-artifact-ref"&&typeof value.ref==="string"&&/^sha256:[a-f0-9]{64}$/.test(value.ref)&&Object.keys(value).every(k=>["kind","ref","sha256"].includes(k))&&(value.sha256===undefined||typeof value.sha256==="string"&&/^[a-f0-9]{64}$/.test(value.sha256))}
+function validateData(event:ExecutionEvent,line:number):void{
+ const d=event.data;let allowed:string[]=[];let req:string[]=[];switch(event.event_type){
+ case"evaluation-created":allowed=req=["status","graph_hash","plugin","workspace"];required(d,req,line);if(d.status!=="planned"||!str(d.graph_hash)||!artifact(d.plugin)||!artifact(d.workspace))fail(line,"invalid evaluation-created data");break;
+ case"phase-transition":allowed=req=["phase","status"];required(d,req,line);if(!str(d.phase)||!enumValue(d.status,PHASE_STATUS))fail(line,"invalid phase-transition data");break;
+ case"job-transition":allowed=["phase","status","attempt","outputs"];req=["phase","status"];required(d,req,line);if(!str(d.phase)||!enumValue(d.status,JOB_STATUS)||(d.attempt!==undefined&&(!Number.isInteger(d.attempt)||Number(d.attempt)<1))||(d.outputs!==undefined&&(!Array.isArray(d.outputs)||!d.outputs.every(artifact))))fail(line,"invalid job-transition data");break;
+ case"heartbeat":allowed=["status","resume"];req=["status"];required(d,req,line);if(!enumValue(d.status,RUN_STATUS)||(d.resume!==undefined&&typeof d.resume!=="boolean"))fail(line,"invalid heartbeat data");break;
+ case"retry":allowed=req=["phase","attempt"];required(d,req,line);if(!str(d.phase)||!Number.isInteger(d.attempt)||Number(d.attempt)<1)fail(line,"invalid retry data");break;
+ case"checkpoint":allowed=req=["revision","status","state","jobs"];required(d,req,line);if(!Number.isInteger(d.revision)||Number(d.revision)<1||!enumValue(d.status,RUN_STATUS)||!artifact(d.state)||!Array.isArray(d.jobs)||!d.jobs.every(j=>object(j)&&Object.keys(j).every(k=>["id","phase","status","attempts"].includes(k))&&str(j.id)&&str(j.phase)&&enumValue(j.status,JOB_STATUS)&&Number.isInteger(j.attempts)&&Number(j.attempts)>=0))fail(line,"invalid checkpoint data");break;
+ case"cancellation":allowed=req=["status"];required(d,req,line);if(d.status!=="cancelled")fail(line,"invalid cancellation data");break;
+ case"failure":allowed=["phase","status"];req=["status"];required(d,req,line);if(!["failed","failure"].includes(String(d.status))||(d.phase!==undefined&&!str(d.phase)))fail(line,"invalid failure data");break;
+ case"completion":allowed=req=["status","archive"];required(d,req,line);if(d.status!=="success"||!artifact(d.archive))fail(line,"invalid completion data");break;
+ case"approval-requested":allowed=req=["phase","status","reason"];required(d,req,line);if(!str(d.phase)||d.status!=="blocked"||!str(d.reason))fail(line,"invalid approval-requested data");break;
+ default:return;
+ }exactKeys(d,allowed,line,"data");
+}
+function validateEvent(raw:unknown,line:number,state:ReplayState,ids:Set<string>):ExecutionEvent{
+ if(!object(raw))fail(line,"envelope must be an object");exactKeys(raw,ENVELOPE_KEYS,line,"envelope");for(const k of ENVELOPE_KEYS)if(!(k in raw))fail(line,`missing envelope field ${k}`);
+ const e=raw as unknown as ExecutionEvent;if(!/^1\.\d+$/.test(e.schema_version))throw new Error(`unsupported execution event schema version at line ${line}: ${String(e.schema_version)}`);if(!EVENT_ID.test(e.event_id))fail(line,"invalid event_id");if(ids.has(e.event_id))fail(line,"duplicate event_id");if(!str(e.event_type)||!str(e.run_id)||(e.job_id!==null&&!str(e.job_id))||!Number.isInteger(e.sequence)||e.sequence!==state.last_sequence+1||!object(e.data))fail(line,"invalid envelope value");
+ if(!RFC3339_UTC.test(e.timestamp)||new Date(e.timestamp).toISOString()!==e.timestamp)fail(line,"timestamp must be canonical RFC3339 UTC");if(state.last_timestamp!==null&&e.timestamp<=state.last_timestamp)fail(line,"timestamp must be strictly monotonic");if(e.causal_event_id!==(state.last_event_id??null))fail(line,"causal_event_id must equal the immediately preceding event_id");if(state.run_id!==null&&e.run_id!==state.run_id)fail(line,"run_id mismatch");if(KNOWN.has(e.event_type)){if(e.schema_version!==EXECUTION_EVENT_SCHEMA_VERSION)fail(line,"known event requires schema version 1.0");validateData(e,line);}ids.add(e.event_id);return e;
+}
+function recount(s:ReplayState):void{const jobs:Record<string,number>={},phases:Record<string,number>={};for(const x of Object.values(s.job_statuses))jobs[x]=(jobs[x]??0)+1;for(const x of Object.values(s.phase_statuses))phases[x]=(phases[x]??0)+1;s.job_counts=jobs;s.phase_counts=phases}
+export function replayExecutionEvents(path:string):ReplayState {const s=emptyReplay();if(!existsSync(path))return s;const text=readFileSync(path,"utf8"),complete=text.length===0||text.endsWith("\n");s.interrupted_tail=!complete;const lines=text.split("\n");if(!complete)lines.pop();const ids=new Set<string>();for(let i=0;i<lines.length;i++){if(!lines[i])continue;let raw:unknown;try{raw=JSON.parse(lines[i])}catch{throw new Error(`invalid execution event JSON at line ${i+1}`)}const e=validateEvent(raw,i+1,s,ids);s.run_id=e.run_id;s.last_sequence=e.sequence;s.last_event_id=e.event_id;s.last_timestamp=e.timestamp;s.events.push(e);if(!KNOWN.has(e.event_type)){s.unknown_events.push({sequence:e.sequence,event_type:e.event_type});continue}const phase=typeof e.data.phase==="string"?e.data.phase:null,status=typeof e.data.status==="string"?e.data.status:null;if(e.event_type==="phase-transition"&&phase&&status){s.current_phase=phase;s.phase_statuses[phase]=status}if(e.event_type==="job-transition"&&e.job_id&&status)s.job_statuses[e.job_id]=status;if(e.event_type==="checkpoint")for(const item of e.data.jobs as Array<Record<string,unknown>>){s.job_statuses[item.id as string]=item.status as string;s.phase_statuses[item.phase as string]=item.status as string}}recount(s);return s}
+
+const sleep=(ms:number)=>Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,ms);
+function acquire(path:string):()=>void{mkdirSync(dirname(path),{recursive:true});const deadline=Date.now()+10000;while(true){try{const fd=openSync(path,"wx",0o600);writeSync(fd,String(process.pid));fsyncSync(fd);closeSync(fd);return()=>{try{unlinkSync(path)}catch{}}}catch(err:any){if(err?.code!=="EEXIST")throw err;if(Date.now()>=deadline)throw new Error("timed out acquiring execution event stream lock");sleep(5)}}}
+export class ExecutionEventWriter {readonly path:string;readonly runId:string;private sequence:number;private causalEventId:string|null;constructor(path:string,runId:string){this.path=path;this.runId=runId;const replay=replayExecutionEvents(path);if(replay.interrupted_tail)throw new Error("interrupted execution event tail detected; repair or archive the stream before appending");if(replay.run_id&&replay.run_id!==runId)throw new Error("execution event stream belongs to a different run");this.sequence=replay.last_sequence;this.causalEventId=replay.last_event_id}
+ append(eventType:ExecutionEventType,jobId:string|null,data:Record<string,unknown>={}):ExecutionEvent{const release=acquire(this.path+".lock");try{const replay=replayExecutionEvents(this.path);if(replay.interrupted_tail)throw new Error("interrupted execution event tail detected; repair or archive the stream before appending");if(replay.run_id&&replay.run_id!==this.runId)throw new Error("execution event stream belongs to a different run");if(replay.last_sequence<this.sequence||replay.last_sequence===this.sequence&&replay.last_event_id!==this.causalEventId)throw new Error("execution event stream changed incompatibly");const previousMs=replay.last_timestamp?Date.parse(replay.last_timestamp):-1;const timestamp=new Date(Math.max(Date.now(),previousMs+1)).toISOString();const event:ExecutionEvent={schema_version:EXECUTION_EVENT_SCHEMA_VERSION,event_id:randomUUID(),event_type:eventType,run_id:this.runId,job_id:jobId,sequence:replay.last_sequence+1,timestamp,causal_event_id:replay.last_event_id,data:sanitizeExecutionEventData(data)};validateEvent(event,event.sequence,replay,new Set(replay.events.map(e=>e.event_id)));const bytes=Buffer.from(JSON.stringify(event)+"\n","utf8");mkdirSync(dirname(this.path),{recursive:true});const fd=openSync(this.path,"a",0o600);try{const written=writeSync(fd,bytes,0,bytes.length,null);if(written!==bytes.length)throw new Error("short atomic execution event append");fsyncSync(fd)}finally{closeSync(fd)}const confirmed=replayExecutionEvents(this.path);if(confirmed.last_event_id!==event.event_id||confirmed.last_sequence!==event.sequence)throw new Error("execution event append verification failed");this.sequence=confirmed.last_sequence;this.causalEventId=confirmed.last_event_id;return event}finally{release()}}
+}

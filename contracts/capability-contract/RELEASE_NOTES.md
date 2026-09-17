@@ -1,5 +1,12 @@
 # Release notes — compatibility policy 1.0.0
 
+## Adaptive bounded elicitation API 1.0.0
+
+- Adds a strict, versioned known/assumed/unknown/contradictory field and evidence model built on the unchanged Artifact Recommendation API.
+- Selects at most three deterministic questions by architecture, safety, and evaluation decision value; deduplicates answered and previously asked context.
+- Makes optional unanswered fields preview-ready through explicit reversible defaults and consequences, while destructive, security, production, and untestable ambiguity always requires confirmation.
+- Adds public exports, result schema, specification, scenario fixtures, and novice/expert/sparse/contradictory/safety tests.
+
 ## Artifact recommendation API 1.0.0
 
 - Adds an independently versioned, deterministic six-type recommendation API and schema for Skill, agent, hook, MCP server, recipe, and plugin outcomes.

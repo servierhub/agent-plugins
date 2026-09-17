@@ -119,7 +119,7 @@ Start with:
 node dist/scripts/cli.js full-eval <plugin-directory> --workspace <plugin-directory>/evaluations/full-eval --dry-run --format json
 ```
 
-Follow returned commands and receipt paths, then rerun with `--resume`. Before a release claim, run `node dist/scripts/cli.js verify ...` with workflow-provided arguments. Ordered `next_actions` in a blocked result are authoritative.
+Follow returned commands and receipt paths, then rerun with `--resume`. Before a release claim, run `node dist/scripts/cli.js verify ...` with workflow-provided arguments. Ordered `next_actions` in a blocked result are authoritative. Non-dry runs append a sanitized durable history to `full-eval-events.jsonl`; see [the event stream contract](references/execution-event-stream.md).
 
 ## Quality bar
 

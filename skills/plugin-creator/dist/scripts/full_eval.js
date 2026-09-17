@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, linkSync, readFileSync, readdirSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { isPathWithin } from "./path_containment.js";
@@ -9,9 +9,11 @@ import { validate } from "./validate_goose_plugin.js";
 import { sourceHash } from "./package_manifest.js";
 import { verifyPlugin } from "./verify_plugin_gates.js";
 import { discoverPluginComponents } from "./component_evidence.js";
+import { ExecutionEventWriter, protectedArtifactRef, replayExecutionEvents } from "./execution_event_stream.js";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PHASES = ["validation", "planning", "execution", "grading", "aggregation", "review", "improvement", "verification"];
 const STATE_FILE = "full-eval-state.json";
+const EVENT_FILE = "full-eval-events.jsonl";
 const LOCK_FILE = STATE_FILE + ".lock";
 const q = (value) => JSON.stringify(value);
 function directories(path) { return existsSync(path) ? readdirSync(path, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name).sort() : []; }
@@ -79,7 +81,7 @@ function optionsFromState(state) { return { ...state.configuration, componentRec
 export function planFullEval(options) {
     const c = context(options), fp = fingerprints(c, options);
     const jobs = PHASES.map((phase, i) => { const id = "full-eval/" + phase, depends_on = i ? ["full-eval/" + PHASES[i - 1]] : []; return { id, phase, depends_on, input_hash: fp[phase], idempotency_key: hash({ artifact: fp.validation, plan: fp.planning, scenario: phase, configuration: fp[phase], run_index: 0 }), status: "planned", attempts: 0, detail: "pending", output_hashes: {} }; });
-    return { context: c, state: { schema_version: "1.0", command: "full-eval", graph_hash: hash(jobs.map(({ id, depends_on, input_hash, idempotency_key }) => ({ id, depends_on, input_hash, idempotency_key }))), revision: 0, status: "planned", configuration: persistedConfiguration(c, options), jobs } };
+    return { context: c, state: { schema_version: "1.0", command: "full-eval", run_id: randomUUID(), graph_hash: hash(jobs.map(({ id, depends_on, input_hash, idempotency_key }) => ({ id, depends_on, input_hash, idempotency_key }))), revision: 0, status: "planned", configuration: persistedConfiguration(c, options), jobs } };
 }
 export function transitionJob(job, event, detail = job.detail) {
     const allowed = { planned: ["start", "cancel", "skip"], running: ["succeed", "fail", "block", "cancel", "skip"], succeeded: ["succeed"], failed: ["fail", "retry"], blocked: ["block", "resume", "cancel"], cancelled: ["cancel", "resume"], skipped: ["skip", "resume"] };
@@ -100,6 +102,7 @@ function outputsCurrent(outputs) { return outputs !== undefined && Object.entrie
 function mergeState(plan, old, resume) {
     if (!old || !resume)
         return plan;
+    plan.run_id = old.run_id ?? old.graph_hash;
     let stale = false;
     const jobs = plan.jobs.map(job => { const prior = old.jobs.find(x => x.id === job.id); if (stale || !prior || prior.input_hash !== job.input_hash || (prior.status === "succeeded" && !outputsCurrent(prior.output_hashes))) {
         stale = true;
@@ -190,11 +193,19 @@ export function fullEval(options) {
         if (options.cancel) {
             if (!existing)
                 throw new Error("cannot cancel full-eval: no persisted graph exists in " + locator.workspace);
-            const persistedOptions = optionsFromState(existing), c = context(persistedOptions);
+            const persistedOptions = optionsFromState(existing), c = context(persistedOptions), eventPath = join(c.workspace, EVENT_FILE), events = new ExecutionEventWriter(eventPath, existing.run_id ?? existing.graph_hash);
+            const before = new Map(existing.jobs.map(job => [job.id, job.status]));
             let state = { ...existing, jobs: existing.jobs.map(j => j.status === "succeeded" || j.status === "cancelled" ? j : { ...j, status: "cancelled", detail: "cancelled by request", output_hashes: {} }), status: "cancelled" };
+            for (const job of state.jobs)
+                if (before.get(job.id) !== job.status) {
+                    events.append("job-transition", job.id, { phase: job.phase, status: job.status });
+                    events.append("phase-transition", job.id, { phase: job.phase, status: job.status });
+                }
+            events.append("cancellation", null, { status: "cancelled" });
             const expected = state.revision;
             state.revision++;
             checkpoint(statePath, state, expected);
+            events.append("checkpoint", null, { revision: state.revision, status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })) });
             return output(state, c, [], state.verification ?? null, options);
         }
         const effective = options.resume && existing ? { ...optionsFromState(existing), ...options, pluginPath: existing.configuration.pluginPath, workspace: existing.configuration.workspace, componentReceipts: options.componentReceipts ?? existing.configuration.componentReceipts } : options;
@@ -204,14 +215,25 @@ export function fullEval(options) {
             state.revision = existing.revision;
         const next_actions = [];
         let verification = state.verification ?? null;
-        const save = () => { const expected = state.revision; state.revision++; checkpoint(statePath, state, expected); };
+        const eventPath = join(c.workspace, EVENT_FILE), priorEvents = replayExecutionEvents(eventPath), runId = priorEvents.run_id ?? state.run_id, events = new ExecutionEventWriter(eventPath, runId);
+        state.run_id = runId;
+        if (!priorEvents.events.length)
+            events.append("evaluation-created", null, { status: "planned", graph_hash: state.graph_hash, plugin: protectedArtifactRef(c.root), workspace: protectedArtifactRef(c.workspace) });
+        else
+            events.append("heartbeat", null, { status: state.status, resume: Boolean(options.resume) });
+        const save = () => { const expected = state.revision; state.revision++; checkpoint(statePath, state, expected); events.append("checkpoint", null, { revision: state.revision, status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })) }); };
         const run = (phase, fn) => { const index = state.jobs.findIndex(j => j.phase === phase), job = state.jobs[index]; if (job.status === "succeeded")
-            return; const unmet = job.depends_on.map(id => state.jobs.find(j => j.id === id)).filter(j => j?.status !== "succeeded"); if (unmet.length) {
+            return; if (job.attempts > 0)
+            events.append("retry", job.id, { phase, attempt: job.attempts + 1 }); const unmet = job.depends_on.map(id => state.jobs.find(j => j.id === id)).filter(j => j?.status !== "succeeded"); if (unmet.length) {
             state.jobs[index] = { ...job, status: "blocked", detail: "blocked by prerequisites: " + unmet.map(j => j?.id + " (" + j?.status + ")").join(", "), output_hashes: {} };
+            events.append("job-transition", job.id, { phase, status: "blocked" });
+            events.append("phase-transition", job.id, { phase, status: "blocked" });
             save();
             return;
-        } state.jobs[index] = transitionJob(job, "start", "running"); save(); const result = fn(); state.jobs[index] = transitionJob(state.jobs[index], result.event, result.detail); if (result.event === "succeed")
-            state.jobs[index].output_hashes = Object.fromEntries((result.outputs ?? []).map(path => [resolve(path), fileHash(resolve(path))])); save(); };
+        } state.jobs[index] = transitionJob(job, "start", "running"); events.append("job-transition", job.id, { phase, status: "running", attempt: state.jobs[index].attempts }); events.append("phase-transition", job.id, { phase, status: "running" }); save(); const result = fn(); state.jobs[index] = transitionJob(state.jobs[index], result.event, result.detail); if (result.event === "succeed")
+            state.jobs[index].output_hashes = Object.fromEntries((result.outputs ?? []).map(path => [resolve(path), fileHash(resolve(path))])); events.append("job-transition", job.id, { phase, status: state.jobs[index].status, outputs: (result.outputs ?? []).map(path => protectedArtifactRef(path, fileHash(resolve(path)))) }); events.append("phase-transition", job.id, { phase, status: state.jobs[index].status }); if (result.event === "fail")
+            events.append("failure", job.id, { phase, status: "failed" }); if (result.event === "block")
+            events.append("approval-requested", job.id, { phase, status: "blocked", reason: "external evidence or human decision required" }); save(); };
         run("validation", () => { const schema = validateAgentPluginSchema(c.root), structural = validate(c.root), ok = schema.valid && !structural.errors.length; return { event: ok ? "succeed" : "fail", detail: ok ? "validation passed" : "validation failed" }; });
         run("planning", () => ({ event: "succeed", detail: c.skills.length + " bundled skill(s); deterministic graph " + state.graph_hash }));
         const missing = c.components.filter(x => !x.available);
@@ -235,6 +257,10 @@ export function fullEval(options) {
         if (verification !== null)
             state.verification = verification;
         save();
+        if (state.status === "success")
+            events.append("completion", null, { status: "success", archive: protectedArtifactRef(c.archive, fileHash(c.archive)) });
+        else if (state.status === "failure")
+            events.append("failure", null, { status: "failure" });
         return output(state, c, next_actions, verification, effective);
     }
     finally {
