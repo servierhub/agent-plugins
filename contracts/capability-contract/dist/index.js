@@ -15,3 +15,5 @@ export * from "./preflight.js";
 export * from "./fake-host-adapter.js";
 export * from "./compatibility-types.js";
 export * from "./compatibility.js";
+export * from "./challenge-types.js";
+export * from "./challenge.js";

@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildExecutionHeartbeat, createExecutionHeartbeat, type HeartbeatClock } from "../dist/scripts/execution_heartbeat.js";
+import { createEtaEstimatorState, estimateExecutionEta } from "../dist/scripts/execution_eta.js";
 
 class FakeClock implements HeartbeatClock {
   time = 0;
@@ -47,6 +48,15 @@ test("heartbeat summarizes execution without protected content", () => {
   assert.deepEqual(event.data.budget, { tokens: { consumed: 25, limit: 100, remaining: 75, fraction: .25 } });
   assert.deepEqual(event.data.checkpoint, { id: "cp-7", output: "[REDACTED]", nested: { authorization: "[REDACTED]", safe: "visible" } });
   assert.equal(JSON.stringify(event).includes("private"), false);
+});
+
+test("heartbeat includes only an explicitly supplied cautious ETA", () => {
+  const startedAt = Date.parse("2026-09-17T20:00:00Z");
+  const completedJobs = Array.from({ length: 5 }, (_, i) => ({ id: "h" + i, kind: "eval", startedAt, completedAt: startedAt + 10_000, concurrency: 1, phases: [{ name: "run", startedAt, completedAt: startedAt + 10_000 }] }));
+  const job = { id: "live", kind: "eval", startedAt, updatedAt: startedAt + 1_000, concurrency: 1, currentPhase: "run", phasePlan: ["run"], phases: [{ name: "run", status: "running" as const, startedAt }] };
+  const eta = estimateExecutionEta(createEtaEstimatorState({ completedJobs }), job, startedAt + 1_000);
+  assert.equal(buildExecutionHeartbeat({ startedAt, updatedAt: startedAt + 1_000 }, startedAt + 2_000).data.eta, undefined);
+  assert.deepEqual(buildExecutionHeartbeat({ startedAt, updatedAt: startedAt + 1_000, eta }, startedAt + 2_000).data.eta, eta);
 });
 
 test("fake-clock scheduler emits beyond two intervals, marks stale, and stops terminal", () => {

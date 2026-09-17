@@ -1,5 +1,11 @@
 # Release notes — compatibility policy 1.0.0
 
+## Contract/scenario challenge API 1.0.0
+
+- Adds a versioned pure API for isolated domain, UX, safety, and evaluation challenge findings, each citing a contract field or declared scenario.
+- Consolidates only true duplicates while preserving contradictions and cross-role disagreement; low-risk unresolved findings are advisory, while high-risk unresolved findings become explicit unknowns and blockers.
+- Accepted changes create the next immutable contract revision and invalidate the prior scenario hash. Strict hostile-input validation, deterministic hashing, bounded roles/findings, schemas, fixtures, tests, and package exports are included.
+
 ## Adaptive bounded elicitation API 1.0.0
 
 - Adds a strict, versioned known/assumed/unknown/contradictory field and evidence model built on the unchanged Artifact Recommendation API.

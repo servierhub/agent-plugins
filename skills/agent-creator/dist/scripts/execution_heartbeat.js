@@ -101,6 +101,7 @@ export function buildExecutionHeartbeat(snapshot, now = Date.now(), staleAfterMs
             stale: staleFor > staleAfterMs,
             stale_for_ms: staleFor,
             terminal,
+            ...(snapshot.eta ? { eta: redactHeartbeatValue(snapshot.eta, new WeakSet(), false) } : {}),
         },
     };
 }

@@ -1,5 +1,7 @@
 /** Privacy-safe progress heartbeats for long-running agent executions. */
 
+import type { ExecutionEtaEstimate } from "./execution_eta.js";
+
 export const EXECUTION_HEARTBEAT_SCHEMA = "agent-creator.execution-heartbeat/v1" as const;
 export const DEFAULT_HEARTBEAT_INTERVAL_MS = 30_000;
 
@@ -24,6 +26,8 @@ export interface ExecutorSnapshot {
   budgets?: Record<string, { consumed?: number; used?: number; limit?: number }>;
   terminal?: boolean;
   status?: string;
+  /** Optional cautious estimate generated from completed-job history. */
+  eta?: ExecutionEtaEstimate;
   [key: string]: unknown;
 }
 
@@ -41,6 +45,7 @@ export interface ExecutionHeartbeatEvent {
     stale: boolean;
     stale_for_ms: number;
     terminal: boolean;
+    eta?: ExecutionEtaEstimate;
   };
 }
 
@@ -147,6 +152,7 @@ export function buildExecutionHeartbeat(snapshot: ExecutorSnapshot, now = Date.n
       stale: staleFor > staleAfterMs,
       stale_for_ms: staleFor,
       terminal,
+      ...(snapshot.eta ? { eta: redactHeartbeatValue(snapshot.eta, new WeakSet<object>(), false) as ExecutionEtaEstimate } : {}),
     },
   };
 }
