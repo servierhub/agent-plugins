@@ -126,7 +126,7 @@ ${help(name)}`);
         }
         else if (!parsed.quiet || code !== 0) {
             const result = payload;
-            console.log([`full-eval: ${result.status}`, ...(result.phases ?? []).map((phase) => `[${phase.status}] ${phase.name}${phase.detail ? `: ${phase.detail}` : ""}`), ...(result.next_actions ?? []).map((action) => `NEXT: ${action}`)].join("\n"));
+            console.log([`full-eval: ${result.status}`, ...(result.phases ?? []).map((phase) => `[${phase.status}] ${phase.name}${phase.detail ? `: ${phase.detail}` : ""}`), ...(result.checkpoint ? [`checkpoint: ${result.checkpoint.kind} (${result.checkpoint.status})`] : []), ...(result.next_actions ?? []).map((action) => `NEXT: ${action}`), ...(result.executable_actions ?? []).map((action) => `RUN ${action.order}: ${action.command}`)].join("\n"));
         }
         if (stderr)
             console.error(stderr);

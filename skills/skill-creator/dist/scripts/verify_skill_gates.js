@@ -260,6 +260,15 @@ export function verifySkill(options) {
         status,
         generated_at: new Date().toISOString(),
         gates,
+        evaluation_provenance: workspace ? {
+            skill_source_sha256: currentSourceHash,
+            eval_plan_sha256: evalPlan.value,
+            execution_evidence_sha256: evidenceProvenance.value,
+            benchmark_sha256: existsSync(join(workspace, "benchmark.json")) ? artifactHash(join(workspace, "benchmark.json")) : null,
+            benchmark_markdown_sha256: existsSync(join(workspace, "benchmark.md")) ? artifactHash(join(workspace, "benchmark.md")) : null,
+            review_sha256: existsSync(join(workspace, "review.html")) ? artifactHash(join(workspace, "review.html")) : null,
+            analysis_sha256: existsSync(join(workspace, "post-evaluation-pattern-review.json")) ? artifactHash(join(workspace, "post-evaluation-pattern-review.json")) : null,
+        } : null,
         critical_failures: Object.entries(gates)
             .filter(([, item]) => item.required && item.status === "fail")
             .map(([gateName]) => gateName),
@@ -274,7 +283,9 @@ export function verifySkill(options) {
                 ? {
                     evaluation_workspace: workspace,
                     benchmark: join(workspace, "benchmark.json"),
+                    benchmark_markdown: join(workspace, "benchmark.md"),
                     review: join(workspace, "review.html"),
+                    analysis: join(workspace, "post-evaluation-pattern-review.json"),
                 }
                 : {}),
         },

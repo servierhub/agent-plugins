@@ -1,5 +1,7 @@
 export * from "./types.js";
 export * from "./validation.js";
+export * from "./recommendation-types.js";
+export * from "./recommendation.js";
 export * from "./evaluation-types.js";
 export * from "./evaluation.js";
 export * from "./result-types.js";

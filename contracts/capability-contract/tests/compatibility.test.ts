@@ -16,6 +16,14 @@ const expected=JSON.parse(readFileSync(join(base,"expected-public-surfaces.json"
 const loadSource=(file:string)=>readFileSync(join(repo,file),"utf8");
 function filesBelow(dir:string):string[]{return readdirSync(dir).flatMap(name=>{const p=join(dir,name);return statSync(p).isDirectory()?filesBelow(p):[relative(base,p).split(String.fromCharCode(92)).join("/")];});}
 
+test("recommendation schema and API package surfaces are explicitly classified",()=>{
+  const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
+  assert.deepEqual(Object.keys(pkg.exports).filter((key:string)=>key.includes("recommendation")).sort(),["./recommendation","./recommendation-schema/1.0.0","./recommendation-types"]);
+  assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="contract.artifact-recommendation.v1")?.validatorId,"schema:artifact-recommendation");
+  assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="schema.artifact-recommendation.v1")?.supportState,"supported");
+  assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="api.recommend-artifact.v1")?.supportState,"unsupported");
+});
+
 test("source-derived discovery metadata and outcome IDs exactly match the registry",()=>{
   assert.equal(discovery.manifestVersion,"2.0.0");
   assert.equal(expected.manifestVersion,"2.0.0");
@@ -233,6 +241,8 @@ test("full-eval validators accept emitted cancellation envelopes and deeply vali
   assert.equal(plugin.status,"cancelled");assert.equal(skill.status,"cancelled");
   assert.equal(validateSurfaceShape("plugin.full-eval.v1",plugin).valid,true);
   assert.equal(validateSurfaceShape("skill.full-eval.v1",skill).valid,true);
+  assert.equal(skill.schema_version,"1.1");assert.equal(skill.checkpoint,null);assert.deepEqual(skill.executable_actions,[]);
+  const legacySkill=clone(skill);legacySkill.schema_version="1.0";delete legacySkill.checkpoint;delete legacySkill.executable_actions;assert.equal(validateSurfaceShape("skill.full-eval.v1",legacySkill).valid,true);
 
   const malformedPluginJobs=[{}, {...plugin.jobs[0],status:"unknown"}, {...plugin.jobs[0],depends_on:[7]}, {...plugin.jobs[0],input_hash:"bad"}, {...plugin.jobs[0],idempotency_key:"bad"}, {...plugin.jobs[0],output_hashes:{artifact:"bad"}}, {...plugin.jobs[0],extra:true}];
   for(const job of malformedPluginJobs){const value=clone(plugin);value.jobs=[job];assert.equal(validateSurfaceShape("plugin.full-eval.v1",value).valid,false,JSON.stringify(job));}

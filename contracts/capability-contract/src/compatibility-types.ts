@@ -1,6 +1,6 @@
 export const COMPATIBILITY_POLICY_VERSION = "1.0.0" as const;
 export type CompatibilitySupportState = "supported" | "legacy-readable" | "unsupported" | "ambiguous";
-export type CompatibilityKind = "envelope" | "workspace-layout" | "receipt" | "status-exit-family" | "shared-contract" | "schema-document" | "protocol-message" | "evaluation-definition" | "evaluation-artifact" | "review-artifact";
+export type CompatibilityKind = "envelope" | "workspace-layout" | "receipt" | "status-exit-family" | "shared-contract" | "schema-document" | "protocol-message" | "evaluation-definition" | "evaluation-artifact" | "review-artifact" | "public-api";
 export type CompatibilityArtifactFormat = "json" | "jsonl" | "html" | "markdown" | "layout";
 export type CompatibilityCreator = "shared" | "skill-creator" | "agent-creator" | "hook-creator" | "plugin-creator";
 export interface CompatibilityDeprecation { window: string; replacement: string; }

@@ -11,6 +11,7 @@ import { auditSkill } from "./audit_skill.js";
 import { designEvals } from "./design_evals.js";
 import { analyzeEvaluation } from "./analyze_evaluation.js";
 import { executePairedRuns } from "./paired_execution.js";
+import { configuredGooseArgv } from "./runners/goose.js";
 import { artifactHash, compositeHash, listRunDirs, validateExecutionEvidence, } from "./evaluation_provenance.js";
 const SCHEMA_VERSION = "2.0";
 const STATE_FILE = ".full-eval-job.json";
@@ -102,7 +103,18 @@ function loadJob(path, identity) {
 function checkpoint(job) { job.revision += 1; atomicJson(join(job.workspace, STATE_FILE), job); }
 function publicStatus(status) { return status === "succeeded" ? "complete" : status === "blocked" ? "blocked" : status === "failed" || status === "cancelled" ? "failed" : status === "running" || status === "stale" ? "planned" : "skipped"; }
 function publicPhases(job, dryRun = false) { return job.phases.map(p => ({ name: p.name, status: dryRun ? (p.status === "succeeded" ? "complete" : "planned") : publicStatus(p.status), artifacts: p.artifacts, ...(p.detail ? { detail: p.detail } : {}), ...(p.error && !p.detail ? { detail: p.error } : {}) })); }
-function envelope(options, job, status, next_actions, extra = {}) { const exit_code = status === "success" || status === "planned" ? 0 : status === "blocked" ? 3 : 1; return { schema_version: "1.0", command: "full-eval", status, exit_code, skill: job.skill, workspace: job.workspace, eval_set: job.eval_set, resume: Boolean(options.resume), dry_run: Boolean(options.dryRun), phases: publicPhases(job, Boolean(options.dryRun)), job: { schema_version: job.schema_version, id: job.job_id, revision: job.revision, status: job.status, state_file: join(job.workspace, STATE_FILE), phases: job.phases }, ...extra, next_actions }; }
+function shellQuote(value) { return value ? `'${value.replaceAll("'", `'"'"'`)}'` : "''"; }
+function action(order, id, description, argv) { return { order, id, description, argv, command: argv.map(shellQuote).join(" ") }; }
+function resumeArgv(job, options, extra = []) { const argv = ["skill-creator", "full-eval", job.skill, "--workspace", job.workspace, "--eval-set", job.eval_set, "--baseline", job.baseline, "--resume"]; if (options.execute)
+    argv.push("--execute"); if (options.runner)
+    argv.push("--runner", options.runner); if (options.model)
+    argv.push("--model", options.model); if (options.baselineSkillPath)
+    argv.push("--baseline-skill", resolve(options.baselineSkillPath)); return [...argv, ...extra]; }
+function executableActions(job, options, status) { if (status !== "blocked" && status !== "cancelled")
+    return []; const human = job.phases.find(p => p.name === "verify")?.status === "blocked" && job.phases.find(p => p.name === "static-review")?.status === "succeeded"; const executionBlocked = options.execute && job.phases.find(p => p.name === "paired-runs-and-grading")?.status === "blocked"; const actions = []; if (executionBlocked)
+    actions.push(action(1, "preflight", "Verify that the configured Goose host is now available.", [...configuredGooseArgv(), "--version"])); if (human)
+    actions.push(action(actions.length + 1, "review", "Open the generated review checkpoint.", ["xdg-open", join(job.workspace, "review.html")])); actions.push(action(actions.length + 1, "resume", human ? "Record the human decision and resume at verification." : "Resume at the first incomplete phase after satisfying the reported requirements.", resumeArgv(job, options, human ? ["--human-review", "pass", "--tests-status", String(options.testsStatus ?? "pass")] : []))); return actions; }
+function envelope(options, job, status, next_actions, extra = {}) { const exit_code = status === "success" || status === "planned" ? 0 : status === "blocked" ? 3 : 1; const checkpoint = status === "blocked" && job.phases.find(p => p.name === "verify")?.status === "blocked" && job.phases.find(p => p.name === "static-review")?.status === "succeeded" ? { kind: "human-review", status: "decision-required", failure: false, review: join(job.workspace, "review.html") } : null; return { schema_version: "1.1", command: "full-eval", status, exit_code, skill: job.skill, workspace: job.workspace, eval_set: job.eval_set, resume: Boolean(options.resume), dry_run: Boolean(options.dryRun), phases: publicPhases(job, Boolean(options.dryRun)), job: { schema_version: job.schema_version, id: job.job_id, revision: job.revision, status: job.status, state_file: join(job.workspace, STATE_FILE), phases: job.phases }, checkpoint, ...extra, next_actions, executable_actions: executableActions(job, options, status) }; }
 function artifactExists(path) { return isDir(path) || existsSync(path); }
 function captureArtifactHashes(phase) { phase.artifact_hashes = Object.fromEntries(phase.artifacts.map(path => [path, artifactHash(path)])); }
 function artifactsMatch(phase) { return Boolean(phase.artifact_hashes) && phase.artifacts.every(path => artifactExists(path) && phase.artifact_hashes?.[path] === artifactHash(path)); }
@@ -323,7 +335,7 @@ export async function fullEval(options) {
                     job.status = verification.status === "fail" ? "failed" : "blocked";
                     checkpoint(job);
                     if (!options.humanReview)
-                        next.push("Review " + join(workspace, "review.html") + ", then rerun full-eval --resume --human-review pass|fail.");
+                        next.push("Human decision required: review " + join(workspace, "review.html") + "; this checkpoint is blocked, not failed.");
                     if (!options.testsStatus)
                         next.push("Provide deterministic test evidence with --tests-status pass|fail|blocked.");
                     return envelope(options, job, verification.status, next, { receipt: receipt ?? validateEvaluationReceipt(workspace), verification });

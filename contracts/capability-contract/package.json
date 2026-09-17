@@ -14,7 +14,16 @@
     "./host-adapter-schema/1.0.0": "./schema/1.0.0/host-execution-adapter.schema.json",
     "./host-event-schema/1.0.0": "./schema/1.0.0/host-execution-event.schema.json",
     "./compatibility": "./dist/compatibility.js",
-    "./compatibility-types": "./dist/compatibility-types.js"
+    "./compatibility-types": "./dist/compatibility-types.js",
+    "./recommendation": {
+      "types": "./dist/recommendation.d.ts",
+      "default": "./dist/recommendation.js"
+    },
+    "./recommendation-types": {
+      "types": "./dist/recommendation-types.d.ts",
+      "default": "./dist/recommendation-types.js"
+    },
+    "./recommendation-schema/1.0.0": "./schema/recommendation/1.0.0/artifact-recommendation.schema.json"
   },
   "files": [
     "dist",
@@ -28,7 +37,9 @@
     "fixtures/host-adapter",
     "COMPATIBILITY_SPECIFICATION.md",
     "RELEASE_NOTES.md",
-    "fixtures/compatibility"
+    "fixtures/compatibility",
+    "ARTIFACT_RECOMMENDATION_SPECIFICATION.md",
+    "fixtures/recommendation"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

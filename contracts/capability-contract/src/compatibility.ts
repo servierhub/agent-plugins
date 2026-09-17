@@ -60,6 +60,60 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "validatorId": "schema:result-contract"
   },
   {
+    "id": "api.recommend-artifact.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/recommendation.ts",
+    "sourceFieldOrLayout": "recommendArtifact",
+    "sourceEvidence": "export function recommendArtifact(input: unknown): ArtifactRecommendationV1",
+    "kind": "public-api",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "artifactFormat": "json",
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "schema.artifact-recommendation.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/schema/recommendation/1.0.0/artifact-recommendation.schema.json",
+    "sourceFieldOrLayout": "artifact-recommendation.schema.json",
+    "sourceEvidence": "\"$id\": \"https://agent-plugins.dev/schemas/artifact-recommendation/1.0.0\"",
+    "kind": "schema-document",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "artifactFormat": "json",
+    "validatorId": "shape:artifact-recommendation-schema-document"
+  },
+  {
+    "id": "contract.artifact-recommendation.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/recommendation-types.ts",
+    "sourceFieldOrLayout": "ArtifactRecommendationV1",
+    "sourceEvidence": "ARTIFACT_RECOMMENDATION_VERSION = \"1.0.0\"",
+    "kind": "shared-contract",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": "/version",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "artifactFormat": "json",
+    "validatorId": "schema:artifact-recommendation"
+  },
+  {
     "id": "schema.host-adapter.v1",
     "creator": "shared",
     "sourceFile": "contracts/capability-contract/src/host-adapter-types.ts",
@@ -886,12 +940,13 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "creator": "skill-creator",
     "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
     "sourceFieldOrLayout": "skill.full-eval.v1",
-    "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
+    "sourceEvidence": "schema_version:\"1.1\",command:\"full-eval\"",
     "kind": "envelope",
     "readVersionsOrRanges": [
-      "1.0"
+      "1.0",
+      "1.1"
     ],
-    "emittedVersion": "1.0",
+    "emittedVersion": "1.1",
     "versionField": "/schema_version",
     "supportState": "supported",
     "deprecation": null,

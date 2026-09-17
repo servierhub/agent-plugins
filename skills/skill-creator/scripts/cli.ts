@@ -122,8 +122,8 @@ ${help(name)}`);
     if (parsed.format === "json") {
       if (!parsed.quiet || code !== 0) console.log(JSON.stringify(payload, null, 2));
     } else if (!parsed.quiet || code !== 0) {
-      const result = payload as { status?: string; phases?: Array<{ name: string; status: string; detail?: string }>; next_actions?: string[] };
-      console.log([`full-eval: ${result.status}`, ...(result.phases ?? []).map((phase) => `[${phase.status}] ${phase.name}${phase.detail ? `: ${phase.detail}` : ""}`), ...(result.next_actions ?? []).map((action) => `NEXT: ${action}`)].join("\n"));
+      const result = payload as { status?: string; checkpoint?: { kind?: string; status?: string }; phases?: Array<{ name: string; status: string; detail?: string }>; next_actions?: string[]; executable_actions?: Array<{ order: number; command: string }> };
+      console.log([`full-eval: ${result.status}`, ...(result.phases ?? []).map((phase) => `[${phase.status}] ${phase.name}${phase.detail ? `: ${phase.detail}` : ""}`), ...(result.checkpoint ? [`checkpoint: ${result.checkpoint.kind} (${result.checkpoint.status})`] : []), ...(result.next_actions ?? []).map((action) => `NEXT: ${action}`), ...(result.executable_actions ?? []).map((action) => `RUN ${action.order}: ${action.command}`)].join("\n"));
     }
     if (stderr) console.error(stderr);
   } else if (parsed.format === "json") {

@@ -1,5 +1,16 @@
 # Release notes — compatibility policy 1.0.0
 
+## Artifact recommendation API 1.0.0
+
+- Adds an independently versioned, deterministic six-type recommendation API and schema for Skill, agent, hook, MCP server, recipe, and plugin outcomes.
+- The existing four-type CapabilityContractV1 enum is unchanged. Recommendations are side-effect-free, strictly validated, explicit about ambiguity and override disposition, and conservative about portability.
+- Compatibility inventory now classifies the recommendation wire contract and schema as supported serialized surfaces, and the `recommendArtifact` function as a TypeScript-only public API.
+
+## Skill full-eval envelope 1.1
+
+- Registers the additive Skill full-eval 1.1 envelope with `checkpoint` and ordered `executable_actions`, while retaining 1.0 read compatibility.
+- Refreshes source evidence for the full-eval and verification producers, including benchmark Markdown, evaluation analysis, and review artifacts.
+
 ## Breaking
 
 - Migration preview inputs now require `entryType: "regular-file" | "directory" | "symlink"`. Directories and symlinks are rejected; symlink targets are never followed.

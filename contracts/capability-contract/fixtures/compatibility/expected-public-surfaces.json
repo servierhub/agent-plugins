@@ -32,6 +32,36 @@
       }
     },
     {
+      "id": "api.recommend-artifact.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.recommend-artifact.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "schema.artifact-recommendation.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/schema.artifact-recommendation.v1.json",
+        "diagnostic": null,
+        "validatorId": "shape:artifact-recommendation-schema-document"
+      }
+    },
+    {
+      "id": "contract.artifact-recommendation.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.artifact-recommendation.v1.json",
+        "diagnostic": null,
+        "validatorId": "schema:artifact-recommendation"
+      }
+    },
+    {
       "id": "schema.host-adapter.v1",
       "expectedOutcome": {
         "mode": "read-supported",

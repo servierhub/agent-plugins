@@ -3,8 +3,53 @@ import { existsSync, statSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import { RunnerError } from "./base.js";
 import { PairedExecutionError } from "./paired.js";
-function shlexSplit(command) { const parts = []; const regex = /"([^"]*)"|'([^']*)'|(\S+)/g; let match; while ((match = regex.exec(command)) !== null)
-    parts.push(match[1] ?? match[2] ?? match[3]); return parts; }
+export function commandArgv(command) { const argv = [], length = command.length; let value = "", started = false, quote = null; for (let i = 0; i < length; i++) {
+    const char = command[i];
+    if (quote === "'") {
+        if (char === "'")
+            quote = null;
+        else
+            value += char;
+        started = true;
+        continue;
+    }
+    if (quote === '\"') {
+        if (char === '\"')
+            quote = null;
+        else if (char === "\\" && i + 1 < length && ['\"', '\\', '$', '`'].includes(command[i + 1]))
+            value += command[++i];
+        else
+            value += char;
+        started = true;
+        continue;
+    }
+    if (/\s/.test(char)) {
+        if (started) {
+            argv.push(value);
+            value = "";
+            started = false;
+        }
+        continue;
+    }
+    if (char === "'" || char === '\"') {
+        quote = char;
+        started = true;
+        continue;
+    }
+    if (char === "\\") {
+        if (++i >= length)
+            throw new RunnerError("Goose command ends with an incomplete escape");
+        value += command[i];
+        started = true;
+        continue;
+    }
+    value += char;
+    started = true;
+} if (quote)
+    throw new RunnerError("Goose command contains an unterminated quote"); if (started)
+    argv.push(value); return argv; }
+export function configuredGooseArgv(command) { const raw = command || process.env.SKILL_CREATOR_GOOSE_COMMAND || "goose", argv = commandArgv(raw); if (!argv.length)
+    throw new RunnerError("SKILL_CREATOR_GOOSE_COMMAND cannot be empty"); return argv; }
 function text(value) { if (typeof value === "string")
     return value; if (Array.isArray(value))
     return value.map(text).filter(Boolean).join("\n"); if (!value || typeof value !== "object")
@@ -38,8 +83,7 @@ catch { } if (!output.trim())
     throw new PairedExecutionError("invalid-response", "Goose stream contained no output", "invalid-response"); const raw = payload.expectations ?? payload.grading?.expectations ?? terminal.expectations; const reported = Array.isArray(raw) ? raw : []; const expectations = assertions.map((assertion, index) => ({ text: assertion, passed: reported[index]?.passed === true, evidence: String(reported[index]?.evidence ?? "Execution host did not return grading for this assertion") })); const usage = terminal.usage ?? payload.usage ?? {}; const tokenCandidate = terminal.tokens ?? payload.tokens ?? usage.total_tokens ?? usage.totalTokens ?? null; return { output, expectations, tokens: Number.isFinite(Number(tokenCandidate)) ? Number(tokenCandidate) : null }; }
 export class GooseRunner {
     command;
-    constructor(command) { const raw = command || process.env.SKILL_CREATOR_GOOSE_COMMAND || "goose"; this.command = shlexSplit(raw); if (!this.command.length)
-        throw new RunnerError("SKILL_CREATOR_GOOSE_COMMAND cannot be empty"); }
+    constructor(command) { this.command = configuredGooseArgv(command); }
     textCommand(model) { const command = [...this.command, "run", "--no-session", "--quiet", "--output-format", "text", "--instructions", "-"]; if (model)
         command.push("--model", model); return command; }
     streamCommand(query, model) { const command = [...this.command, "run", "--no-session", "--quiet", "--output-format", "stream-json", "--text", query]; if (model)
