@@ -5,10 +5,12 @@ import { fileURLToPath } from "node:url";
 import { validate } from "./validate_goose_plugin.js";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { fullEval } from "./full_eval.js";
+import { renderCiProgress, renderHistoricalReview, renderMachineJsonl, renderTerminalProgress } from "./progress_projections.js";
+import { replayExecutionEvents } from "./execution_event_stream.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nExit codes: 0 success, 1 failure, 2 usage, 3 blocked.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -29,14 +31,14 @@ function parseCommon(args) { let format = "text", mode = "strict-authoring", qui
     }
     else if (a === "--format") {
         const v = args[++i];
-        if (v !== "text" && v !== "json")
-            return "--format must be text or json";
+        if (!["text", "json", "jsonl", "ci", "review"].includes(v))
+            return "--format must be text, json, jsonl, ci, or review";
         format = v;
     }
     else if (a.startsWith("--format=")) {
         const v = a.slice(9);
-        if (v !== "text" && v !== "json")
-            return "--format must be text or json";
+        if (!["text", "json", "jsonl", "ci", "review"].includes(v))
+            return "--format must be text, json, jsonl, ci, or review";
         format = v;
     }
     else
@@ -78,7 +80,8 @@ async function runFullEval(o) {
     if (!o.args[0] || o.args[0].startsWith("-"))
         return usage("full-eval requires a plugin directory");
     const options = { pluginPath: o.args[0] }, receipts = [];
-    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--min-pass-rate", "--min-delta", "--total-budget-ms", "--cancellation-grace-ms"]);
+    let progressMode = o.quiet ? "quiet" : "normal";
+    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--min-pass-rate", "--min-delta", "--total-budget-ms", "--cancellation-grace-ms", "--progress"]);
     for (let i = 1; i < o.args.length; i++) {
         const a = o.args[i];
         if (a === "--dry-run")
@@ -91,7 +94,12 @@ async function runFullEval(o) {
             const v = o.args[++i];
             if (!v || v.startsWith("--"))
                 return usage(a + " requires a value");
-            if (a === "--component-receipt")
+            if (a === "--progress") {
+                if (!["quiet", "normal", "verbose"].includes(v))
+                    return usage("--progress must be quiet, normal, or verbose");
+                progressMode = v;
+            }
+            else if (a === "--component-receipt")
                 receipts.push(v);
             else if (a === "--workspace")
                 options.workspace = v;
@@ -119,12 +127,22 @@ async function runFullEval(o) {
         options.componentReceipts = receipts;
     try {
         const result = await fullEval(options);
-        const text = ["full-eval: " + result.status, ...result.phases.map(p => "[" + p.status + "] " + p.name + ": " + p.detail), ...result.next_actions.map(a => "NEXT: " + a)].join("\n");
-        emit(result, text, o);
+        if (!o.quiet) {
+            if (o.format === "json")
+                console.log(JSON.stringify(result, null, 2));
+            else {
+                const events = options.dryRun ? [] : replayExecutionEvents(result.event_file).events, projection = o.format === "jsonl" ? renderMachineJsonl(events) : o.format === "ci" ? renderCiProgress(events) : o.format === "review" ? renderHistoricalReview(events) : renderTerminalProgress(events, progressMode);
+                if (projection.output)
+                    process.stdout.write(projection.output + (projection.output.endsWith("\n") ? "" : "\n"));
+            }
+        }
         return result.exit_code;
     }
     catch (error) {
-        console.error(error.message);
+        if (o.format === "jsonl")
+            console.error(JSON.stringify({ kind: "full-eval-error", message: error.message }));
+        else
+            console.error(error.message);
         return 1;
     }
 }

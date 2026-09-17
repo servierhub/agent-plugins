@@ -22,6 +22,7 @@ Build once, then use the unified entrypoint for validation, evaluation, aggregat
 
 ```bash
 npm install && npm run build
+node dist/scripts/cli.js candidate /path/to/conversation --idea "plain-language idea"
 node dist/scripts/cli.js validate /path/to/skill
 node dist/scripts/cli.js audit /path/to/skill --format json
 node dist/scripts/cli.js design-evals /path/to/skill/evals/evals.json --skill-path /path/to/skill --format json
@@ -43,6 +44,12 @@ Every subcommand accepts `--help`, `--format text|json`, and `--quiet`. Exit cod
 `validate` checks Agent Skills format conformance. `audit` checks repository authoring policy. `design-evals` checks scenario realism, discrimination, capabilities, atomic assertions, fixtures, and navigation expectations. `freeze-evals` derives five elicitation shells per material capability and freezes completed scenarios, deterministic assertions, qualitative review questions, execution context, edits, provenance, and a canonical content hash. `analyze` separates completed, unavailable, and blocked evidence, then maps failed assertions and navigation results to authoring patterns. Packaging blocks error-level audit findings and reports warnings.
 
 `full-eval` uses the fixed phase order `validate → authoring-audit → evaluation-design → scaffold → paired-runs-and-grading → aggregate → static-review → receipt → post-evaluation-pattern-review → verify`. Its result always includes `status`, `phases`, and `next_actions`; `--format json` wraps that result in the unified CLI envelope. `--dry-run` is non-mutating. Normal reruns and `--resume` preserve existing artifacts and continue from the first unmet requirement. Without `--execute`, the orchestrator never invokes an LLM itself: exit code `3` identifies the exact paired output, grading, timing, test, or human-review evidence an agent or person must provide before rerunning. With `--execute`, one invocation advances through paired execution, grading, aggregation, static review, analysis, receipt, and gates. When human review is the only decision left, exit code `3` is a non-failing `human-review` checkpoint with ordered `executable_actions`; resume starts at verification without rerunning completed phases. The source-bound `<workspace>/receipt.json` records hashes for the Skill, eval plan, execution evidence, benchmark JSON/Markdown, review, and analysis.
+
+## Idea to candidate
+
+The `candidate` command provides a durable conversational checkpoint from a plain-language idea through routing, bounded elicitation, contract preview, exact-hash contract confirmation, frozen scenario confirmation, and isolated launch. Re-run it with the same workspace in a later session to resume without mutating a read-only view. The default output is a short novice summary, with assumptions and risks always included in the final report; `--mode expert`, `--detail`, and repeatable `--override path=value` expose supported contract controls. Unsupported budget overrides fail explicitly.
+
+Only `--fake` execution is bundled. It writes beneath the realpath-contained conversation workspace, performs no production mutation, reports generation as `simulated`, and reports validation and evaluation as `not-run`. Use it to test the flow, not to approve a candidate.
 
 ## Legacy validate and package entrypoints
 

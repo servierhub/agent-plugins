@@ -71,3 +71,14 @@ redacted, including Bearer credentials, API-key assignments, AWS access keys,
 GitHub tokens, and `sk-` keys. Full/private prompt content must never be stored.
 Artifacts are represented only by opaque protected references and require
 separate authorization to resolve.
+
+## Progress projections
+
+`progress_projections` is a pure replay layer over the validated canonical event array. It does not read checkpoints, the clock, environment variables, or terminal capabilities. Each projection therefore reports the same current phase, job counts, lifecycle state, and consumed/total/remaining budget:
+
+- terminal text: `--format text --progress quiet|normal|verbose` (plain text, no ANSI dependency);
+- machine stream: `--format jsonl` (one JSON object per non-empty line and no human lines);
+- CI log: `--format ci` (groups summary, failures, protected artifact links, and resume guidance);
+- historical review: `--format review` (accessible, script-free HTML replay with explicit `live` or `completed` lifecycle labels).
+
+`evaluation-created` may include `job_count` and a budget snapshot. Checkpoints may include a budget snapshot. These optional v1 fields are emitted by `full_eval` so count and budget projections remain event-derived; protected artifact references never reveal local paths.

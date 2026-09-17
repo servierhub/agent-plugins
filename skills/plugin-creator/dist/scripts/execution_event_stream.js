@@ -50,6 +50,7 @@ function required(value, keys, line) { for (const key of keys)
         fail(line, `missing data field ${key}`); }
 function str(value) { return typeof value === "string" && value.length > 0; }
 function enumValue(value, values) { return typeof value === "string" && values.has(value); }
+function budget(value) { return object(value) && Object.keys(value).every(k => ["consumed_ms", "total_ms", "remaining_ms"].includes(k)) && [value.consumed_ms, value.total_ms, value.remaining_ms].every(x => typeof x === "number" && Number.isFinite(x) && x >= 0); }
 function artifact(value) { return object(value) && value.kind === "protected-artifact-ref" && typeof value.ref === "string" && /^sha256:[a-f0-9]{64}$/.test(value.ref) && Object.keys(value).every(k => ["kind", "ref", "sha256"].includes(k)) && (value.sha256 === undefined || typeof value.sha256 === "string" && /^[a-f0-9]{64}$/.test(value.sha256)); }
 function validateData(event, line) {
     const d = event.data;
@@ -57,9 +58,10 @@ function validateData(event, line) {
     let req = [];
     switch (event.event_type) {
         case "evaluation-created":
-            allowed = req = ["status", "graph_hash", "plugin", "workspace"];
+            allowed = ["status", "graph_hash", "plugin", "workspace", "job_count", "budget"];
+            req = ["status", "graph_hash", "plugin", "workspace"];
             required(d, req, line);
-            if (d.status !== "planned" || !str(d.graph_hash) || !artifact(d.plugin) || !artifact(d.workspace))
+            if (d.status !== "planned" || !str(d.graph_hash) || !artifact(d.plugin) || !artifact(d.workspace) || d.job_count !== undefined && (!Number.isInteger(d.job_count) || Number(d.job_count) < 0) || d.budget !== undefined && !budget(d.budget))
                 fail(line, "invalid evaluation-created data");
             break;
         case "phase-transition":
@@ -89,9 +91,10 @@ function validateData(event, line) {
                 fail(line, "invalid retry data");
             break;
         case "checkpoint":
-            allowed = req = ["revision", "status", "state", "jobs"];
+            allowed = ["revision", "status", "state", "jobs", "budget"];
+            req = ["revision", "status", "state", "jobs"];
             required(d, req, line);
-            if (!Number.isInteger(d.revision) || Number(d.revision) < 1 || !enumValue(d.status, RUN_STATUS) || !artifact(d.state) || !Array.isArray(d.jobs) || !d.jobs.every(j => object(j) && Object.keys(j).every(k => ["id", "phase", "status", "attempts"].includes(k)) && str(j.id) && str(j.phase) && enumValue(j.status, JOB_STATUS) && Number.isInteger(j.attempts) && Number(j.attempts) >= 0))
+            if (d.budget !== undefined && !budget(d.budget) || !Number.isInteger(d.revision) || Number(d.revision) < 1 || !enumValue(d.status, RUN_STATUS) || !artifact(d.state) || !Array.isArray(d.jobs) || !d.jobs.every(j => object(j) && Object.keys(j).every(k => ["id", "phase", "status", "attempts"].includes(k)) && str(j.id) && str(j.phase) && enumValue(j.status, JOB_STATUS) && Number.isInteger(j.attempts) && Number(j.attempts) >= 0))
                 fail(line, "invalid checkpoint data");
             break;
         case "cancellation":

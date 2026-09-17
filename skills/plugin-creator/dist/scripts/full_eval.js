@@ -10,6 +10,7 @@ import { sourceHash } from "./package_manifest.js";
 import { verifyPlugin } from "./verify_plugin_gates.js";
 import { discoverPluginComponents } from "./component_evidence.js";
 import { ExecutionEventWriter, protectedArtifactRef, replayExecutionEvents } from "./execution_event_stream.js";
+import { projectExecutionProgress } from "./progress_projections.js";
 import { ExecutionLease, atomicCheckpoint, beginAttempt, chargeBudget, cleanupCheckpointPartials, clearCancellation, elapsedBudgetMs, finishAttempt, forceTerminate, mayRetry, newReliabilityLedger, normalizePlan, readCancellation, readLease, remainingBudgetMs, repairInterruptedJsonl, requestCancellation, sleep } from "./execution_reliability.js";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PHASES = ["validation", "planning", "execution", "grading", "aggregation", "review", "improvement", "verification"];
@@ -159,7 +160,7 @@ function checkpoint(path, state, expectedRevision, lease) {
         write();
 }
 function legacyStatus(status) { return status === "succeeded" ? "pass" : status === "failed" ? "fail" : status === "cancelled" || status === "skipped" ? "skipped" : status; }
-function output(state, c, next_actions, verification, o) { const status = state.status, exit_code = status === "success" ? 0 : status === "blocked" || status === "cancelled" ? 3 : status === "planned" ? 0 : 1; const phases = state.jobs.map(j => ({ name: j.phase, status: legacyStatus(j.status), detail: j.detail })); return { schema_version: "1.0", command: "full-eval", status, exit_code, dry_run: Boolean(o.dryRun), resume: Boolean(o.resume), plugin: c.root, workspace: c.workspace, archive: c.archive, state_file: join(c.workspace, STATE_FILE), graph_hash: state.graph_hash, revision: state.revision, jobs: state.jobs, phases, components: c.components, next_actions, verification }; }
+function output(state, c, next_actions, verification, o) { const status = state.status, exit_code = status === "success" ? 0 : status === "blocked" || status === "cancelled" ? 3 : status === "planned" ? 0 : 1; const phases = state.jobs.map(j => ({ name: j.phase, status: legacyStatus(j.status), detail: j.detail })); const event_file = join(c.workspace, EVENT_FILE), progress = o.dryRun ? null : projectExecutionProgress(replayExecutionEvents(event_file).events); return { schema_version: "1.0", command: "full-eval", status, exit_code, dry_run: Boolean(o.dryRun), resume: Boolean(o.resume), plugin: c.root, workspace: c.workspace, archive: c.archive, state_file: join(c.workspace, STATE_FILE), event_file, progress, graph_hash: state.graph_hash, revision: state.revision, jobs: state.jobs, phases, components: c.components, next_actions, verification }; }
 function reliabilityFor(state, options) { return state?.reliability_plan ?? normalizePlan(options.reliability); }
 export async function fullEval(options) {
     const locator = context({ pluginPath: options.pluginPath, workspace: options.workspace }), statePath = join(locator.workspace, STATE_FILE), lockPath = join(locator.workspace, LOCK_FILE);
@@ -199,7 +200,7 @@ export async function fullEval(options) {
             const expected = state.revision;
             state.revision++;
             checkpoint(statePath, state, expected, lease);
-            events.append("checkpoint", null, { revision: state.revision, status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })) });
+            events.append("checkpoint", null, { revision: state.revision, status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })), budget: { consumed_ms: elapsedBudgetMs(state.reliability), total_ms: state.reliability_plan.total_budget_ms, remaining_ms: remainingBudgetMs(state.reliability, state.reliability_plan) } });
             clearCancellation(join(locator.workspace, CANCEL_FILE));
             return output(state, c, [], state.verification ?? null, options);
         }
@@ -221,14 +222,14 @@ export async function fullEval(options) {
         const eventPath = join(c.workspace, EVENT_FILE), priorEvents = replayExecutionEvents(eventPath), runId = priorEvents.run_id ?? state.run_id, events = new ExecutionEventWriter(eventPath, runId);
         state.run_id = runId;
         if (!priorEvents.events.length)
-            events.append("evaluation-created", null, { status: "planned", graph_hash: state.graph_hash, plugin: protectedArtifactRef(c.root), workspace: protectedArtifactRef(c.workspace) });
+            events.append("evaluation-created", null, { status: "planned", graph_hash: state.graph_hash, plugin: protectedArtifactRef(c.root), workspace: protectedArtifactRef(c.workspace), job_count: state.jobs.length, budget: { consumed_ms: elapsedBudgetMs(state.reliability), total_ms: state.reliability_plan.total_budget_ms, remaining_ms: remainingBudgetMs(state.reliability, state.reliability_plan) } });
         else {
             const divergent = state.jobs.some(job => priorEvents.job_statuses[job.id] !== job.status);
             if (divergent)
-                events.append("checkpoint", null, { revision: Math.max(1, state.revision), status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })) });
+                events.append("checkpoint", null, { revision: Math.max(1, state.revision), status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })), budget: { consumed_ms: elapsedBudgetMs(state.reliability), total_ms: state.reliability_plan.total_budget_ms, remaining_ms: remainingBudgetMs(state.reliability, state.reliability_plan) } });
             events.append("heartbeat", null, { status: state.status, resume: Boolean(options.resume) });
         }
-        const save = () => { lease.heartbeat(); state.reliability = { ...state.reliability, consumed_ms: elapsedBudgetMs(state.reliability) }; const expected = state.revision; state.revision++; checkpoint(statePath, state, expected, lease); events.append("checkpoint", null, { revision: state.revision, status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })) }); };
+        const save = () => { lease.heartbeat(); state.reliability = { ...state.reliability, consumed_ms: elapsedBudgetMs(state.reliability) }; const expected = state.revision; state.revision++; checkpoint(statePath, state, expected, lease); events.append("checkpoint", null, { revision: state.revision, status: state.status, state: protectedArtifactRef(statePath), jobs: state.jobs.map(({ id, phase, status, attempts }) => ({ id, phase, status, attempts })), budget: { consumed_ms: elapsedBudgetMs(state.reliability), total_ms: state.reliability_plan.total_budget_ms, remaining_ms: remainingBudgetMs(state.reliability, state.reliability_plan) } }); };
         const cancelPath = join(c.workspace, CANCEL_FILE), deadline = Date.parse(state.reliability.started_at) + state.reliability_plan.total_budget_ms;
         const run = async (phase, fn) => { const index = state.jobs.findIndex(j => j.phase === phase); let job = state.jobs[index]; if (job.status === "succeeded")
             return; if (readCancellation(join(c.workspace, CANCEL_FILE))) {

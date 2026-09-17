@@ -23,6 +23,7 @@ Read only the references required by the current request:
 
 | User intent | Required guidance |
 |---|---|
+| Turn an early idea into a reviewable candidate | [Idea-to-candidate conversation](references/idea-to-candidate.md), then load authoring and evaluation guidance only after confirmation |
 | Create or materially redesign a Skill | [Creation checklist](references/authoring.md), [pattern catalog](references/skill-authoring-best-practices.md), and [prompt engineering](references/prompt-engineering.md); also read [rule-rich domain coverage](references/domain-coverage.md) when correctness depends on many deterministic rules |
 | Audit quality without changing behavior | [Audit checklist](references/audit.md) |
 | Design or review evaluation scenarios | [Evaluation design](references/evaluation-design.md) and [schemas](references/schemas.md) |
@@ -76,6 +77,13 @@ At creation and after evaluation, use the [pattern catalog](references/skill-aut
 - Where should it be applied?
 
 Choose the smallest structural correction. For rule-rich deterministic domains, choose the smallest sufficient domain coverage rather than the smallest artifact, and deliver breadth-first so evals and final validation exist before extended automation. Do not copy patterns mechanically or overfit an evaluation prompt.
+
+## Idea-to-candidate quick path
+
+For an early idea, start with a plain-language, summary-first conversation. Ask no more than three questions in one turn, preview the full contract, freeze and confirm scenarios, then launch only inside the durable conversation workspace. Novices see no JSON or internal creator names; their final report always names assumptions and risks. Experts may inspect fields and use supported overrides; reject unsupported budgets rather than implying they took effect. The bundled fake adapter reports generation as simulated and validation/evaluation as not run. Every mutation remains isolated and production promotion is a separate decision. See [the detailed flow](references/idea-to-candidate.md).
+
+    node dist/scripts/cli.js candidate <conversation-workspace> --idea "plain-language idea"
+    node dist/scripts/cli.js candidate <conversation-workspace>  # resume later
 
 ## Commands
 

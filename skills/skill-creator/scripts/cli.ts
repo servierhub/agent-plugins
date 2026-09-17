@@ -5,9 +5,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 type Format = "text" | "json";
-type Command = "validate" | "audit" | "design-evals" | "freeze-evals" | "analyze" | "trigger-eval" | "aggregate" | "review" | "verify" | "package" | "full-eval";
+type Command = "candidate" | "validate" | "audit" | "design-evals" | "freeze-evals" | "analyze" | "trigger-eval" | "aggregate" | "review" | "verify" | "package" | "full-eval";
 
 const commands: Record<Command, { entry: string; usage: string; required: (args: string[]) => boolean }> = {
+  candidate: { entry: "idea_to_candidate.js", usage: "candidate <workspace> [--idea <plain-language idea>] [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   validate: { entry: "quick_validate.js", usage: "validate <skill-directory>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   audit: { entry: "audit_skill.js", usage: "audit <skill-directory> [-o audit.json]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   "design-evals": { entry: "design_evals.js", usage: "design-evals <evals.json> [--skill-path <dir>] [--normalize <file>]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
@@ -36,6 +37,7 @@ Common options:
   return `Usage: skill-creator <command> [options]
 
 Commands:
+  candidate     Turn an idea into an isolated, resumable Skill candidate
   validate      Validate Agent Skills format conformance
   audit         Audit authoring quality and recommend relevant patterns
   design-evals  Validate and normalize evaluation scenarios
@@ -105,7 +107,8 @@ ${help(name)}`);
   }
 
   const here = dirname(fileURLToPath(import.meta.url));
-  const child = spawnSync(process.execPath, [join(here, config.entry), ...parsed.args], { encoding: "utf8" });
+  const childArgs = name === "candidate" ? [...parsed.args, "--format", parsed.format] : parsed.args;
+  const child = spawnSync(process.execPath, [join(here, config.entry), ...childArgs], { encoding: "utf8" });
   const rawCode = child.status ?? 1;
   const stdout = (child.stdout ?? "").trimEnd();
   const stderr = (child.stderr ?? "").trimEnd();
@@ -120,7 +123,10 @@ ${help(name)}`);
     code = 3;
   }
 
-  if (name === "full-eval" && payload && typeof payload === "object") {
+  if (name === "candidate" && parsed.format === "json" && payload && typeof payload === "object") {
+    if (!parsed.quiet || code !== 0) console.log(JSON.stringify(payload, null, 2));
+    if (stderr) console.error(stderr);
+  } else if (name === "full-eval" && payload && typeof payload === "object") {
     if (parsed.format === "json") {
       if (!parsed.quiet || code !== 0) console.log(JSON.stringify(payload, null, 2));
     } else if (!parsed.quiet || code !== 0) {
