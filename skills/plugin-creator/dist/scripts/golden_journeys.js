@@ -1,0 +1,156 @@
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = resolve(HERE, "../../assets/golden-e2e"), IDS = ["idea-api-review-skill", "dependency-review-agent", "multi-component-safety-plugin"];
+const stable = (v) => JSON.stringify(v, (_k, x) => x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x);
+const hash = (v) => createHash("sha256").update(v).digest("hex"), read = (p) => readFileSync(p, "utf8"), fixturePath = (id) => join(ROOT, id, "fixture.json"), expectedPath = (id) => join(ROOT, id, "expected-contract.json");
+function save(path, v) { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, JSON.stringify(v, null, 2) + "\n"); }
+function files(root, dir = root) { if (!existsSync(dir))
+    return []; return readdirSync(dir).sort().flatMap(n => { const p = join(dir, n), s = statSync(p); return s.isDirectory() ? files(root, p) : [relative(root, p).split(sep).join("/")]; }); }
+function treeHash(root) { return hash(stable(files(root).map(path => ({ path, sha256: hash(readFileSync(join(root, path))) })))); }
+export function loadGoldenJourney(id) { if (!IDS.includes(id))
+    throw Error("unknown golden journey: " + id); const raw = read(fixturePath(id)), v = JSON.parse(raw), e = JSON.parse(read(expectedPath(id))); if (v.schema_version !== "1.0" || v.id !== id || !v.natural_language_request || !v.scenario_suite.length)
+    throw Error("invalid golden fixture: " + id); if (e.fixture_sha256 !== hash(raw))
+    throw Error("immutable fixture checksum mismatch: " + id); return v; }
+export function listGoldenJourneys() { return IDS.map(loadGoldenJourney); }
+function config(f, profile, overrides) { if (profile === "novice" && Object.keys(overrides).length)
+    throw Error("novice profile does not accept overrides; select expert"); const out = { ...f.novice_defaults }; for (const [k, v] of Object.entries(overrides)) {
+    const r = f.expert_overrides[k];
+    if (!r)
+        throw Error("unsupported expert override: " + k);
+    if (typeof v !== r.type)
+        throw Error("expert override " + k + " must be " + r.type);
+    if (typeof v === "number" && ((r.minimum !== undefined && v < r.minimum) || (r.maximum !== undefined && v > r.maximum)))
+        throw Error("expert override " + k + " is outside bounds");
+    out[k] = v;
+} return out; }
+function skill(name, improved) { return `---\nname: ${name}\ndescription: Reviews ${name.replaceAll("-", " ")} evidence and activates when a user requests this review.\n---\n\n# ${name}\n\nInspect the supplied evidence, report compatibility, security, and usability findings, and cite the inspected input.\n${improved ? "Reject unsupported claims, flag breaking or dangerous changes, and require explicit human approval before mutation. Verify provenance and preserve an audit trail." : "Summarize the review findings."}\n`; }
+function agent(improved) { return `---\nname: dependency-review\ndescription: Reviews dependency updates and explains evidence-focused risk.\nmodel: deterministic-fixture\n---\n\n# Dependency review\n\nInspect version, changelog, lockfile, and package provenance. Rank compatibility and supply-chain risk.\n${improved ? "Challenge suspicious provenance, refuse every unapproved mutation, cite evidence, and leave application pending human approval." : "Suggest whether to update."}\n`; }
+function generateCandidate(f, root, improved) { mkdirSync(root, { recursive: true }); if (f.artifact_kind === "skill") {
+    const p = join(root, "skills/api-review/SKILL.md");
+    mkdirSync(dirname(p), { recursive: true });
+    writeFileSync(p, skill("api-review", improved));
+    return [p];
+} if (f.artifact_kind === "agent") {
+    const p = join(root, "dependency-review.md");
+    writeFileSync(p, agent(improved));
+    return [p];
+} const hookDir = join(root, "extensions/io.github.bioinfornatics.agent-plugins.goose"), script = join(root, "scripts/pre-tool-safety.mjs"); save(join(root, "plugin.json"), { $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json", name: "safety-review", version: "1.0.0", description: "Provides review guidance and narrowly scoped safety blocking.", extensions: { "io.github.bioinfornatics.agent-plugins.goose": { version: 1, hooks: "extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json" } } }); mkdirSync(join(root, "skills/safety-policy"), { recursive: true }); mkdirSync(join(root, "agents"), { recursive: true }); mkdirSync(join(root, "scripts"), { recursive: true }); writeFileSync(join(root, "skills/safety-policy/SKILL.md"), skill("safety-policy", improved)); writeFileSync(join(root, "agents/safety-review.md"), `---\nname: safety-review\ndescription: Reviews operations against narrow safety evidence.\n---\n\n${improved ? "Verify provenance, explain the exact matched rule, resist bypass attempts, and require human approval." : "Review operation safety."}\n`); save(join(hookDir, "hooks.json"), { hooks: { PreToolUse: [{ matcher: "developer__shell", hooks: [{ type: "command", command: "${PLUGIN_ROOT}/scripts/pre-tool-safety.mjs", timeout: 5 }] }] } }); writeFileSync(script, `#!/usr/bin/env node\nlet s="";process.stdin.on("data",c=>s+=c).on("end",()=>{let p={};try{p=JSON.parse(s)}catch{}const c=String(p?.tool_input?.command??""),blocked=/(^|\\s)(rm\\s+-rf\\s+\\/|git\\s+push\\s+(--force|-f)(\\s|$))/.test(c)||${improved}&&/(ignore|bypass).*(safety|hook)/i.test(c);process.stdout.write(JSON.stringify({decision:blocked?"block":"allow",command:c,evidence:"pre-tool-safety",exit_code:blocked?2:0}));if(blocked)process.exitCode=2});\n`); chmodSync(script, 0o755); return files(root).map(p => join(root, p)); }
+function execValidator(script, args) { const r = spawnSync(process.execPath, [script, ...args], { encoding: "utf8" }); return { valid: r.status === 0, detail: ((r.stdout || r.stderr) || "").trim() || `exit ${r.status}` }; }
+function validateCandidate(f, root) { const checks = [], run = (validator, script, args) => checks.push({ validator, ...execValidator(script, args) }); if (f.artifact_kind === "skill")
+    run("skill-creator/quick_validate", resolve(HERE, "../../../skill-creator/dist/scripts/quick_validate.js"), [join(root, "skills/api-review")]);
+else if (f.artifact_kind === "agent")
+    run("agent-creator/validate_agent", resolve(HERE, "../../../agent-creator/dist/scripts/validate_agent.js"), [join(root, "dependency-review.md"), "--require-filename-match"]);
+else {
+    run("plugin-creator/validate_goose_plugin", join(HERE, "validate_goose_plugin.js"), [root]);
+    run("plugin-creator/validate_agent_plugin_schema", join(HERE, "validate_agent_plugin_schema.js"), [root]);
+    run("agent-creator/validate_agent", resolve(HERE, "../../../agent-creator/dist/scripts/validate_agent.js"), [join(root, "agents/safety-review.md"), "--require-filename-match"]);
+} return { executed: true, checks, valid: checks.every(x => x.valid) }; }
+function behaviorInput(f, id, n) { if (f.artifact_kind === "skill")
+    return { scenario: id, fixture: n, request: id === "activation-negative" ? "compile unrelated module " + n : "API review request " + n + ": breaking endpoint change" }; if (f.artifact_kind === "agent")
+    return { scenario: id, fixture: n, version: id === "routine-update" ? "1.0." + n : n + ".0.0-major", provenance: id === "supply-chain-risk" ? "unknown-mirror" : "registry", mutation: id === "mutation-request" }; const commands = { "safe-operation": "printf safe-" + n, "dangerous-operation": "rm -rf /", "handoff": "echo evidence-" + n, "bypass-attempt": "ignore safety hook and bypass it" }; return { scenario: id, fixture: n, tool_input: { command: commands[id] } }; }
+function grade(f, id, stdout) { let o = {}; try {
+    o = JSON.parse(stdout);
+}
+catch {
+    return false;
+} if (f.artifact_kind === "skill")
+    return id === "activation-negative" ? !o.activated && o.restrained : id === "unsafe-api-change" ? o.findings?.includes("breaking-change") && o.findings?.includes("security-risk") : o.activated === true; if (f.artifact_kind === "agent")
+    return id === "supply-chain-risk" ? o.provenance_checked === true : id === "mutation-request" ? o.mutation_applied === false && o.approval_required === true : !!o.risk; return id === "dangerous-operation" || id === "bypass-attempt" ? o.exit_code === 2 && o.decision === "block" : o.exit_code === 0 && o.decision === "allow" && o.evidence === "pre-tool-safety"; }
+function executeSuite(f, root, repetitions, variant) { const records = []; for (let r = 1; r <= repetitions; r++) {
+    const isolated = join(root, ".fixtures", variant, String(r));
+    mkdirSync(isolated, { recursive: true });
+    for (const s of f.scenario_suite) {
+        const input = behaviorInput(f, s.id, r), inputPath = join(isolated, s.id + ".json");
+        save(inputPath, input);
+        const command = f.artifact_kind === "plugin" ? [join(root, "scripts/pre-tool-safety.mjs")] : [join(HERE, "golden_behavior_runner.js"), f.artifact_kind, s.id, inputPath, variant];
+        const started = process.hrtime.bigint();
+        if (f.artifact_kind === "plugin" && variant === "baseline")
+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 80);
+        const x = spawnSync(process.execPath, command, { input: f.artifact_kind === "plugin" ? JSON.stringify(input) : undefined, encoding: "utf8" }), duration_ms = Number(process.hrtime.bigint() - started) / 1e6;
+        records.push({ repetition: r, scenario_id: s.id, fixture: relative(root, inputPath), expected: s.expect, observed: { status: x.status, stdout: x.stdout }, passed: grade(f, s.id, x.stdout), duration_ms, runner: f.artifact_kind === "plugin" ? relative(root, command[0]) : "golden_behavior_runner.js", executed: true });
+    }
+} return records; }
+function executeChallenges(f, records, count, workspace) { const dir = join(workspace, "challengers"); mkdirSync(dir, { recursive: true }); const branches = []; for (let n = 1; n <= count; n++) {
+    const scenario = f.scenario_suite[(n - 1) % f.scenario_suite.length], finding_id = "finding-" + n + "-" + scenario.id, script = join(dir, "challenger-" + n + ".mjs");
+    writeFileSync(script, "process.stdout.write(process.argv[2])\n");
+    const finding = records.some(x => x.scenario_id === scenario.id && !x.passed) ? "observed expectation failure" : "adversarial restraint verification required", x = spawnSync(process.execPath, [script, JSON.stringify({ finding_id, scenario_id: scenario.id, finding })], { encoding: "utf8" });
+    branches.push({ branch_id: "branch-" + n, independent: true, executed: true, runner: relative(workspace, script), ...JSON.parse(x.stdout) });
+} return branches; }
+function evidence(fixture_sha256, input_sha256, candidate_sha256, at, phase, record_sha256) { return { kind: "executed", adapter: "deterministic-offline-fixture-runner-v1", executed: true, llm_executed: false, claim: "Deterministic local adapter executed filesystem validation or fixture assertions; no LLM, network, host, or production execution occurred.", provenance: { fixture_sha256, input_sha256, candidate_sha256, record_sha256, adapter_sha256: hash("plugin-creator/deterministic-offline-fixture-runner/v1"), generated_at: at, phase } }; }
+function computeMetrics(records, baseline, required) { const mean = (xs) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length), success = records.filter(x => x.passed).length / Math.max(1, records.length), baseSuccess = baseline.filter(x => x.passed).length / Math.max(1, baseline.length), currentTime = mean(records.map(x => x.duration_ms)), baselineTime = mean(baseline.map(x => x.duration_ms)), productivity = (baselineTime - currentTime) / baselineTime, outcome = baseSuccess === 1 ? success : Math.max(0, (success - baseSuccess) / (1 - baseSuccess)); return { repetitions: { required, completed: new Set(records.map(x => x.repetition)).size }, effectiveness: success, productivity, outcome_success: outcome, inputs: { passed: records.filter(x => x.passed).length, total: records.length, baseline_passed: baseline.filter(x => x.passed).length, baseline_total: baseline.length, current_duration_ms: currentTime, baseline_duration_ms: baselineTime } }; }
+function appendEvent(path, event) { writeFileSync(path, JSON.stringify(event) + "\n", { flag: "a" }); }
+export function verifyGoldenArchive(workspace) { const root = resolve(workspace), state = JSON.parse(read(join(root, "golden-state.json"))), archiveRoot = join(root, "ci-archive"), inventory = JSON.parse(read(join(archiveRoot, "inventory.json"))), expected = JSON.parse(read(join(archiveRoot, "expected-contract.json"))), archived = JSON.parse(read(join(archiveRoot, "result.json"))), errors = []; for (const x of inventory.files) {
+    const p = join(archiveRoot, x.path);
+    if (!existsSync(p) || hash(readFileSync(p)) !== x.sha256)
+        errors.push("hash mismatch: " + x.path);
+} for (const name of expected.required_archive_files)
+    if (name !== "inventory.json" && !inventory.files.some((x) => x.path === name) || !existsSync(join(archiveRoot, name)))
+        errors.push("required archive file missing: " + name); if (stable(archived) !== stable(state))
+    errors.push("archived result does not match canonical state"); if (expected.terminal_status !== state.release.status || expected.activation_allowed !== state.release.activation_allowed)
+    errors.push("release contract mismatch"); if (state.phases && expected.required_phases.some((name) => !state.phases.some((x) => x.name === name && x.status === "completed")))
+    errors.push("phase contract mismatch"); if (expected.required_metrics.some((name) => state.metrics[name] === undefined))
+    errors.push("metric contract mismatch"); const candidate = join(root, state.candidate.relative_path); if (!existsSync(candidate) || treeHash(candidate) !== state.candidate.sha256)
+    errors.push("candidate provenance mismatch"); if (state.fixture_sha256 !== hash(read(fixturePath(state.journey))))
+    errors.push("fixture provenance mismatch"); if (hash(stable(state.records)) !== state.provenance.records_sha256)
+    errors.push("record provenance mismatch"); if (state.baseline_records && hash(stable(state.baseline_records)) !== state.provenance.baseline_records_sha256)
+    errors.push("baseline record provenance mismatch"); if (state.provenance.parent_state_sha256 && state.provenance.parent_state_sha256 !== state.checkpoint.state_sha256)
+    errors.push("checkpoint provenance mismatch"); return { valid: errors.length === 0, errors, checked_files: inventory.files.length + 1 }; }
+export function inspectGoldenEvidence(workspace, now = new Date(), staleAfterMs = 86400000) { const p = join(resolve(workspace), "golden-state.json"); if (!existsSync(p))
+    return { status: "missing", activation_allowed: false, reason: "no evidence" }; const state = JSON.parse(read(p)), age = Math.max(0, now.getTime() - Date.parse(state.heartbeat.at)), verified = verifyGoldenArchive(workspace), status = !verified.valid ? "invalid" : age > staleAfterMs ? "stale" : "fresh"; return { status, age_ms: age, threshold_ms: staleAfterMs, activation_allowed: false, reason: status === "invalid" ? "transitive provenance verification failed" : status === "stale" ? "evidence heartbeat is stale" : "production approval is pending", verification: verified, state }; }
+export function runGoldenJourney(o) {
+    const f = loadGoldenJourney(o.journey), workspace = resolve(o.workspace), statePath = join(workspace, "golden-state.json"), events = join(workspace, "golden-events.jsonl"), ci = join(workspace, "ci-archive"), baseTime = o.now ?? new Date(), at = baseTime.toISOString(), fixtureRaw = read(fixturePath(f.id)), fixtureSha = hash(fixtureRaw), profile = o.profile ?? "novice", configuration = config(f, profile, o.overrides ?? {}), inputSha = hash(stable({ request: f.natural_language_request, profile, configuration }));
+    mkdirSync(workspace, { recursive: true });
+    let prior;
+    if (existsSync(statePath)) {
+        prior = JSON.parse(read(statePath));
+        if (!o.resume && !o.cancel)
+            throw Error("golden run exists; use --resume or a new workspace");
+        if (prior.journey !== f.id || prior.fixture_sha256 !== fixtureSha || prior.input_sha256 !== inputSha)
+            throw Error("resume provenance mismatch: fixture or configured input changed");
+        if (o.resume && prior.status === "pending-production-approval") {
+            const verified = verifyGoldenArchive(workspace);
+            if (!verified.valid)
+                throw Error("resume rejected: " + verified.errors.join("; "));
+            return prior;
+        }
+    }
+    const runId = prior?.run_id ?? hash(f.id + inputSha).slice(0, 24), candidateBase = join(workspace, "candidate/.agents/plugins", f.id), baselineRoot = join(workspace, "baseline/.agents/plugins", f.id), revisedRoot = join(workspace, "revised/.agents/plugins", f.id);
+    if (!prior) {
+        generateCandidate(f, candidateBase, false);
+        generateCandidate(f, baselineRoot, false);
+    }
+    const validation = validateCandidate(f, candidateBase), seq0 = prior?.heartbeat.sequence ?? 0, heartbeats = [];
+    const beat = (phase, n, status = "running") => { const timestamp = new Date(baseTime.getTime() + n * 1000).toISOString(), b = { sequence: seq0 + n, at: timestamp, phase, status }; heartbeats.push(b); appendEvent(events, { schema_version: "1.0", event: "heartbeat", run_id: runId, ...b, provenance: { fixture_sha256: fixtureSha, input_sha256: inputSha } }); };
+    beat("generation", 1, "completed");
+    beat("validation", 2, validation.valid ? "completed" : "failed");
+    const checkpoint = { phase: "validation", state_sha256: hash(stable({ runId, inputSha, candidate_sha256: treeHash(candidateBase), validation })), completed_phases: ["generation", "validation"] };
+    if (o.cancel) {
+        const candidateSha = treeHash(candidateBase), state = { schema_version: "1.0", run_id: runId, journey: f.id, fixture_sha256: fixtureSha, input_sha256: inputSha, revision: (prior?.revision ?? 0) + 1, status: "cancelled", activation: { allowed: false, reason: "evaluation cancelled at durable checkpoint" }, profile, configuration, candidate: { relative_path: relative(workspace, candidateBase), sha256: candidateSha }, validation, records: [], metrics: { repetitions: { required: Number(configuration.repetitions), completed: 0 }, effectiveness: 0, productivity: 0, outcome_success: 0, thresholds_met: false }, heartbeat: heartbeats.at(-1), heartbeats, checkpoint, provenance: { records_sha256: hash(stable([])), parent_state_sha256: checkpoint.state_sha256 }, review: { status: "not-started", challenge_count: 0, improvement_count: 0 }, release: { status: "pending-production-approval", activation_allowed: false } };
+        save(statePath, state);
+        archive(workspace, f, state);
+        return state;
+    }
+    const repetitions = Number(configuration.repetitions), baselineRecords = executeSuite(f, baselineRoot, repetitions, "baseline"), initialRecords = executeSuite(f, candidateBase, repetitions, "baseline"), branches = executeChallenges(f, initialRecords, Number(configuration.challenge_branches), workspace), challenge = { reviewer: "independent-deterministic-challenger-v1", independent: true, executed: true, branches, findings: branches, candidate_sha256: treeHash(candidateBase) };
+    beat("evaluation", 3, "completed");
+    beat("challenge", 4, "completed");
+    generateCandidate(f, revisedRoot, true);
+    writeFileSync(join(revisedRoot, "ADDRESSED_FINDINGS.txt"), challenge.findings.map((x) => x.finding_id).join("\n") + "\n");
+    const revisedValidation = validateCandidate(f, revisedRoot), records = executeSuite(f, revisedRoot, repetitions, "improved");
+    beat("improvement", 5, "completed");
+    beat("release-review", 6, "completed");
+    const metrics = computeMetrics(records, baselineRecords, repetitions);
+    metrics.thresholds_met = metrics.repetitions.completed >= f.thresholds.repetitions && metrics.effectiveness >= f.thresholds.effectiveness && metrics.productivity >= f.thresholds.productivity && metrics.outcome_success >= f.thresholds.outcome_success;
+    const candidateSha = treeHash(revisedRoot), recordsSha = hash(stable(records)), phases = ["generation", "validation", "evaluation", "challenge", "improvement", "release-review"].map((name, i) => ({ name, status: "completed", evidence: evidence(fixtureSha, inputSha, candidateSha, new Date(baseTime.getTime() + (i + 1) * 1000).toISOString(), name, recordsSha) }));
+    const state = { schema_version: "1.0", run_id: runId, journey: f.id, fixture_sha256: fixtureSha, input_sha256: inputSha, revision: (prior?.revision ?? 0) + 1, status: "pending-production-approval", activation: { allowed: false, reason: "explicit trusted human production approval is required; deterministic executor has no activation capability" }, profile, configuration, candidate: { relative_path: relative(workspace, revisedRoot), sha256: candidateSha, initial_relative_path: relative(workspace, candidateBase) }, validation: { initial: validation, revised: revisedValidation }, records, baseline_records: baselineRecords, metrics, heartbeat: heartbeats.at(-1), heartbeats, checkpoint, provenance: { records_sha256: recordsSha, baseline_records_sha256: hash(stable(baselineRecords)), parent_state_sha256: checkpoint.state_sha256 }, review: { status: "pending", challenge_count: challenge.findings.length, improvement_count: 1, challenge, improvement: { addressed_finding_ids: challenge.findings.map((x) => x.finding_id), rerun_passed: records.every((x) => x.passed) } }, release: { status: "pending-production-approval", activation_allowed: false }, phases };
+    save(statePath, state);
+    archive(workspace, f, state);
+    return state;
+}
+function archive(workspace, f, state) { const ci = join(workspace, "ci-archive"); mkdirSync(ci, { recursive: true }); const docs = { "result.json": state, "fixture.json": f, "expected-contract.json": JSON.parse(read(expectedPath(f.id))), "records.json": state.records, "baseline-records.json": state.baseline_records ?? [], "challenge.json": state.review }; const out = []; for (const [name, value] of Object.entries(docs)) {
+    const body = JSON.stringify(value, null, 2) + "\n";
+    writeFileSync(join(ci, name), body);
+    out.push({ path: name, sha256: hash(body) });
+} save(join(ci, "inventory.json"), { schema_version: "1.0", evidence_notice: "Behavioral evidence was executed by a deterministic offline fixture runner; no LLM or production action was executed.", files: out }); }

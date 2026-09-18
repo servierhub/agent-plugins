@@ -32,6 +32,16 @@ test("outcome metrics schema, API, input contract, and report are explicitly cla
   for(const id of ["contract.outcome-metrics-input.v1","contract.outcome-metrics-report.v1"]){const row:any=expected.outcomes.find((x:any)=>x.id===id);const value=JSON.parse(outcomeFixture(row.expectedOutcome.fixture).toString());const nested=id.includes("report")?value.guardrails:value.metricContract;nested.compatibilityProbe=true;assert.equal(validateSurfaceShape(id,value).valid,false,id+" nested extras");}
 });
 
+test("feedback annotation schemas, contracts, APIs, revisions, and hashes are explicitly classified",()=>{
+  const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
+  assert.deepEqual(Object.keys(pkg.exports).filter((key:string)=>key.includes("feedback")).sort(),["./feedback-annotation","./feedback-annotation-schema/1.0.0","./feedback-annotation-types","./feedback-decision-result-schema/1.0.0","./feedback-decision-schema/1.0.0","./feedback-proposal-schema/1.0.0"]);
+  for(const id of ["contract.feedback-annotation.v1","contract.feedback-interpretation.v1","contract.feedback-proposal.v1","contract.feedback-preview.v1","contract.feedback-decision.v1","contract.feedback-revision.v1","contract.feedback-decision-result.v1","schema.feedback-annotation.v1","schema.feedback-proposal.v1","schema.feedback-decision.v1","schema.feedback-decision-result.v1"])assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id===id)?.supportState,"supported",id);
+  for(const row of COMPATIBILITY_REGISTRY.filter(x=>x.id.startsWith("api.")&&x.sourceFile.endsWith("feedback-annotation.ts")))assert.equal(row.supportState,"unsupported",row.id);
+  for(const id of ["contract.feedback-annotation.v1","contract.feedback-interpretation.v1","contract.feedback-proposal.v1","contract.feedback-preview.v1","contract.feedback-decision.v1","contract.feedback-revision.v1","contract.feedback-decision-result.v1"]){const row:any=expected.outcomes.find((x:any)=>x.id===id),value=JSON.parse(outcomeFixture(row.expectedOutcome.fixture).toString());assert.equal(validateSurfaceShape(id,value).valid,true,id);value.__unexpectedCompatibilityField=true;assert.equal(validateSurfaceShape(id,value).valid,false,id+" root extras");}
+  const annotation:any=JSON.parse(outcomeFixture("cases/contract.feedback-annotation.v1.json").toString());annotation.instruction="tampered";assert.equal(validateSurfaceShape("contract.feedback-annotation.v1",annotation).valid,false,"annotation hash binding");
+  const revision:any=JSON.parse(outcomeFixture("cases/contract.feedback-revision.v1.json").toString());revision.content.screen.button="tampered";assert.equal(validateSurfaceShape("contract.feedback-revision.v1",revision).valid,false,"revision content hash binding");
+});
+
 test("updated skill viewer source artifacts and decision template are classified",()=>{
   const rule=discovery.artifactDiscovery.find((x:any)=>x.sourceFile==="skills/skill-creator/eval-viewer/generate_review.ts");
   assert.ok(rule.expected.includes("benchmark.json"));assert.ok(rule.expected.includes("timing.json"));
@@ -178,7 +188,6 @@ test("artifact discovery accounts for every producer site exactly once",()=>{
   const skillViewer="skills/skill-creator/eval-viewer/generate_review.ts",agentViewer="skills/agent-creator/eval-viewer/generate_review.ts";
   assert.notEqual(alias(skillViewer,"metrics.json"),alias("skills/skill-creator/scripts/aggregate_benchmark.ts","benchmark.json"));
   assert.notEqual(alias(skillViewer,"user_notes.md"),alias(skillViewer,"feedback.json"));
-  assert.notEqual(alias(skillViewer,"transcript.md"),alias("skills/agent-creator/scripts/run_agent_eval.ts","response.md"));
   assert.equal(alias(skillViewer,"metrics.json"),alias(agentViewer,"metrics.json"),"identical viewer copies may share canonical identity");
 });
 

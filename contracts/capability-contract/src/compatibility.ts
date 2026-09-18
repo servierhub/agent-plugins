@@ -2435,6 +2435,384 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "deprecation": null,
     "migrationId": null,
     "validatorId": "shape:outcome-metrics-schema-document"
+  },
+  {
+    "id": "contract.feedback-annotation.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation-types.ts",
+    "sourceFieldOrLayout": "FeedbackAnnotationV1",
+    "sourceEvidence": "export interface FeedbackAnnotationV1 {",
+    "kind": "shared-contract",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": "/schemaVersion",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "schema:feedback-annotation"
+  },
+  {
+    "id": "contract.feedback-interpretation.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation-types.ts",
+    "sourceFieldOrLayout": "FeedbackInterpretationV1",
+    "sourceEvidence": "export interface FeedbackInterpretationV1 {",
+    "kind": "shared-contract",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": "/schemaVersion",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "artifact:feedback-interpretation"
+  },
+  {
+    "id": "contract.feedback-proposal.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation-types.ts",
+    "sourceFieldOrLayout": "FeedbackProposalV1",
+    "sourceEvidence": "export interface FeedbackProposalV1 {",
+    "kind": "shared-contract",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": "/schemaVersion",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "schema:feedback-proposal"
+  },
+  {
+    "id": "contract.feedback-preview.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation-types.ts",
+    "sourceFieldOrLayout": "FeedbackPreviewV1",
+    "sourceEvidence": "export interface FeedbackPreviewV1 {",
+    "kind": "shared-contract",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": "/schemaVersion",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "artifact:feedback-preview"
+  },
+  {
+    "id": "contract.feedback-decision.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation-types.ts",
+    "sourceFieldOrLayout": "FeedbackDecisionV1",
+    "sourceEvidence": "export interface FeedbackDecisionV1 {",
+    "kind": "shared-contract",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": "/schemaVersion",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "schema:feedback-decision"
+  },
+  {
+    "id": "contract.feedback-revision.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation-types.ts",
+    "sourceFieldOrLayout": "FeedbackRevision",
+    "sourceEvidence": "export interface FeedbackRevision {",
+    "kind": "shared-contract",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "artifact:feedback-revision"
+  },
+  {
+    "id": "contract.feedback-decision-result.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation-types.ts",
+    "sourceFieldOrLayout": "FeedbackDecisionResult",
+    "sourceEvidence": "export interface FeedbackDecisionResult {",
+    "kind": "shared-contract",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "schema:feedback-decision-result"
+  },
+  {
+    "id": "schema.feedback-annotation.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/schema/feedback-annotation/1.0.0/feedback-annotation.schema.json",
+    "sourceFieldOrLayout": "feedback-annotation.schema.json",
+    "sourceEvidence": "\"$id\":\"https://agent-plugins.org/schemas/feedback-annotation/1.0.0/feedback-annotation.schema.json\"",
+    "kind": "schema-document",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "shape:feedback-schema-document"
+  },
+  {
+    "id": "schema.feedback-proposal.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/schema/feedback-annotation/1.0.0/feedback-proposal.schema.json",
+    "sourceFieldOrLayout": "feedback-proposal.schema.json",
+    "sourceEvidence": "\"$id\":\"https://agent-plugins.org/schemas/feedback-annotation/1.0.0/feedback-proposal.schema.json\"",
+    "kind": "schema-document",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "shape:feedback-schema-document"
+  },
+  {
+    "id": "schema.feedback-decision.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/schema/feedback-annotation/1.0.0/feedback-decision.schema.json",
+    "sourceFieldOrLayout": "feedback-decision.schema.json",
+    "sourceEvidence": "\"$id\":\"https://agent-plugins.org/schemas/feedback-annotation/1.0.0/feedback-decision.schema.json\"",
+    "kind": "schema-document",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "shape:feedback-schema-document"
+  },
+  {
+    "id": "schema.feedback-decision-result.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/schema/feedback-annotation/1.0.0/feedback-decision-result.schema.json",
+    "sourceFieldOrLayout": "feedback-decision-result.schema.json",
+    "sourceEvidence": "\"$id\":\"https://agent-plugins.org/schemas/feedback-annotation/1.0.0/feedback-decision-result.schema.json\"",
+    "kind": "schema-document",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "shape:feedback-schema-document"
+  },
+  {
+    "id": "api.feedback-annotation.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "feedback annotation module",
+    "sourceEvidence": "import {createHash} from \"node:crypto\";",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "api.canonical-serialize-feedback.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "canonicalSerializeFeedback",
+    "sourceEvidence": "export function canonicalSerializeFeedback(value:unknown):string",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "api.hash-feedback.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "hashFeedback",
+    "sourceEvidence": "export function hashFeedback(value:unknown):string",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "api.validate-feedback-annotation.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "validateFeedbackAnnotation",
+    "sourceEvidence": "export function validateFeedbackAnnotation(value:unknown):FeedbackValidation",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "api.create-feedback-annotation.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "createFeedbackAnnotation",
+    "sourceEvidence": "export function createFeedbackAnnotation(",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "api.create-feedback-interpretation.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "createFeedbackInterpretation",
+    "sourceEvidence": "export function createFeedbackInterpretation(",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "api.create-feedback-proposal.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "createFeedbackProposal",
+    "sourceEvidence": "export function createFeedbackProposal(",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "api.preview-feedback-proposal.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "previewFeedbackProposal",
+    "sourceEvidence": "export function previewFeedbackProposal(",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "api.decide-feedback-proposal.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "decideFeedbackProposal",
+    "sourceEvidence": "export function decideFeedbackProposal(",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "api.compare-feedback-revisions.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/feedback-annotation.ts",
+    "sourceFieldOrLayout": "compareFeedbackRevisions",
+    "sourceEvidence": "export function compareFeedbackRevisions(",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
   }
 ] as CompatibilityEntry[]).map(E)) as readonly CompatibilityEntry[];
 export const RESULT_CONTRACT_REFERENCE=Object.freeze({version:RESULT_CONTRACT_VERSION,schemaId:RESULT_CONTRACT_SCHEMA_ID,mappingExport:"LEGACY_STATUS_MAPPINGS",classifierExport:"classifyResultExit"});

@@ -1,5 +1,9 @@
 # Release notes — compatibility policy 1.0.0
 
+## Feedback annotations 1.0.0 (ap-rcj.7.2)
+
+Adds immutable, versioned annotation, interpretation, proposal, preview, decision, candidate/scenario revision, provenance, rerun/invalidation, schema, fixture, and public export contracts.
+
 ## Outcome and productivity metrics API 1.0.0
 
 - Adds a versioned ten-metric dictionary and pure computation API for the golden idea-to-release-candidate journey, including formulas, populations, exclusions, provenance, units, and targets.
@@ -68,3 +72,8 @@
 - Adds strict transitive DAG verification with whole-envelope canonical hashes, full endpoint/relation edge bindings, Ed25519 or externally trusted digest authenticity, independently anchored approval subjects, issuer trust/revocation, and future/stale/expired timestamp rejection.
 - Reports every invalid-node reason, deterministic first-invalid-edge attribution, and the union of conclusions affected by all invalid nodes and edges.
 - Adds schema, specification, types, distribution output, every-node-kind fixtures and mutation scenarios, replay/substitution/downgrade/stale attacks, and hostile proxy/getter conformance coverage.
+
+## Feedback Annotation Contract 1.0.0
+- Binds annotations exactly to proposal base resource/revision/hash and verifies the full annotation → interpretation → proposal → preview chain at decision time.
+- Requires a complete globally acyclic dependency graph rooted at the revised resource; accepted effects include explicit required-test reruns and resource invalidations bound to the new revision/hash.
+- Constructors close cloned runtime input and pin schema versions/hashes; adversarial coverage includes override, forged self-hash, disconnected-cycle, unreachable-node, and recomputed-preview attacks.

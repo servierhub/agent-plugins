@@ -1278,6 +1278,216 @@
         "diagnostic": null,
         "validatorId": "shape:outcome-metrics-schema-document"
       }
+    },
+    {
+      "id": "contract.feedback-annotation.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.feedback-annotation.v1.json",
+        "diagnostic": null,
+        "validatorId": "schema:feedback-annotation"
+      }
+    },
+    {
+      "id": "contract.feedback-interpretation.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.feedback-interpretation.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:feedback-interpretation"
+      }
+    },
+    {
+      "id": "contract.feedback-proposal.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.feedback-proposal.v1.json",
+        "diagnostic": null,
+        "validatorId": "schema:feedback-proposal"
+      }
+    },
+    {
+      "id": "contract.feedback-preview.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.feedback-preview.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:feedback-preview"
+      }
+    },
+    {
+      "id": "contract.feedback-decision.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.feedback-decision.v1.json",
+        "diagnostic": null,
+        "validatorId": "schema:feedback-decision"
+      }
+    },
+    {
+      "id": "contract.feedback-revision.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.feedback-revision.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:feedback-revision"
+      }
+    },
+    {
+      "id": "contract.feedback-decision-result.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.feedback-decision-result.v1.json",
+        "diagnostic": null,
+        "validatorId": "schema:feedback-decision-result"
+      }
+    },
+    {
+      "id": "schema.feedback-annotation.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/schema.feedback-annotation.v1.json",
+        "diagnostic": null,
+        "validatorId": "shape:feedback-schema-document"
+      }
+    },
+    {
+      "id": "schema.feedback-proposal.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/schema.feedback-proposal.v1.json",
+        "diagnostic": null,
+        "validatorId": "shape:feedback-schema-document"
+      }
+    },
+    {
+      "id": "schema.feedback-decision.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/schema.feedback-decision.v1.json",
+        "diagnostic": null,
+        "validatorId": "shape:feedback-schema-document"
+      }
+    },
+    {
+      "id": "schema.feedback-decision-result.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/schema.feedback-decision-result.v1.json",
+        "diagnostic": null,
+        "validatorId": "shape:feedback-schema-document"
+      }
+    },
+    {
+      "id": "api.feedback-annotation.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.feedback-annotation.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.canonical-serialize-feedback.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.canonical-serialize-feedback.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.hash-feedback.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.hash-feedback.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.validate-feedback-annotation.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.validate-feedback-annotation.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.create-feedback-annotation.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.create-feedback-annotation.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.create-feedback-interpretation.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.create-feedback-interpretation.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.create-feedback-proposal.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.create-feedback-proposal.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.preview-feedback-proposal.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.preview-feedback-proposal.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.decide-feedback-proposal.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.decide-feedback-proposal.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.compare-feedback-revisions.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "cases/api.compare-feedback-revisions.v1.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
     }
   ]
 }

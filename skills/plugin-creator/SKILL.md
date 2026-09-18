@@ -129,6 +129,10 @@ For independent builder/challenger review, use the local matrix runner documente
 
 A deliverable is ready only when the 1.0.0 manifest is valid; portable components use fixed locations; Skills are useful and valid; referenced files exist and remain contained; Goose behavior is namespaced and host-validated; legacy conflicts are resolved; prerequisites are documented; no secrets are packaged; strict validation succeeds; and requested evaluation, packaging, and release gates pass.
 
+## Golden end-to-end acceptance
+
+For offline factory acceptance from a natural-language idea, run `dist/scripts/cli.js golden-e2e`. Prefer novice defaults unless bounded expert overrides are requested. The deterministic adapter executes local generation, shipped validators, and fixture assertions (`executed: true`) but explicitly records that no LLM ran (`llm_executed: false`). Verify archive provenance and record-derived metrics. Passing thresholds still leaves production approval pending and must never activate an artifact. See [Golden end-to-end journeys](references/golden-e2e-journeys.md).
+
 ## Utilities
 
 - `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, `package`, `full-eval`, and `independent-review` interface.

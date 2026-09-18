@@ -50,7 +50,7 @@ function buildRun(root, runDir) {
     const metadataPath = metadataCandidates.find(existsSync) || null, metadata = metadataPath ? json(metadataPath) : null;
     const gradingCandidates = [join(runDir, "grading.json"), join(dirname(runDir), "grading.json")], gradingPath = gradingCandidates.find(existsSync) || null;
     const timingCandidates = [join(runDir, "timing.json"), join(dirname(runDir), "timing.json")], timingPath = timingCandidates.find(existsSync) || null;
-    const outputsDir = join(runDir, "outputs"), outputs = isDir(outputsDir) ? readdirSync(outputsDir).sort().filter(n => isFile(join(outputsDir, n)) && !new Set(["transcript.md", "user_notes.md", "metrics.json"]).has(n)).map(n => embedFile(join(outputsDir, n), root)) : [];
+    const outputsDir = join(runDir, "outputs"), outputs = isDir(outputsDir) ? readdirSync(outputsDir).sort().filter(n => isFile(join(outputsDir, n)) && !new Set(["user_notes.md", "metrics.json"]).has(n)).map(n => embedFile(join(outputsDir, n), root)) : [];
     const scenario = String(metadata?.eval_id ?? relative(root, runDir).split(/[\\/]/).find(x => x.startsWith("eval-")) ?? "unknown");
     return { id: relative(root, runDir).split(/[\\/]/).join("-"), scenario_id: scenario, configuration: configuration(root, runDir), prompt: String(metadata?.prompt ?? "(No prompt found)"), outputs, grading: gradingPath ? json(gradingPath) : null, timing: timingPath ? json(timingPath) : null, provenance: { metadata: metadataPath ? relative(root, metadataPath) : null, grading: gradingPath ? relative(root, gradingPath) : null, timing: timingPath ? relative(root, timingPath) : null, run: relative(root, runDir) } };
 }

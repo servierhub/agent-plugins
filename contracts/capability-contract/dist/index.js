@@ -25,3 +25,5 @@ export * from "./evidence-graph-types.js";
 export * from "./evidence-graph.js";
 export * from "./outcome-metrics-types.js";
 export * from "./outcome-metrics.js";
+export * from "./feedback-annotation-types.js";
+export * from "./feedback-annotation.js";

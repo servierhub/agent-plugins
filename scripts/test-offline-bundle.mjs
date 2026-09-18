@@ -108,6 +108,10 @@ try {
     "skills/hook-creator/assets/evaluation-fixtures/exact-rm-guard/hooks/hooks.json",
     "skills/plugin-creator/evals/evals.json",
     "skills/plugin-creator/assets/evaluation-fixtures/package-ready/plugin.json",
+    "skills/plugin-creator/dist/scripts/golden_journeys.js",
+    "skills/plugin-creator/assets/golden-e2e/idea-api-review-skill/fixture.json",
+    "skills/plugin-creator/assets/golden-e2e/dependency-review-agent/fixture.json",
+    "skills/plugin-creator/assets/golden-e2e/multi-component-safety-plugin/fixture.json",
   ]) {
     if (!existsSync(path.join(plugin, required))) throw new Error(`Missing offline artifact: ${required}`);
   }
@@ -138,6 +142,11 @@ try {
   run(path.join(plugin, "skills", "agent-creator", "dist", "scripts", "validate_agent.js"), [agent]);
   run(path.join(plugin, "skills", "plugin-creator", "dist", "scripts", "validate_agent_plugin_schema.js"), [plugin, "--format", "json"]);
   run(path.join(plugin, "skills", "plugin-creator", "dist", "scripts", "validate_goose_plugin.js"), [plugin]);
+  const goldenWorkspace = path.join(tmp, "golden-offline");
+  const golden = spawnSync(node, [path.join(plugin, "skills", "plugin-creator", "dist", "scripts", "cli.js"), "golden-e2e", "--journey", "multi-component-safety-plugin", "--workspace", goldenWorkspace, "--format", "json"], {cwd: extracted, encoding: "utf8", env: {PATH: process.env.PATH ?? "", HOME: process.env.HOME ?? "", NODE_PATH: ""}});
+  if (golden.status !== 4) throw new Error(`Offline golden journey did not reach pending approval: ${golden.stdout}\n${golden.stderr}`);
+  const goldenResult = JSON.parse(golden.stdout);
+  if (!goldenResult.metrics.thresholds_met || goldenResult.activation.allowed || !goldenResult.phases.every((phase) => phase.evidence.executed && !phase.evidence.llm_executed)) throw new Error("Offline golden journey evidence contract failed");
   const repacked = path.join(tmp, "repacked.zip");
   run(path.join(plugin, "skills", "plugin-creator", "dist", "scripts", "package_goose_plugin.js"), [plugin, repacked]);
   if (!existsSync(repacked)) throw new Error("Offline plugin repack did not produce an archive");

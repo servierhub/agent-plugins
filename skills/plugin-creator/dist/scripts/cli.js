@@ -7,12 +7,13 @@ import { validate } from "./validate_goose_plugin.js";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { fullEval } from "./full_eval.js";
 import { runCiEval } from "./ci_eval.js";
+import { inspectGoldenEvidence, listGoldenJourneys, runGoldenJourney } from "./golden_journeys.js";
 import { renderCiProgress, renderHistoricalReview, renderMachineJsonl, renderTerminalProgress } from "./progress_projections.js";
 import { replayExecutionEvents } from "./execution_event_stream.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval|ci-eval|independent-review> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--approval FILE --approval-trust-policy FILE --test-evidence FILE] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--production] [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nindependent-review options:\n  --config FILE --host COMMAND [--host-arg ARG ...]  Run isolated review branches\n\nci-eval options:\n  --config FILE        Provider-neutral, non-interactive CI configuration\n\nCI exit codes: 0 success, 1 evaluation failure, 2 invalid config, 3 blocked capability/evidence, 4 pending approval.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval|ci-eval|independent-review|golden-e2e> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--approval FILE --approval-trust-policy FILE --test-evidence FILE] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--production] [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nindependent-review options:\n  --config FILE --host COMMAND [--host-arg ARG ...]  Run isolated review branches\n\nci-eval options:\n  --config FILE        Provider-neutral, non-interactive CI configuration\n\ngolden-e2e options:\n  --list | --journey ID --workspace DIR [--profile novice|expert]\n  [--override key=value ...] [--resume] [--cancel] [--inspect] [--stale-after-ms MS]\n\nCI exit codes: 0 success, 1 evaluation failure, 2 invalid config, 3 blocked capability/evidence, 4 pending approval.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -165,11 +166,43 @@ async function runFullEval(o) {
 export async function runCli(argv) { const [command, ...raw] = argv; if (!command || command === "--help" || command === "-h") {
     console.log(HELP);
     return 0;
-} if (!["init", "validate", "migrate", "verify", "package", "full-eval", "ci-eval", "independent-review"].includes(command))
+} if (!["init", "validate", "migrate", "verify", "package", "full-eval", "ci-eval", "independent-review", "golden-e2e"].includes(command))
     return usage("Unknown command: " + command); const o = parseCommon(raw); if (typeof o === "string")
     return usage(o); if (o.help) {
     console.log(HELP);
     return 0;
+} if (command === "golden-e2e") {
+    try {
+        if (o.args.includes("--list")) {
+            const items = listGoldenJourneys();
+            emit(items, items.map(x => x.id + " - " + x.title).join("\n"), o);
+            return 0;
+        }
+        const val = (name) => { const i = o.args.indexOf(name); return i >= 0 ? o.args[i + 1] : undefined; }, journey = val("--journey"), workspace = val("--workspace"), profile = (val("--profile") ?? "novice");
+        if (!journey || !workspace)
+            return usage("golden-e2e requires --journey ID --workspace DIR");
+        if (o.args.includes("--inspect")) {
+            const result = inspectGoldenEvidence(workspace, new Date(), Number(val("--stale-after-ms") ?? 86400000));
+            emit(result, "Golden evidence: " + result.status + "; activation denied", o);
+            return result.status === "fresh" ? 3 : 1;
+        }
+        const overrides = {};
+        for (let i = 0; i < o.args.length; i++)
+            if (o.args[i] === "--override") {
+                const pair = o.args[++i] ?? "", at = pair.indexOf("=");
+                if (at < 1)
+                    return usage("--override requires key=value");
+                const raw = pair.slice(at + 1);
+                overrides[pair.slice(0, at)] = raw === "true" ? true : raw === "false" ? false : Number.isFinite(Number(raw)) ? Number(raw) : raw;
+            }
+        const result = runGoldenJourney({ journey, workspace, profile, overrides, resume: o.args.includes("--resume"), cancel: o.args.includes("--cancel") });
+        emit(result, "Golden journey " + journey + ": " + result.status + "; activation denied", o);
+        return result.status === "pending-production-approval" ? 4 : 3;
+    }
+    catch (error) {
+        console.error(error.message);
+        return 2;
+    }
 } if (command === "independent-review") {
     const ci = o.args.indexOf("--config"), hi = o.args.indexOf("--host"), configPath = ci >= 0 ? o.args[ci + 1] : undefined, host = hi >= 0 ? o.args[hi + 1] : undefined, hostArgs = [];
     for (let i = 0; i < o.args.length; i++)

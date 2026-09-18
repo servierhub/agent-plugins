@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "node \"$(dirname \"$npm_package_json\")/scripts/build.mjs\"",
-    "test": "node \"$(dirname \"$npm_package_json\")/scripts/test.mjs\""
+    "test": "node \"$(dirname \"$npm_package_json\")/scripts/test.mjs\"",
+    "test:a11y": "npm run build && node dist/scripts/check_review_accessibility.js"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",

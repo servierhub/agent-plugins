@@ -71,7 +71,19 @@
       "types": "./dist/outcome-metrics-types.d.ts",
       "default": "./dist/outcome-metrics-types.js"
     },
-    "./outcome-metrics-schema/1.0.0": "./schema/outcome-metrics/1.0.0/outcome-productivity-metrics.schema.json"
+    "./outcome-metrics-schema/1.0.0": "./schema/outcome-metrics/1.0.0/outcome-productivity-metrics.schema.json",
+    "./feedback-annotation": {
+      "types": "./dist/feedback-annotation.d.ts",
+      "default": "./dist/feedback-annotation.js"
+    },
+    "./feedback-annotation-types": {
+      "types": "./dist/feedback-annotation-types.d.ts",
+      "default": "./dist/feedback-annotation-types.js"
+    },
+    "./feedback-annotation-schema/1.0.0": "./schema/feedback-annotation/1.0.0/feedback-annotation.schema.json",
+    "./feedback-proposal-schema/1.0.0": "./schema/feedback-annotation/1.0.0/feedback-proposal.schema.json",
+    "./feedback-decision-schema/1.0.0": "./schema/feedback-annotation/1.0.0/feedback-decision.schema.json",
+    "./feedback-decision-result-schema/1.0.0": "./schema/feedback-annotation/1.0.0/feedback-decision-result.schema.json"
   },
   "files": [
     "dist",
@@ -98,7 +110,9 @@
     "EVIDENCE_GRAPH_SPECIFICATION.md",
     "fixtures/evidence-graph",
     "OUTCOME_METRICS_SPECIFICATION.md",
-    "fixtures/outcome-metrics"
+    "fixtures/outcome-metrics",
+    "FEEDBACK_ANNOTATION_SPECIFICATION.md",
+    "fixtures/feedback-annotation"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

@@ -6,6 +6,8 @@ import { validateEvaluationPlan } from "./evaluation.js";
 import { validateResultContract } from "./result.js";
 import { OUTCOME_METRIC_IDS, OUTCOME_METRICS_VERSION } from "./outcome-metrics-types.js";
 import { validateOutcomeMetricsInput } from "./outcome-metrics.js";
+import { hashFeedback, validateFeedbackAnnotation } from "./feedback-annotation.js";
+import { FEEDBACK_ANNOTATION_VERSION } from "./feedback-annotation-types.js";
 import { isRfc3339Timestamp } from "./host-adapter.js";
 const isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 const nonBlank = (value) => typeof value === "string" && /\S/.test(value);
@@ -30,6 +32,8 @@ const schema = (name) => JSON.parse(readFileSync(join(here, "..", "schema", "1.0
 const evaluationSchema = schema("evaluation-plan.schema.json"), resultSchema = schema("result-contract.schema.json");
 const recommendationSchema = JSON.parse(readFileSync(join(here, "..", "schema", "recommendation", "1.0.0", "artifact-recommendation.schema.json"), "utf8"));
 const outcomeMetricsSchema = JSON.parse(readFileSync(join(here, "..", "schema", "outcome-metrics", "1.0.0", "outcome-productivity-metrics.schema.json"), "utf8"));
+const feedbackSchema = (name) => JSON.parse(readFileSync(join(here, "..", "schema", "feedback-annotation", "1.0.0", name), "utf8"));
+const feedbackSchemaDocuments = { "schema.feedback-annotation.v1": feedbackSchema("feedback-annotation.schema.json"), "schema.feedback-proposal.v1": feedbackSchema("feedback-proposal.schema.json"), "schema.feedback-decision.v1": feedbackSchema("feedback-decision.schema.json"), "schema.feedback-decision-result.v1": feedbackSchema("feedback-decision-result.schema.json") };
 const productionApprovalDocument = JSON.parse(readFileSync(join(here, "..", "fixtures", "compatibility", "cases", "schema.hook-production-approval.v1.json"), "utf8"));
 const hostProtocolSchema = schema("host-execution-adapter.schema.json"), hostEventSchema = schema("host-execution-event.schema.json");
 const deepEqual = (left, right) => JSON.stringify(left) === JSON.stringify(right);
@@ -257,6 +261,17 @@ const productionApprovalEvent = (v) => isRecord(v) && exact(v, ["revision", "act
 const productionApproval = (v) => isRecord(v) && exact(v, ["version", "request_id", "requested_at", "expires_at", "requester", "automated_evidence", "bindings", "events"], ["version", "request_id", "requested_at", "expires_at", "requester", "automated_evidence", "bindings", "events", "supersedes"]) && v.version === "hook-production-approval/v1" && nonBlank(v.request_id) && rfc3339(v.requested_at) && rfc3339(v.expires_at) && Date.parse(String(v.expires_at)) > Date.parse(String(v.requested_at)) && productionApprovalIdentity(v.requester) && isRecord(v.automated_evidence) && exact(v.automated_evidence, ["status", "attestation_sha256"]) && enumValue(v.automated_evidence.status, ["pass", "fail"]) && sha256(v.automated_evidence.attestation_sha256) && productionApprovalBindings(v.bindings) && arrayOf(v.events, productionApprovalEvent) && optional(v.supersedes, productionApprovalLineage);
 const productionApprovalSchema = (v) => deepEqual(v, productionApprovalDocument);
 const schemaDocument = (surfaceId, v) => deepEqual(v, surfaceId === "schema.host-adapter.v1" ? hostProtocolSchema : surfaceId === "schema.host-event.v1" ? hostEventSchema : surfaceId === "schema.artifact-recommendation.v1" ? recommendationSchema : surfaceId === "schema.outcome-metrics.v1" ? outcomeMetricsSchema : null);
+const feedbackReviewer = (v) => isRecord(v) && exact(v, ["reviewerId", "role"], ["reviewerId", "displayName", "role"]) && nonBlank(v.reviewerId) && nonBlank(v.role) && optional(v.displayName, nonBlank);
+const feedbackOperation = (v) => isRecord(v) && ((exact(v, ["op", "path", "value"]) && enumValue(v.op, ["add", "replace"])) || (exact(v, ["op", "path"]) && v.op === "remove")) && nonBlank(v.path) && /^\/(?:[^~/]|~0|~1)*(?:\/(?:[^~/]|~0|~1)*)*$/.test(v.path) && !String(v.path).split("/").some(x => ["__proto__", "prototype", "constructor"].includes(x));
+const feedbackHashed = (v, field) => sha256(v[field]) && hashFeedback(Object.fromEntries(Object.entries(v).filter(([key]) => key !== field))) === v[field];
+const feedbackInterpretation = (v) => isRecord(v) && exact(v, ["schemaVersion", "interpretationId", "annotationId", "annotationHash", "createdAt", "interpreter", "intent", "summary", "operations", "affectedResourceIds", "requiredTests", "interpretationHash"]) && v.schemaVersion === FEEDBACK_ANNOTATION_VERSION && [v.interpretationId, v.annotationId].every(nonBlank) && sha256(v.annotationHash) && rfc3339(v.createdAt) && feedbackReviewer(v.interpreter) && enumValue(v.intent, ["modify", "remove", "move", "simplify", "explain", "replace", "merge", "behavior"]) && nonBlank(v.summary) && arrayOf(v.operations, feedbackOperation) && stringArray(v.affectedResourceIds) && stringArray(v.requiredTests) && feedbackHashed(v, "interpretationHash");
+const feedbackProposal = (v) => isRecord(v) && exact(v, ["schemaVersion", "proposalId", "annotationId", "annotationHash", "interpretationId", "interpretationHash", "baseResourceId", "baseRevision", "baseHash", "action", "rationale", "operations", "affectedResourceIds", "requiredTests", "proposedAt", "proposer", "proposalHash"]) && v.schemaVersion === FEEDBACK_ANNOTATION_VERSION && [v.proposalId, v.annotationId, v.interpretationId, v.baseResourceId].every(nonBlank) && [v.annotationHash, v.interpretationHash, v.baseHash].every(sha256) && integer(v.baseRevision) && enumValue(v.action, ["accept", "reject", "correct"]) && nonBlank(v.rationale) && arrayOf(v.operations, feedbackOperation) && stringArray(v.affectedResourceIds) && stringArray(v.requiredTests) && rfc3339(v.proposedAt) && feedbackReviewer(v.proposer) && feedbackHashed(v, "proposalHash") && (v.action !== "reject" || v.operations.length === 0);
+const feedbackPreview = (v) => isRecord(v) && exact(v, ["schemaVersion", "proposalId", "proposalHash", "baseResourceId", "baseRevision", "baseHash", "before", "after", "operations", "affectedResourceIds", "requiredTests", "previewHash"]) && v.schemaVersion === FEEDBACK_ANNOTATION_VERSION && nonBlank(v.proposalId) && sha256(v.proposalHash) && nonBlank(v.baseResourceId) && integer(v.baseRevision) && sha256(v.baseHash) && arrayOf(v.operations, feedbackOperation) && stringArray(v.affectedResourceIds) && stringArray(v.requiredTests) && feedbackHashed(v, "previewHash");
+const feedbackDecision = (v) => isRecord(v) && exact(v, ["schemaVersion", "decisionId", "proposalId", "proposalHash", "decision", "rationale", "reviewer", "decidedAt", "expectedRevision", "expectedResourceHash", "previewHash", "decisionHash"]) && v.schemaVersion === FEEDBACK_ANNOTATION_VERSION && [v.decisionId, v.proposalId].every(nonBlank) && sha256(v.proposalHash) && enumValue(v.decision, ["accepted", "rejected"]) && nonBlank(v.rationale) && feedbackReviewer(v.reviewer) && rfc3339(v.decidedAt) && integer(v.expectedRevision) && sha256(v.expectedResourceHash) && sha256(v.previewHash) && feedbackHashed(v, "decisionHash");
+const feedbackProvenance = (v) => isRecord(v) && exact(v, ["annotationId", "annotationHash", "interpretationId", "interpretationHash", "proposalId", "proposalHash", "decisionId", "decisionHash"]) && [v.annotationId, v.interpretationId, v.proposalId, v.decisionId].every(nonBlank) && [v.annotationHash, v.interpretationHash, v.proposalHash, v.decisionHash].every(sha256);
+const feedbackRevision = (v) => isRecord(v) && exact(v, ["resourceId", "resourceKind", "revision", "parentRevision", "parentHash", "content", "resourceHash"], ["resourceId", "resourceKind", "revision", "parentRevision", "parentHash", "content", "resourceHash", "provenance"]) && nonBlank(v.resourceId) && enumValue(v.resourceKind, ["product", "scenario", "candidate"]) && integer(v.revision) && nullable(v.parentRevision, integer) && nullable(v.parentHash, sha256) && sha256(v.resourceHash) && hashFeedback(v.content) === v.resourceHash && optional(v.provenance, feedbackProvenance);
+const feedbackEffect = (v) => isRecord(v) && ((exact(v, ["kind", "resourceId", "status", "reason", "sourceResourceId", "sourceRevision", "sourceHash"]) && v.kind === "resource" && nonBlank(v.resourceId) && enumValue(v.status, ["rerun-required", "invalidated"])) || (exact(v, ["kind", "testId", "status", "reason", "sourceResourceId", "sourceRevision", "sourceHash"]) && v.kind === "test" && nonBlank(v.testId) && v.status === "rerun-required")) && nonBlank(v.reason) && nonBlank(v.sourceResourceId) && positiveInteger(v.sourceRevision) && sha256(v.sourceHash);
+const feedbackDecisionResult = (v) => isRecord(v) && exact(v, ["decision", "revision", "effects"]) && feedbackDecision(v.decision) && nullable(v.revision, feedbackRevision) && arrayOf(v.effects, feedbackEffect);
 const metricTarget = (v) => isRecord(v) && exact(v, ["operator", "value", "unit"]) && enumValue(v.operator, ["<=", ">="]) && finite(v.value) && nonBlank(v.unit);
 const outcomeMetricResult = (v) => isRecord(v) && exact(v, ["id", "status", "unit", "target", "provenanceIds"], ["id", "status", "value", "unit", "target", "met", "numerator", "denominator", "provenanceIds"]) && OUTCOME_METRIC_IDS.includes(v.id) && enumValue(v.status, ["computed", "missing", "opted-out", "guardrail-blocked"]) && optional(v.value, finite) && nonBlank(v.unit) && metricTarget(v.target) && optional(v.met, x => typeof x === "boolean") && optional(v.numerator, finite) && optional(v.denominator, finite) && stringArray(v.provenanceIds) && new Set(v.provenanceIds).size === v.provenanceIds.length;
 const outcomeMetricsReport = (v) => isRecord(v) && exact(v, ["schemaVersion", "dictionaryVersion", "journeyId", "privacyStatus", "metrics", "northStar", "guardrails", "computationHash"]) && v.schemaVersion === OUTCOME_METRICS_VERSION && v.dictionaryVersion === OUTCOME_METRICS_VERSION && nonBlank(v.journeyId) && enumValue(v.privacyStatus, ["local-only", "opted-out"]) && Array.isArray(v.metrics) && v.metrics.length === OUTCOME_METRIC_IDS.length && v.metrics.every(outcomeMetricResult) && v.metrics.every((x, i) => x.id === OUTCOME_METRIC_IDS[i]) && outcomeMetricResult(v.northStar) && isRecord(v.northStar) && v.northStar.id === OUTCOME_METRIC_IDS.at(-1) && isRecord(v.guardrails) && exact(v.guardrails, ["releaseEligible", "blockedRunIds", "reasons"]) && typeof v.guardrails.releaseEligible === "boolean" && stringArray(v.guardrails.blockedRunIds) && stringArray(v.guardrails.reasons) && typeof v.computationHash === "string" && /^sha256:[a-f0-9]{64}$/.test(v.computationHash);
@@ -330,12 +345,28 @@ export function validateShapeById(surfaceId, validatorId, value) {
         return validatesSchema(recommendationSchema, value, recommendationSchema);
     if (validatorId === "schema:outcome-metrics-input")
         return validateOutcomeMetricsInput(value).valid;
+    if (validatorId === "schema:feedback-annotation")
+        return validateFeedbackAnnotation(value).valid;
+    if (validatorId === "artifact:feedback-interpretation")
+        return feedbackInterpretation(value);
+    if (validatorId === "schema:feedback-proposal")
+        return feedbackProposal(value);
+    if (validatorId === "artifact:feedback-preview")
+        return feedbackPreview(value);
+    if (validatorId === "schema:feedback-decision")
+        return feedbackDecision(value);
+    if (validatorId === "artifact:feedback-revision")
+        return feedbackRevision(value);
+    if (validatorId === "schema:feedback-decision-result")
+        return feedbackDecisionResult(value);
     if (validatorId === "artifact:outcome-metrics-report")
         return outcomeMetricsReport(value);
     if (validatorId === "shape:json-schema-document" || validatorId === "shape:artifact-recommendation-schema-document" || validatorId === "shape:outcome-metrics-schema-document")
         return schemaDocument(surfaceId, value);
     if (validatorId === "shape:production-approval-schema-document")
         return productionApprovalSchema(value);
+    if (validatorId === "shape:feedback-schema-document")
+        return deepEqual(value, feedbackSchemaDocuments[surfaceId]);
     const hostMap = { "host:capability-report": "capabilityReport", "host:negotiation-request": "negotiationRequest", "host:run-request": "runRequest", "host:artifact-exchange": "artifactExchange", "host:error": "error", "host:cancellation-request": "cancellationRequest", "host:cancellation-response": "cancellationResponse", "host:resume-request": "resumeRequest", "host:artifact-request": "artifactRequest" };
     if (validatorId === "host:negotiation-result")
         return Boolean(hostValidators[surfaceId.endsWith("blocked.v1") ? "negotiationBlocked" : "negotiationAccepted"]?.(value));

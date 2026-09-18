@@ -122,6 +122,10 @@ goose plugin install https://github.com/example/my-plugin.git
 For local development, place the plugin under the project or user
 `.agents/plugins/` directory and start a new Goose session.
 
+## Golden offline E2E journeys
+
+Three immutable natural-language journeys exercise the complete creator lifecycle with novice defaults and bounded expert overrides. A deterministic offline executor generates isolated candidates, runs shipped validators and frozen scenario repetitions, derives metrics from baseline/result/timing records, archives provenance and heartbeat evidence, and can never activate an artifact. Its evidence is honestly `executed: true` for local fixture execution and `llm_executed: false`. Successful evaluation remains **pending production approval**. See [Golden end-to-end journeys](references/golden-e2e-journeys.md).
+
 ## Format status
 
 The project targets Goose's Open Plugins adapter and the Open Plugins
