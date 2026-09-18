@@ -241,7 +241,6 @@
       "additionalProperties": false,
       "required": [
         "name",
-        "version",
         "trust_boundary"
       ],
       "properties": {
@@ -253,11 +252,37 @@
           "type": "string",
           "minLength": 1
         },
+        "unavailable_reason": {
+          "type": "string",
+          "minLength": 1
+        },
         "trust_boundary": {
           "type": "string",
           "minLength": 1
         }
-      }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "version"
+          ],
+          "not": {
+            "required": [
+              "unavailable_reason"
+            ]
+          }
+        },
+        {
+          "required": [
+            "unavailable_reason"
+          ],
+          "not": {
+            "required": [
+              "version"
+            ]
+          }
+        }
+      ]
     },
     "model": {
       "type": "object",
@@ -365,7 +390,6 @@
       "additionalProperties": false,
       "required": [
         "name",
-        "version",
         "trust_boundary"
       ],
       "properties": {
@@ -377,6 +401,10 @@
           "type": "string",
           "minLength": 1
         },
+        "unavailable_reason": {
+          "type": "string",
+          "minLength": 1
+        },
         "trust_boundary": {
           "type": "string",
           "minLength": 1
@@ -385,7 +413,29 @@
           "type": "string",
           "minLength": 1
         }
-      }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "version"
+          ],
+          "not": {
+            "required": [
+              "unavailable_reason"
+            ]
+          }
+        },
+        {
+          "required": [
+            "unavailable_reason"
+          ],
+          "not": {
+            "required": [
+              "version"
+            ]
+          }
+        }
+      ]
     }
   }
 }

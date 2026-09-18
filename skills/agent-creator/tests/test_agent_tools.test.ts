@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { parseAgent, renderAgent, AgentFormatError } from "../dist/scripts/agent_format.js";
 import { extractAssistantText, validateEvalSet } from "../dist/scripts/run_agent_eval.js";
-import { deterministicGrade, resolveJudgments } from "../dist/scripts/grade_agent_eval.js";
+import { deterministicGrade, GradingDiagnostic, resolveJudgments, verifiedRuns } from "../dist/scripts/grade_agent_eval.js";
 import { normalizeAssertions, assertionHash, runDeterministic, variantManifest } from "../dist/scripts/assertion_grading.js";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
@@ -154,6 +154,22 @@ test("grading executes deterministic assertions before semantic judgment", () =>
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 });
 
+test("declared variants are authoritative when only one of two run directories is present", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "agent-grade-incomplete-"));
+  try {
+    const evalDir = join(tmp, "eval-1"), assertions = normalizeAssertions(["contains: evidence"]);
+    const variants = { with_agent: "current source", old_agent: "baseline source" }, variant_sources = variantManifest(variants), hash = assertionHash(assertions, variants);
+    const present = join(evalDir, "with_agent"); mkdirSync(join(present, "outputs"), { recursive: true });
+    writeFileSync(join(present, "outputs", "response.md"), "evidence\n");
+    writeFileSync(join(present, "assertion_hash.txt"), hash + "\n");
+    const metadata = { assertion_hash: hash, assertions, variants: Object.keys(variants), variant_sources };
+    assert.throws(() => verifiedRuns("eval-1", evalDir, metadata), (error: any) => error instanceof GradingDiagnostic && error.code === "INCOMPLETE_VARIANTS" && /old_agent/.test(error.message));
+    writeFileSync(join(evalDir, "eval_metadata.json"), JSON.stringify(metadata));
+    assert.throws(() => execFileSync("node", [join(DIST, "grade_agent_eval.js"), tmp], { stdio: "pipe" }), (error: any) => error.status === 1 && /old_agent.*rerun all declared variants/.test(error.stderr));
+    assert.equal(existsSync(join(present, "grading.json")), false);
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
+});
+
 test("semantic consensus never averages disagreement or uncontained evidence", () => {
   const base = { model: "fake-model", variant: "variant-blind", evidence_quote: "exact output", rationale: "supported", valid_evidence: true };
   const split = resolveJudgments([{ ...base, grader_id: "fake-a", verdict: "pass" }, { ...base, grader_id: "fake-b", verdict: "fail" }] as any);
@@ -204,7 +220,7 @@ test("grade CLI rejects assertion criterion/version mutation retaining a stale c
     writeFileSync(metadataPath, JSON.stringify(metadata)); // deliberately retain the copied hash and both run markers
     assert.throws(
       () => execFileSync("node", [join(DIST, "grade_agent_eval.js"), tmp], { encoding: "utf-8", stdio: "pipe" }),
-      (error: any) => error.status === 1 && /Canonical assertion\/variant hash changed.*rerun both variants/.test(error.stderr)
+      (error: any) => error.status === 1 && /Canonical assertion\/variant hash changed.*rerun all declared variants/.test(error.stderr)
     );
     assert.equal(existsSync(join(evalDir, "with_agent", "grading.json")), false);
     assert.equal(existsSync(join(evalDir, "old_agent", "grading.json")), false);

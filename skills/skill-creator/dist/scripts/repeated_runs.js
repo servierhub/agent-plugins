@@ -1,4 +1,4 @@
-import { compositeHash } from "./evaluation_provenance.js";
+import { counterbalancedPairSeed, pairedOrderFromSeed } from "./evaluation_provenance.js";
 export const RUN_PROFILE_COUNTS = { fast: 1, standard: 3, release: 5 };
 export class RepeatedRunPlanError extends Error {
     code = "invalid-aggregate-budget";
@@ -40,7 +40,7 @@ export function schedulePairs(binding, count) {
         throw new TypeError("requested pair count must be a positive integer");
     return Array.from({ length: count }, (_, offset) => {
         const pair_index = offset + 1;
-        const hex = compositeHash([binding.skill_source_sha256, binding.eval_plan_sha256, binding.scenario_sha256, String(pair_index)]).slice(0, 8);
-        return { pair_index, seed: Number.parseInt(hex, 16) >>> 0, order: pair_index % 2 ? ["with_skill", "baseline"] : ["baseline", "with_skill"] };
+        const seed = counterbalancedPairSeed(binding, pair_index);
+        return { pair_index, seed, order: pairedOrderFromSeed(seed) };
     });
 }

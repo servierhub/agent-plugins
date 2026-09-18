@@ -4057,7 +4057,7 @@
       "role": "consumer",
       "canonicalArtifactId": "agent.response-markdown.unversioned",
       "sourceEvidence": "response.md",
-      "evidenceOccurrences": 1
+      "evidenceOccurrences": 2
     },
     {
       "siteId": "skills/agent-creator/scripts/grade_agent_eval.ts::timing.json",

@@ -81,6 +81,8 @@ test("export, import, grade, and aggregate preserve a string eval_id through an 
     const runPath = join(state.root, "run.json"), workspace = join(state.root, "workspace");
     writeFileSync(runPath, JSON.stringify(runFor(job, { eval_id: "group/risk" })));
     importEvidenceRun({ jobPath: join(bundle, "job.json"), runPath, workspace });
+    writeFileSync(runPath, JSON.stringify(runFor(job, { eval_id: "group/risk", run_id: "manual-2", configuration: "without_agent_instructions" })));
+    importEvidenceRun({ jobPath: join(bundle, "job.json"), runPath, workspace });
 
     const evalDir = join(workspace, "eval-group%2Frisk");
     const importedMetadata = JSON.parse(readFileSync(join(evalDir, "eval_metadata.json"), "utf-8"));

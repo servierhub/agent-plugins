@@ -12,6 +12,23 @@ export function compositeHash(parts) {
     }
     return hash.digest("hex");
 }
+function rawPairSeed(binding, pairIndex) {
+    return Number.parseInt(compositeHash([binding.skill_source_sha256, binding.eval_plan_sha256, binding.scenario_sha256, String(pairIndex)]).slice(0, 8), 16) >>> 0;
+}
+/** Derive a pair's execution order solely from its recorded unsigned 32-bit seed. */
+export function pairedOrderFromSeed(seed) {
+    if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff)
+        throw new TypeError("pair seed must be an unsigned 32-bit integer");
+    return seed % 2 === 0 ? ["with_skill", "baseline"] : ["baseline", "with_skill"];
+}
+/** Derive reproducible seeds whose parity alternates, preserving counterbalance. */
+export function counterbalancedPairSeed(binding, pairIndex) {
+    if (!Number.isInteger(pairIndex) || pairIndex <= 0)
+        throw new TypeError("pair index must be a positive integer");
+    const startingParity = rawPairSeed(binding, 1) & 1;
+    const requiredParity = startingParity ^ ((pairIndex - 1) & 1);
+    return ((rawPairSeed(binding, pairIndex) & 0xfffffffe) | requiredParity) >>> 0;
+}
 function isDirectory(path) {
     try {
         return statSync(path).isDirectory();
@@ -68,8 +85,9 @@ export function expectedRunDirs(workspace) {
         const expectedConfigs = ["with_skill", metadata.baseline_configuration ?? (isDirectory(join(evalDir, "old_skill")) ? "old_skill" : "without_skill")];
         for (let index = 1; index <= metadata.requested_pairs; index++) {
             const scheduled = schedules[index - 1];
-            const expectedSeed = Number.parseInt(compositeHash([String(binding.skill_source_sha256), String(binding.eval_plan_sha256), String(binding.scenario_sha256), String(index)]).slice(0, 8), 16) >>> 0;
-            const expectedOrder = index % 2 ? ["with_skill", "baseline"] : ["baseline", "with_skill"];
+            const scheduleBinding = { skill_source_sha256: String(binding.skill_source_sha256), eval_plan_sha256: String(binding.eval_plan_sha256), scenario_sha256: String(binding.scenario_sha256) };
+            const expectedSeed = counterbalancedPairSeed(scheduleBinding, index);
+            const expectedOrder = pairedOrderFromSeed(expectedSeed);
             if (!scheduled || scheduled.pair_index !== index || scheduled.seed !== expectedSeed || JSON.stringify(scheduled.order) !== JSON.stringify(expectedOrder))
                 throw new ExecutionPlanError("invalid-evaluation-plan", evalName + " execution_schedule is not a strict total deterministic schedule at pair " + index);
             for (const config of expectedConfigs)

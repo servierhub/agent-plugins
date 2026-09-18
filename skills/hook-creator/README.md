@@ -59,7 +59,7 @@ node dist/validate_hook.js /path/to/plugin
 
 ## Reproducible evaluation manifests
 
-Hook evaluations use the canonical format in `references/evaluation-run-manifest.md` and `schemas/evaluation-run-manifest.schema.json`. The same schema applies locally and in CI; verification invalidates receipts after any bound input changes.
+Hook evaluations use the canonical format in `references/evaluation-run-manifest.md` and `schemas/evaluation-run-manifest.schema.json`. The same schema applies locally and in CI; verification invalidates receipts after any bound input changes. Host adapters, runners, and graders—like tools—must record exactly one concrete version or an explicit unavailability reason, and retain their declared trust boundary in either case.
 
 ## Development
 
