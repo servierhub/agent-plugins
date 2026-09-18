@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, truncateSync, writeFileSync, writeSync } from "node:fs";
+import { closeSync, existsSync, fsyncSync, linkSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, truncateSync, unlinkSync, writeFileSync, writeSync } from "node:fs";
 import { dirname, basename } from "node:path";
 export const DEFAULT_EXECUTION_RELIABILITY_PLAN = { lease_ms: 30_000, heartbeat_ms: 5_000, stale_after_ms: 45_000, max_attempts: 3, backoff_ms: 25, max_backoff_ms: 250, cancellation_grace_ms: 250, total_budget_ms: 120_000 };
 export function newReliabilityLedger(now = Date.now()) { return { started_at: new Date(now).toISOString(), consumed_ms: 0, attempts: 0 }; }
@@ -43,28 +43,80 @@ catch {
     return null;
 } }
 function replaceJson(path, value) { const tmp = path + ".tmp-" + process.pid + "-" + randomUUID(); writeFileSync(tmp, JSON.stringify(value), { mode: 0o600 }); renameSync(tmp, path); }
-function withMutex(path, fn) { mkdirSync(dirname(path), { recursive: true }); for (let i = 0; i < 400; i++) {
-    let fd;
+function readMutex(path) { try {
+    const value = JSON.parse(readFileSync(path, "utf8"));
+    return value?.schema_version === "1.0" && typeof value.owner === "string" && Number.isInteger(value.pid) ? value : null;
+}
+catch {
+    return null;
+} }
+function removeOwnedMutex(path, owner) { if (readMutex(path)?.owner !== owner)
+    return; try {
+    unlinkSync(path);
+}
+catch (error) {
+    if (error?.code !== "ENOENT")
+        throw error;
+} }
+function createMutex(path, record) { const candidate = path + ".candidate-" + record.owner; try {
+    writeFileSync(candidate, JSON.stringify(record), { flag: "wx", mode: 0o600 });
     try {
-        fd = openSync(path, "wx", 0o600);
+        linkSync(candidate, path);
+        return true;
+    }
+    catch (error) {
+        if (error?.code !== "EEXIST")
+            throw error;
+        return false;
+    }
+}
+finally {
+    try {
+        unlinkSync(candidate);
+    }
+    catch (error) {
+        if (error?.code !== "ENOENT")
+            throw error;
+    }
+} }
+function sameFile(left, right) { try {
+    const a = statSync(left), b = statSync(right);
+    return a.dev === b.dev && a.ino === b.ino;
+}
+catch {
+    return false;
+} }
+function reapDeadMutex(path) { const reap = path + ".reap", owner = randomUUID(), record = { schema_version: "1.0", owner, pid: process.pid }; if (!createMutex(reap, record))
+    return; try {
+    const current = readMutex(path);
+    if (current && !processAlive(current.pid))
+        try {
+            unlinkSync(path);
+        }
+        catch (error) {
+            if (error?.code !== "ENOENT")
+                throw error;
+        }
+}
+finally {
+    removeOwnedMutex(reap, owner);
+} }
+function withMutex(path, fn, recover) { mkdirSync(dirname(path), { recursive: true }); const owner = randomUUID(), record = { schema_version: "1.0", owner, pid: process.pid }; for (let i = 0; i < 400; i++) {
+    if (createMutex(path, record)) {
         try {
             return fn();
         }
         finally {
-            closeSync(fd);
-            rmSync(path, { force: true });
+            removeOwnedMutex(path, owner);
         }
     }
-    catch (error) {
-        if (fd !== undefined)
-            try {
-                closeSync(fd);
-            }
-            catch { }
-        if (error?.code !== "EEXIST")
-            throw error;
-        sleep(5);
+    const current = readMutex(path);
+    if (current) {
+        recover?.(current);
+        if (!processAlive(current.pid))
+            reapDeadMutex(path);
     }
+    sleep(5);
 } throw new Error("timed out acquiring execution fence mutex"); }
 function fenceGeneration(path) { try {
     const x = JSON.parse(readFileSync(path, "utf8"));
@@ -95,7 +147,8 @@ export class ExecutionLease {
             busy = true;
             return;
         } if (current && processAlive(current.pid) && current.pid !== process.pid)
-            stalePid = current.pid; const generation = Math.max(fenceGeneration(fence), current?.generation ?? 0) + 1; replaceJson(fence, { schema_version: "1.0", generation, fencing_token: token, updated_at: new Date(now).toISOString() }); replaceJson(path, { schema_version: "1.1", owner, generation, fencing_token: token, pid: process.pid, process_group_id: ownProcessGroup(), acquired_at: new Date(now).toISOString(), heartbeat_at: new Date(now).toISOString(), expires_at: new Date(now + p.lease_ms).toISOString() }); won = new ExecutionLease(path, owner, generation, token, p); });
+            stalePid = current.pid; const generation = Math.max(fenceGeneration(fence), current?.generation ?? 0) + 1; replaceJson(fence, { schema_version: "1.0", generation, fencing_token: token, updated_at: new Date(now).toISOString() }); replaceJson(path, { schema_version: "1.1", owner, generation, fencing_token: token, pid: process.pid, process_group_id: ownProcessGroup(), acquired_at: new Date(now).toISOString(), heartbeat_at: new Date(now).toISOString(), expires_at: new Date(now + p.lease_ms).toISOString() }); won = new ExecutionLease(path, owner, generation, token, p); }, lock => { const current = readLease(path); if (current?.pid === lock.pid && leaseIsStale(current, p, Date.now()) && lock.pid !== process.pid)
+            forceTerminate(lock.pid, p.cancellation_grace_ms); });
         if (won) {
             if (stalePid)
                 forceTerminate(stalePid, p.cancellation_grace_ms);
