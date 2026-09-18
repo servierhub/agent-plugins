@@ -18,6 +18,7 @@
     "cases/agent.timing.unversioned.json": "12b1eeca41510f59acb697722e9cbce16bb7e802687ab609c6c9f6854ce2bd17",
     "cases/agent.transcript.unversioned.json": "bf8b7e839430cc79081c5f0fcad3ddbb64c7463a3bef2e0f53ae9dc351f1c7ed",
     "cases/agent.viewer-html.unversioned.html": "c591eb0613dbec96b679bf7d79135c6750ef032e61261db2c56173d61feeea60",
+    "cases/api.compute-outcome-metrics.v1.json": "71e7b64d2e971509e5a7a6c2b113bdeb78389c4793435e3045e9a3a70423f3f6",
     "cases/api.recommend-artifact.v1.json": "b515f208ec625678d52bde3936e058671ce45a2a3c221d25ec75d46c4f18b436",
     "cases/contract.artifact-recommendation.v1.json": "47a321858c8a753da0206126b541277d19eb170f12877bc7a88113f10dd8fcae",
     "cases/contract.capability.v1.json": "039dedaa345cdd51c57fe354c8a48d028faf7289e609d9a071650e316d306ff1",
@@ -61,6 +62,8 @@
     "cases/contract.host.run-identity.v1.json": "1a4a99c8b4d7bb232e6c115a44636c7e51c102de3aac383b3b3947f591c5be22",
     "cases/contract.host.run-request.v1.json": "b59633a9ce350ea5387cdbe8644ebb97acb92ab15593fbda934b083d6052bcc6",
     "cases/contract.host.usage-metrics.v1.json": "1a4a99c8b4d7bb232e6c115a44636c7e51c102de3aac383b3b3947f591c5be22",
+    "cases/contract.outcome-metrics-input.v1.json": "dfd4831f4b28a9bc1538ea651a5d570d4b5d80988aeca20ed672f90d50e9d582",
+    "cases/contract.outcome-metrics-report.v1.json": "fd1899a2fccc009f00e799b9c7cc077d4ad7e97b0ef3f43a56daa4817fb2f2a4",
     "cases/contract.result.v1.json": "04697fa6551c4d27a6fd6d4693cc1fe5b67ed5451de855050eda68f2624c590f",
     "cases/hook.cli.envelope.unversioned.json": "093f2541c4add422eac6c6d51e1fe90a939cf049f6a5f873c926c021aa40f3f0",
     "cases/hook.document.current.unversioned.json": "78922a784ee78e9e50587e93628cd3b9d4dfbe49087adc4514e6781cea38cbb9",
@@ -95,6 +98,7 @@
     "cases/schema.hook-production-approval.v1.json": "c49798cdc346e2a74cf2ae0bbc3ba1d438ce917dbddb448903136474d720c852",
     "cases/schema.host-adapter.v1.json": "9d3ff2ecbac8ae8d09b0a86e1dab50baf45be83041b5d3d44e1ac1af68e2090a",
     "cases/schema.host-event.v1.json": "93a5e178bc122adfdd18f27a596e578c6b4b9c250b386f79a54d3d4a61a1294d",
+    "cases/schema.outcome-metrics.v1.json": "47f508c9a349222c7d6a9d874ba5a2735adcd83289a2138198aff1c7d90d9c0b",
     "cases/skill.authoring-audit.v1.json": "48a26809f8470b96e8abea0953eaaae0f993a2a27046f7496a96c3d43ccdac50",
     "cases/skill.benchmark-markdown.unversioned.md": "e57029879d1c8db10addd1c00b1ae5b1636f3adbe15c19f9cde7fb3766fc01da",
     "cases/skill.benchmark.unversioned.json": "1c1623a1502232e6191de4e097959c65de0ac72586317d127be8a171bebf66fe",
@@ -125,7 +129,7 @@
     "cases/workspace.plugin-eval.unversioned.json": "4adb016c0805e8664588095e9384891b0de5db47c70b3eae512fc72e09b408b6",
     "cases/workspace.skill-eval.current.v1.json": "000c803c9b99c66cc4eac6bb1077c39b0a602e60ed911e146dcca41db0f9863b",
     "cases/workspace.skill-eval.legacy-runs.v0.json": "6da09102d5ab94f880c71161a5703b66c524fb78de537eb2043eba787bf541a6",
-    "expected-public-surfaces.json": "1ce65804066bf8dfd5cd3537ed33a4e7936884e968a6294a2f6bb56a1ad38ff6",
+    "expected-public-surfaces.json": "a0582da758824848366ee6fdfcecca395f3f757d2e9d17a938778df673ac4387",
     "golden/agent-cli.json": "0f421a9b9a25af141dfdf4e695d07be6d2513387752ba8be9bb0d78bffbb5eae",
     "golden/ambiguous-unversioned.json": "ed43fe0bfcc37a9959f724cd7d2119b4446c9ffbe20340e6a2a710458667e0b8",
     "golden/evaluation-receipt.json": "741737e992932a818f50f7b2a06276b0fb362164c2d10e7515c968818b15d3e1",
@@ -147,6 +151,6 @@
     "migration/legacy-workspace/runs/eval-1/with_skill/run-1/grading.json": "440d8f48e61a25876a6cb4d90287a73fe3d0b9edaf948e7a7fd76ef09046cfde",
     "migration/legacy-workspace/runs/eval-1/with_skill/run-1/outputs/response.md": "147edb9b994ca947e40c4d819a2fad43c554fa72ba879c49b776bc69c83dd310",
     "migration/legacy-workspace/runs/eval-1/with_skill/run-1/timing.json": "da1aab93bf45bfee07536fe97d1c5a202048ecba54fd14a4b64b94b120e0f6b7",
-    "producer-discovery.json": "303e54c6a7bfc857350e9a1b908df96b7093124b8d9893f3af391a2982073cd4"
+    "producer-discovery.json": "40b1f7c44eed5b6b556acc9d5dd7942085f382c91eb0ca0a42a9383f2c4234c7"
   }
 }

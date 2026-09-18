@@ -24,6 +24,21 @@ test("recommendation schema and API package surfaces are explicitly classified",
   assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="api.recommend-artifact.v1")?.supportState,"unsupported");
 });
 
+test("outcome metrics schema, API, input contract, and report are explicitly classified and strict",()=>{
+  const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
+  assert.deepEqual(Object.keys(pkg.exports).filter((key:string)=>key.includes("outcome-metrics")).sort(),["./outcome-metrics","./outcome-metrics-schema/1.0.0","./outcome-metrics-types"]);
+  assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="api.compute-outcome-metrics.v1")?.supportState,"unsupported");
+  for(const id of ["contract.outcome-metrics-input.v1","contract.outcome-metrics-report.v1","schema.outcome-metrics.v1"])assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id===id)?.supportState,"supported",id);
+  for(const id of ["contract.outcome-metrics-input.v1","contract.outcome-metrics-report.v1"]){const row:any=expected.outcomes.find((x:any)=>x.id===id);const value=JSON.parse(outcomeFixture(row.expectedOutcome.fixture).toString());const nested=id.includes("report")?value.guardrails:value.metricContract;nested.compatibilityProbe=true;assert.equal(validateSurfaceShape(id,value).valid,false,id+" nested extras");}
+});
+
+test("updated skill viewer source artifacts and decision template are classified",()=>{
+  const rule=discovery.artifactDiscovery.find((x:any)=>x.sourceFile==="skills/skill-creator/eval-viewer/generate_review.ts");
+  assert.ok(rule.expected.includes("benchmark.json"));assert.ok(rule.expected.includes("timing.json"));
+  const viewer=COMPATIBILITY_REGISTRY.find(x=>x.id==="skill.viewer-html.unversioned")!;assert.equal(viewer.sourceEvidence,'readFileSync(join(HERE,"viewer.html"),"utf8")');
+  assert.equal(validateSurfaceShape(viewer.id,loadSource("skills/skill-creator/eval-viewer/viewer.html")).valid,true);
+});
+
 test("production approval artifact and schema are explicit supported surfaces",()=>{
   assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="hook.production-approval.v1")?.validatorId,"artifact:production-approval");
   assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="schema.hook-production-approval.v1")?.supportState,"supported");

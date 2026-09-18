@@ -24,3 +24,5 @@ export * from "./candidate-selection-types.js";
 export * from "./candidate-selection.js";
 export * from "./evidence-graph-types.js";
 export * from "./evidence-graph.js";
+export * from "./outcome-metrics-types.js";
+export * from "./outcome-metrics.js";

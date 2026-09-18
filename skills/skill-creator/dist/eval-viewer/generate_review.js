@@ -1,430 +1,180 @@
 #!/usr/bin/env node
-/**
- * Generate and serve a review page for eval results.
- *
- * Reads the workspace directory, discovers runs (directories with outputs/),
- * embeds all output data into a self-contained HTML page, and serves it via
- * a tiny HTTP server. Feedback auto-saves to feedback.json in the workspace.
- *
- * Usage:
- *   node generate_review.js <workspace-path> [--port PORT] [--skill-name NAME]
- *   node generate_review.js <workspace-path> --previous-feedback /path/to/old/feedback.json
- *
- * No dependencies beyond the Node stdlib are required.
- */
-import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync, } from "node:fs";
+/** Builds one decision-oriented review IR for both static and live viewers. */
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from "node:fs";
 import { join, relative, dirname, extname, resolve, basename } from "node:path";
 import { parseArgs } from "node:util";
 import { createServer } from "node:http";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-const execFileAsync = promisify(execFile);
 const HERE = dirname(new URL(import.meta.url).pathname);
-const METADATA_FILES = new Set(["transcript.md", "user_notes.md", "metrics.json"]);
-const TEXT_EXTENSIONS = new Set([
-    ".txt", ".md", ".json", ".csv", ".py", ".js", ".ts", ".tsx", ".jsx",
-    ".yaml", ".yml", ".xml", ".html", ".css", ".sh", ".rb", ".go", ".rs",
-    ".java", ".c", ".cpp", ".h", ".hpp", ".sql", ".r", ".toml",
-]);
-const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"]);
-const MIME_OVERRIDES = {
-    ".svg": "image/svg+xml",
-    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-};
-const MIME_TYPES = {
-    ".html": "text/html", ".htm": "text/html", ".css": "text/css",
-    ".js": "text/javascript", ".json": "application/json", ".txt": "text/plain",
-    ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
-    ".gif": "image/gif", ".webp": "image/webp", ".pdf": "application/pdf",
-};
-function getMimeType(path) {
-    const ext = extname(path).toLowerCase();
-    if (MIME_OVERRIDES[ext])
-        return MIME_OVERRIDES[ext];
-    return MIME_TYPES[ext] || "application/octet-stream";
+const TEXT = new Set([".txt", ".md", ".json", ".csv", ".py", ".js", ".ts", ".tsx", ".jsx", ".yaml", ".yml", ".xml", ".html", ".css", ".sh", ".rb", ".go", ".rs", ".java", ".c", ".cpp", ".h", ".sql", ".r", ".toml", ".svg"]);
+const IMAGE = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
+const MIME = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp", ".pdf": "application/pdf" };
+const isDir = (p) => { try {
+    return statSync(p).isDirectory();
 }
-function isDir(path) {
-    try {
-        return statSync(path).isDirectory();
-    }
-    catch {
-        return false;
-    }
+catch {
+    return false;
+} };
+const isFile = (p) => { try {
+    return statSync(p).isFile();
 }
-function isFile(path) {
-    try {
-        return statSync(path).isFile();
-    }
-    catch {
-        return false;
-    }
+catch {
+    return false;
+} };
+const json = (p) => { try {
+    return JSON.parse(readFileSync(p, "utf8"));
 }
-function embedFile(path) {
-    const ext = extname(path).toLowerCase();
-    const mime = getMimeType(path);
-    const name = basename(path);
-    if (TEXT_EXTENSIONS.has(ext)) {
-        let content;
+catch {
+    return null;
+} };
+function embedFile(path, root) {
+    const ext = extname(path).toLowerCase(), name = basename(path), provenance = relative(root, path).split("\\").join("/");
+    if (TEXT.has(ext)) {
         try {
-            content = readFileSync(path, "utf-8");
+            return { name, type: "text", content: readFileSync(path, "utf8"), provenance };
         }
         catch {
-            content = "(Error reading file)";
-        }
-        return { name, type: "text", content };
-    }
-    if (IMAGE_EXTENSIONS.has(ext)) {
-        try {
-            const raw = readFileSync(path);
-            return { name, type: "image", mime, data_uri: `data:${mime};base64,${raw.toString("base64")}` };
-        }
-        catch {
-            return { name, type: "error", content: "(Error reading file)" };
-        }
-    }
-    if (ext === ".pdf") {
-        try {
-            const raw = readFileSync(path);
-            return { name, type: "pdf", data_uri: `data:${mime};base64,${raw.toString("base64")}` };
-        }
-        catch {
-            return { name, type: "error", content: "(Error reading file)" };
-        }
-    }
-    if (ext === ".xlsx") {
-        try {
-            const raw = readFileSync(path);
-            return { name, type: "xlsx", data_b64: raw.toString("base64") };
-        }
-        catch {
-            return { name, type: "error", content: "(Error reading file)" };
+            return { name, type: "error", content: "(Error reading file)", provenance };
         }
     }
     try {
-        const raw = readFileSync(path);
-        return { name, type: "binary", mime, data_uri: `data:${mime};base64,${raw.toString("base64")}` };
+        const data = readFileSync(path).toString("base64");
+        return IMAGE.has(ext) ? { name, type: "image", data_uri: `data:${MIME[ext]};base64,${data}`, provenance } : { name, type: "download", data_uri: `data:${MIME[ext] || "application/octet-stream"};base64,${data}`, provenance };
     }
     catch {
-        return { name, type: "error", content: "(Error reading file)" };
+        return { name, type: "error", content: "(Error reading file)", provenance };
     }
 }
+function configuration(root, runDir) { const parts = relative(root, runDir).split(/[\\/]/); return parts.find(x => /^(with_skill|without_skill|new_skill|old_skill|candidate|baseline)$/i.test(x)) || parts.at(-2) || "unknown"; }
 function buildRun(root, runDir) {
-    let prompt = "";
-    let evalId = null;
-    for (const candidate of [join(runDir, "eval_metadata.json"), join(dirname(runDir), "eval_metadata.json")]) {
-        if (existsSync(candidate)) {
-            try {
-                const metadata = JSON.parse(readFileSync(candidate, "utf-8"));
-                prompt = metadata.prompt ?? "";
-                evalId = metadata.eval_id ?? null;
-            }
-            catch {
-                // ignore malformed metadata
-            }
-            if (prompt)
-                break;
-        }
-    }
-    if (!prompt) {
-        for (const candidate of [join(runDir, "transcript.md"), join(runDir, "outputs", "transcript.md")]) {
-            if (existsSync(candidate)) {
-                try {
-                    const text = readFileSync(candidate, "utf-8");
-                    const match = /## Eval Prompt\n\n([\s\S]*?)(?=\n##|$)/.exec(text);
-                    if (match)
-                        prompt = match[1].trim();
-                }
-                catch {
-                    // ignore
-                }
-                if (prompt)
-                    break;
-            }
-        }
-    }
-    if (!prompt)
-        prompt = "(No prompt found)";
-    const runId = relative(root, runDir).split(/[\\/]/).join("-");
-    const outputsDir = join(runDir, "outputs");
-    const outputFiles = [];
-    if (isDir(outputsDir)) {
-        for (const entry of readdirSync(outputsDir).sort()) {
-            const filePath = join(outputsDir, entry);
-            if (isFile(filePath) && !METADATA_FILES.has(entry)) {
-                outputFiles.push(embedFile(filePath));
-            }
-        }
-    }
-    let grading = null;
-    for (const candidate of [join(runDir, "grading.json"), join(dirname(runDir), "grading.json")]) {
-        if (existsSync(candidate)) {
-            try {
-                grading = JSON.parse(readFileSync(candidate, "utf-8"));
-            }
-            catch {
-                // ignore
-            }
-            if (grading)
-                break;
-        }
-    }
-    return { id: runId, prompt, eval_id: evalId, outputs: outputFiles, grading };
+    const metadataCandidates = [join(runDir, "eval_metadata.json"), join(dirname(runDir), "eval_metadata.json"), join(dirname(dirname(runDir)), "eval_metadata.json")];
+    const metadataPath = metadataCandidates.find(existsSync) || null, metadata = metadataPath ? json(metadataPath) : null;
+    const gradingCandidates = [join(runDir, "grading.json"), join(dirname(runDir), "grading.json")], gradingPath = gradingCandidates.find(existsSync) || null;
+    const timingCandidates = [join(runDir, "timing.json"), join(dirname(runDir), "timing.json")], timingPath = timingCandidates.find(existsSync) || null;
+    const outputsDir = join(runDir, "outputs"), outputs = isDir(outputsDir) ? readdirSync(outputsDir).sort().filter(n => isFile(join(outputsDir, n)) && !new Set(["transcript.md", "user_notes.md", "metrics.json"]).has(n)).map(n => embedFile(join(outputsDir, n), root)) : [];
+    const scenario = String(metadata?.eval_id ?? relative(root, runDir).split(/[\\/]/).find(x => x.startsWith("eval-")) ?? "unknown");
+    return { id: relative(root, runDir).split(/[\\/]/).join("-"), scenario_id: scenario, configuration: configuration(root, runDir), prompt: String(metadata?.prompt ?? "(No prompt found)"), outputs, grading: gradingPath ? json(gradingPath) : null, timing: timingPath ? json(timingPath) : null, provenance: { metadata: metadataPath ? relative(root, metadataPath) : null, grading: gradingPath ? relative(root, gradingPath) : null, timing: timingPath ? relative(root, timingPath) : null, run: relative(root, runDir) } };
 }
-function findRunsRecursive(root, current, runs) {
-    if (!isDir(current))
-        return;
-    const outputsDir = join(current, "outputs");
-    if (isDir(outputsDir)) {
-        const run = buildRun(root, current);
-        if (run)
-            runs.push(run);
-        return;
-    }
-    const skip = new Set(["node_modules", ".git", "__pycache__", "skill", "inputs"]);
-    for (const child of readdirSync(current).sort()) {
-        const childPath = join(current, child);
-        if (isDir(childPath) && !skip.has(child)) {
-            findRunsRecursive(root, childPath, runs);
+function findRuns(root) { const out = []; function walk(dir) { if (!isDir(dir))
+    return; if (isDir(join(dir, "outputs"))) {
+    out.push(buildRun(root, dir));
+    return;
+} for (const n of readdirSync(dir).sort())
+    if (!new Set(["node_modules", ".git", "skill", "inputs"]).has(n) && isDir(join(dir, n)))
+        walk(join(dir, n)); } walk(root); return out.sort((a, b) => a.scenario_id.localeCompare(b.scenario_id) || a.id.localeCompare(b.id)); }
+const num = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
+const mean = (obj, key) => num(obj?.[key]?.mean);
+function configIds(benchmark, runs) { const ids = Object.keys(benchmark?.run_summary || {}).filter(x => x !== "delta"); for (const r of runs)
+    if (!ids.includes(r.configuration))
+        ids.push(r.configuration); const candidate = ids.find(x => /with_skill|new_skill|candidate/i.test(x)) ?? ids[0] ?? null; const baseline = ids.find(x => /without_skill|old_skill|baseline/i.test(x)) ?? ids.find(x => x !== candidate) ?? null; return { candidate, baseline }; }
+function passedMap(run) { return new Map((run.grading?.expectations || []).map((x) => [String(x.text ?? "Unnamed assertion"), Boolean(x.passed)])); }
+const anchorToken = (value) => Buffer.from(value, "utf8").toString("hex") || "empty";
+const scenarioAnchor = (id) => `scenario-${anchorToken(id)}`;
+const runAnchor = (run) => `run-${anchorToken(run.id)}`;
+const assertionAnchor = (run, label) => `${runAnchor(run)}-assertion-${anchorToken(label)}`;
+function runFailed(run) { const expectations = run.grading?.expectations; return Array.isArray(expectations) ? expectations.some((x) => x.passed === false) : (run.grading?.summary?.failed ?? 0) > 0; }
+/** Includes candidate-vs-baseline, repeated-run, and grader/model outcome disagreements. */
+function scenarioDisagreement(runs) {
+    const outcomes = new Map(), signatures = new Set();
+    for (const r of runs) {
+        const assertions = [...passedMap(r)].sort(([a], [b]) => a.localeCompare(b));
+        signatures.add(JSON.stringify(assertions));
+        for (const [label, passed] of assertions) {
+            const values = outcomes.get(label) || new Set();
+            values.add(passed);
+            outcomes.set(label, values);
         }
     }
+    return signatures.size > 1 || [...outcomes.values()].some(values => values.size > 1);
 }
-function findRuns(workspace) {
-    const runs = [];
-    findRunsRecursive(workspace, workspace, runs);
-    runs.sort((a, b) => {
-        const aId = typeof a.eval_id === "number" ? a.eval_id : Infinity;
-        const bId = typeof b.eval_id === "number" ? b.eval_id : Infinity;
-        if (aId !== bId)
-            return aId - bId;
-        return a.id.localeCompare(b.id);
-    });
-    return runs;
+export function buildReviewIR(workspace, skillName, benchmark, previous = {}) {
+    const runs = findRuns(workspace), ids = configIds(benchmark, runs), summary = benchmark?.run_summary || {}, delta = summary.delta || {}, paired = delta.paired?.pass_rate || {};
+    const critical = [];
+    for (const scenario of new Set(runs.map(r => r.scenario_id))) {
+        const cs = runs.filter(r => r.scenario_id === scenario && r.configuration === ids.candidate), bs = runs.filter(r => r.scenario_id === scenario && r.configuration === ids.baseline);
+        for (let i = 0; i < Math.min(cs.length, bs.length); i++) {
+            const c = passedMap(cs[i]), b = passedMap(bs[i]);
+            for (const [label, bp] of b)
+                if (bp && c.get(label) === false)
+                    critical.push({ text: `${scenario}: ${label}`, href: `#${assertionAnchor(cs[i], label)}` });
+        }
+    }
+    const missing = [];
+    const miss = (text, href = "#provenance") => missing.push({ text, href });
+    if (!benchmark)
+        miss("benchmark.json is missing or invalid");
+    if (!ids.candidate)
+        miss("candidate configuration is missing", "#scenario-evidence");
+    if (!ids.baseline)
+        miss("baseline configuration is missing", "#scenario-evidence");
+    const noGrade = runs.find(r => !r.grading);
+    if (noGrade)
+        miss("one or more runs have no valid grading.json", `#${runAnchor(noGrade)}`);
+    const effect = num(paired.mean) ?? (() => { const v = Number.parseFloat(delta.pass_rate); return Number.isFinite(v) ? v : null; })();
+    const ci = paired.confidence_interval_95 && num(paired.confidence_interval_95.lower) !== null && num(paired.confidence_interval_95.upper) !== null ? { lower: paired.confidence_interval_95.lower, upper: paired.confidence_interval_95.upper } : null;
+    if (!ci)
+        miss("paired 95% confidence interval is unavailable");
+    const metricDefs = [["pass_rate", "rate"], ["time_seconds", "seconds"], ["tokens", "tokens"], ["cost", "cost"]];
+    const metrics = metricDefs.map(([id, unit]) => { const candidate = mean(summary[ids.candidate || ""], id), baseline = mean(summary[ids.baseline || ""], id); return { id, candidate, baseline, delta: candidate !== null && baseline !== null ? candidate - baseline : null, unit, evidence_href: "#provenance-benchmark" }; });
+    for (const m of metrics.filter(x => x.id !== "pass_rate" && x.candidate === null))
+        miss(`${m.id} evidence is unavailable`, m.evidence_href);
+    let verdict = "inconclusive";
+    if (!ids.candidate || !ids.baseline || runs.some(r => !r.grading) || !benchmark)
+        verdict = "blocked";
+    else if (critical.length || effect !== null && effect < 0)
+        verdict = "fail";
+    else if (effect !== null && effect > 0 && ci && ci.lower > 0)
+        verdict = "pass";
+    const action = verdict === "pass" ? "Confirm the evidence is representative, then accept or request another evaluation." : verdict === "fail" ? "Reject or revise the candidate; resolve every critical regression before acceptance." : verdict === "blocked" ? "Provide the missing evidence before making a decision." : "Run more paired samples or make an explicit risk-acceptance decision; do not treat this result as a pass.";
+    const scenarios = [...new Set(runs.map(r => r.scenario_id))].map(id => { const sr = runs.filter(r => r.scenario_id === id), candidateRuns = sr.filter(r => r.configuration === ids.candidate), baselineRuns = sr.filter(r => r.configuration === ids.baseline); return { id, anchor: scenarioAnchor(id), prompt: sr[0]?.prompt || "", failed: candidateRuns.some(runFailed), baseline_weakness: baselineRuns.some(runFailed), disagreement: scenarioDisagreement(sr), runs: sr }; });
+    const decisionHref = critical[0]?.href ?? missing[0]?.href ?? "#provenance-benchmark";
+    return { schema_version: "1.0", skill_name: skillName, generated_at: String(benchmark?.metadata?.timestamp ?? "unavailable"), candidate_id: ids.candidate, baseline_id: ids.baseline, decision: { verdict, effect_size: effect, confidence_95: ci, variance: num(paired.stddev), critical_regressions: [...new Map(critical.map(x => [`${x.text}|${x.href}`, x])).values()], missing_evidence: [...new Map(missing.map(x => [`${x.text}|${x.href}`, x])).values()], required_human_action: action, evidence_href: decisionHref }, metrics, scenarios, provenance: { benchmark: benchmark ? "benchmark.json" : null, workspace: basename(workspace) }, previous_feedback: previous };
 }
-function loadPreviousIteration(workspace) {
-    const result = {};
-    const feedbackMap = {};
-    const feedbackPath = join(workspace, "feedback.json");
-    if (existsSync(feedbackPath)) {
-        try {
-            const data = JSON.parse(readFileSync(feedbackPath, "utf-8"));
-            for (const r of data.reviews ?? []) {
-                if (r.feedback?.trim())
-                    feedbackMap[r.run_id] = r.feedback;
-            }
-        }
-        catch {
-            // ignore
-        }
-    }
-    const prevRuns = findRuns(workspace);
-    for (const run of prevRuns) {
-        result[run.id] = { feedback: feedbackMap[run.id] ?? "", outputs: run.outputs ?? [] };
-    }
-    for (const [runId, fb] of Object.entries(feedbackMap)) {
-        if (!(runId in result))
-            result[runId] = { feedback: fb, outputs: [] };
-    }
-    return result;
-}
-function generateHtml(runs, skillName, previous, benchmark) {
-    const templatePath = join(HERE, "viewer.html");
-    const template = readFileSync(templatePath, "utf-8");
-    const previousFeedback = {};
-    const previousOutputs = {};
-    if (previous) {
-        for (const [runId, data] of Object.entries(previous)) {
-            if (data.feedback)
-                previousFeedback[runId] = data.feedback;
-            if (data.outputs?.length)
-                previousOutputs[runId] = data.outputs;
-        }
-    }
-    const embedded = {
-        skill_name: skillName,
-        runs,
-        previous_feedback: previousFeedback,
-        previous_outputs: previousOutputs,
-    };
-    if (benchmark)
-        embedded.benchmark = benchmark;
-    const dataJson = JSON.stringify(embedded);
-    return template.replace("/*__EMBEDDED_DATA__*/", `const EMBEDDED_DATA = ${dataJson};`);
-}
-async function killPort(port) {
-    try {
-        const { stdout } = await execFileAsync("lsof", ["-ti", `:${port}`], { timeout: 5000 });
-        const pids = stdout.trim().split("\n").filter(Boolean);
-        for (const pidStr of pids) {
-            try {
-                process.kill(Number(pidStr), "SIGTERM");
-            }
-            catch {
-                // ignore
-            }
-        }
-        if (pids.length) {
-            await new Promise((r) => setTimeout(r, 500));
-        }
-    }
-    catch (error) {
-        if (error.code === "ENOENT") {
-            console.error("Note: lsof not found, cannot check if port is in use");
-        }
-        // lsof exits non-zero when no process found; that's fine
-    }
-}
-function parseCliArgs(argv) {
-    const { positionals, values } = parseArgs({
-        args: argv,
-        allowPositionals: true,
-        options: {
-            port: { type: "string", short: "p", default: "3117" },
-            "skill-name": { type: "string", short: "n" },
-            "previous-workspace": { type: "string" },
-            benchmark: { type: "string" },
-            static: { type: "string", short: "s" },
-        },
-    });
-    return { positionals, values };
-}
-async function main() {
-    const { positionals, values } = parseCliArgs(process.argv.slice(2));
-    const [workspaceArg] = positionals;
-    if (!workspaceArg) {
-        console.error("usage: generate_review.js <workspace-path> [--port PORT] [--skill-name NAME]");
-        process.exit(2);
-    }
-    const workspace = resolve(workspaceArg);
-    if (!isDir(workspace)) {
-        console.error(`Error: ${workspace} is not a directory`);
-        process.exit(1);
-    }
-    const runs = findRuns(workspace);
-    if (!runs.length) {
-        console.error(`No runs found in ${workspace}`);
-        process.exit(1);
-    }
-    const skillName = values["skill-name"] || basename(workspace).replace("-workspace", "");
-    const feedbackPath = join(workspace, "feedback.json");
-    let previous = {};
-    if (values["previous-workspace"]) {
-        previous = loadPreviousIteration(resolve(values["previous-workspace"]));
-    }
-    const benchmarkPath = values.benchmark ? resolve(values.benchmark) : null;
-    let benchmark = null;
-    if (benchmarkPath && existsSync(benchmarkPath)) {
-        try {
-            benchmark = JSON.parse(readFileSync(benchmarkPath, "utf-8"));
-        }
-        catch {
-            // ignore
-        }
-    }
-    if (values.static) {
-        const html = generateHtml(runs, skillName, previous, benchmark);
-        const staticPath = resolve(values.static);
-        mkdirSync(dirname(staticPath), { recursive: true });
-        writeFileSync(staticPath, html);
-        console.log(`\n  Static viewer written to: ${staticPath}\n`);
-        process.exit(0);
-    }
-    let port = Number(values.port);
-    await killPort(port);
-    const server = createServer((req, res) => {
-        const url = req.url ?? "/";
-        if (req.method === "GET" && (url === "/" || url === "/index.html")) {
-            const liveRuns = findRuns(workspace);
-            let liveBenchmark = null;
-            if (benchmarkPath && existsSync(benchmarkPath)) {
-                try {
-                    liveBenchmark = JSON.parse(readFileSync(benchmarkPath, "utf-8"));
-                }
-                catch {
-                    // ignore
-                }
-            }
-            const html = generateHtml(liveRuns, skillName, previous, liveBenchmark);
-            const content = Buffer.from(html, "utf-8");
-            res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Content-Length": content.length });
-            res.end(content);
-        }
-        else if (req.method === "GET" && url === "/api/feedback") {
-            const data = existsSync(feedbackPath) ? readFileSync(feedbackPath) : Buffer.from("{}");
-            res.writeHead(200, { "Content-Type": "application/json", "Content-Length": data.length });
-            res.end(data);
-        }
-        else if (req.method === "POST" && url === "/api/feedback") {
-            const chunks = [];
-            req.on("data", (chunk) => chunks.push(chunk));
-            req.on("end", () => {
-                const body = Buffer.concat(chunks).toString("utf-8");
-                let resp;
-                let status;
-                try {
-                    const data = JSON.parse(body);
-                    if (typeof data !== "object" || data === null || !("reviews" in data)) {
-                        throw new Error("Expected JSON object with 'reviews' key");
-                    }
-                    writeFileSync(feedbackPath, `${JSON.stringify(data, null, 2)}\n`);
-                    resp = Buffer.from('{"ok":true}');
-                    status = 200;
-                }
-                catch (error) {
-                    resp = Buffer.from(JSON.stringify({ error: error.message }));
-                    status = 500;
-                }
-                res.writeHead(status, { "Content-Type": "application/json", "Content-Length": resp.length });
-                res.end(resp);
-            });
-        }
-        else {
-            res.writeHead(404);
-            res.end();
-        }
-    });
-    await new Promise((resolvePromise, reject) => {
-        server.once("error", (error) => {
-            if (error.code === "EADDRINUSE") {
-                server.listen(0, "127.0.0.1", () => resolvePromise());
-            }
-            else {
-                reject(error);
-            }
-        });
-        server.listen(port, "127.0.0.1", () => resolvePromise());
-    });
-    const address = server.address();
-    if (address && typeof address === "object")
-        port = address.port;
-    const url = `http://localhost:${port}`;
-    console.log("\n  Eval Viewer");
-    console.log("  ─────────────────────────────────");
-    console.log(`  URL:       ${url}`);
-    console.log(`  Workspace: ${workspace}`);
-    console.log(`  Feedback:  ${feedbackPath}`);
-    if (Object.keys(previous).length) {
-        console.log(`  Previous:  ${values["previous-workspace"]} (${Object.keys(previous).length} runs)`);
-    }
-    if (benchmarkPath)
-        console.log(`  Benchmark: ${benchmarkPath}`);
-    console.log("\n  Press Ctrl+C to stop.\n");
-    try {
-        const platform = process.platform;
-        const opener = platform === "darwin" ? "open" : platform === "win32" ? "start" : "xdg-open";
-        execFile(opener, [url]);
-    }
-    catch {
-        // best-effort browser open; not fatal
-    }
-    process.on("SIGINT", () => {
-        console.log("\nStopped.");
-        server.close();
-        process.exit(0);
-    });
-}
-main().catch((error) => {
-    console.error(error?.message ?? error);
+function safeJson(value) { return JSON.stringify(value).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029"); }
+export function generateHtml(ir) { return readFileSync(join(HERE, "viewer.html"), "utf8").replace("/*__EMBEDDED_DATA__*/", `const REVIEW_IR=${safeJson(ir)};`); }
+function previousFeedback(path) { if (!path)
+    return {}; const data = json(join(resolve(path), "feedback.json")); return Object.fromEntries((data?.reviews || []).filter((x) => x.feedback).map((x) => [String(x.run_id), String(x.feedback)])); }
+function loadBenchmark(path) { return path && existsSync(path) ? json(path) : null; }
+async function main() { const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { port: { type: "string", short: "p", default: "3117" }, "skill-name": { type: "string", short: "n" }, "previous-workspace": { type: "string" }, benchmark: { type: "string" }, static: { type: "string", short: "s" } } }); const arg = positionals[0]; if (!arg) {
+    console.error("usage: generate_review.js <workspace> [--benchmark FILE] [--static FILE]");
+    process.exit(2);
+} const workspace = resolve(arg); if (!isDir(workspace)) {
+    console.error(`Error: ${workspace} is not a directory`);
     process.exit(1);
-});
+} const skill = String(values["skill-name"] || basename(workspace).replace("-workspace", "")), bp = values.benchmark ? resolve(String(values.benchmark)) : existsSync(join(workspace, "benchmark.json")) ? join(workspace, "benchmark.json") : null, prev = previousFeedback(values["previous-workspace"]), feedback = join(workspace, "feedback.json"); const render = () => generateHtml(buildReviewIR(workspace, skill, loadBenchmark(bp), prev)); if (values.static) {
+    const out = resolve(String(values.static));
+    mkdirSync(dirname(out), { recursive: true });
+    writeFileSync(out, render());
+    console.log(`Static viewer written to: ${out}`);
+    return;
+} const server = createServer((req, res) => { if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
+    const body = Buffer.from(render());
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Content-Length": body.length });
+    res.end(body);
+    return;
+} if (req.url === "/api/feedback" && req.method === "GET") {
+    const body = existsSync(feedback) ? readFileSync(feedback) : Buffer.from("{}");
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(body);
+    return;
+} if (req.url === "/api/feedback" && req.method === "POST") {
+    const chunks = [];
+    req.on("data", x => chunks.push(x));
+    req.on("end", () => { try {
+        const body = Buffer.concat(chunks);
+        if (body.length > 1024 * 1024)
+            throw Error("feedback exceeds 1 MiB");
+        const data = JSON.parse(body.toString("utf8"));
+        if (!Array.isArray(data?.reviews))
+            throw Error("reviews array required");
+        writeFileSync(feedback, JSON.stringify(data, null, 2) + "\n");
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end('{"ok":true}');
+    }
+    catch (e) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: e.message }));
+    } });
+    return;
+} res.writeHead(404); res.end(); }); const port = Number(values.port); server.listen(port, "127.0.0.1", () => console.log(`Review viewer: http://127.0.0.1:${port}`)); }
+if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname))
+    main().catch(e => { console.error(e?.message || e); process.exit(1); });

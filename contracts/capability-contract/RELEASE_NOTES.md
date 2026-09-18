@@ -1,5 +1,12 @@
 # Release notes — compatibility policy 1.0.0
 
+## Outcome and productivity metrics API 1.0.0
+
+- Adds a versioned ten-metric dictionary and pure computation API for the golden idea-to-release-candidate journey, including formulas, populations, exclusions, provenance, units, and targets.
+- Makes credible effectiveness within duration, cost, and intervention budgets the north star; safety, evidence credibility, task success, and identified human approval are mandatory non-rewardable guardrails.
+- Computes only from explicit digest-provenanced events and evaluations under local-only processing by default, with opt-out distinguished from missing observations.
+- Adds strict hostile validation, deterministic canonical report hashing, closed schema, conformance fixtures, package exports, generated declarations, and compatibility documentation without changing existing 1.x surfaces.
+
 ## Evidence-based candidate selection API 1.0.0
 
 - Adds a pure, independently versioned API with explicit conservative objective weights and thresholds for effectiveness, productivity, stability, and safety.

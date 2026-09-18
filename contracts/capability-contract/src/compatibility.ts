@@ -1415,7 +1415,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "creator": "skill-creator",
     "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
     "sourceFieldOrLayout": "eval-viewer/viewer.html",
-    "sourceEvidence": "const templatePath = join(HERE, \"viewer.html\")",
+    "sourceEvidence": "readFileSync(join(HERE,\"viewer.html\"),\"utf8\")",
     "kind": "review-artifact",
     "artifactFormat": "html",
     "readVersionsOrRanges": [
@@ -2363,6 +2363,78 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "migrationId": null,
     "artifactFormat": "json",
     "validatorId": "shape:production-approval-schema-document"
+  },
+  {
+    "id": "contract.outcome-metrics-input.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/outcome-metrics-types.ts",
+    "sourceFieldOrLayout": "OutcomeMetricsInput",
+    "sourceEvidence": "export interface OutcomeMetricsInput {",
+    "kind": "shared-contract",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": "/schemaVersion",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "schema:outcome-metrics-input"
+  },
+  {
+    "id": "api.compute-outcome-metrics.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/outcome-metrics.ts",
+    "sourceFieldOrLayout": "computeOutcomeMetrics",
+    "sourceEvidence": "export function computeOutcomeMetrics(value:unknown):OutcomeMetricsReport",
+    "kind": "public-api",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "unsupported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "unsupported:typescript-only"
+  },
+  {
+    "id": "contract.outcome-metrics-report.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/src/outcome-metrics-types.ts",
+    "sourceFieldOrLayout": "OutcomeMetricsReport",
+    "sourceEvidence": "export interface OutcomeMetricsReport {",
+    "kind": "shared-contract",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": "/schemaVersion",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "artifact:outcome-metrics-report"
+  },
+  {
+    "id": "schema.outcome-metrics.v1",
+    "creator": "shared",
+    "sourceFile": "contracts/capability-contract/schema/outcome-metrics/1.0.0/outcome-productivity-metrics.schema.json",
+    "sourceFieldOrLayout": "outcome-productivity-metrics.schema.json",
+    "sourceEvidence": "\"$id\": \"https://agent-plugins.org/schemas/outcome-productivity-metrics/1.0.0/outcome-productivity-metrics.schema.json\"",
+    "kind": "schema-document",
+    "artifactFormat": "json",
+    "readVersionsOrRanges": [
+      "1.0.0"
+    ],
+    "emittedVersion": "1.0.0",
+    "versionField": null,
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "validatorId": "shape:outcome-metrics-schema-document"
   }
 ] as CompatibilityEntry[]).map(E)) as readonly CompatibilityEntry[];
 export const RESULT_CONTRACT_REFERENCE=Object.freeze({version:RESULT_CONTRACT_VERSION,schemaId:RESULT_CONTRACT_SCHEMA_ID,mappingExport:"LEGACY_STATUS_MAPPINGS",classifierExport:"classifyResultExit"});

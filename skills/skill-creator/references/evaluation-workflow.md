@@ -108,7 +108,7 @@ node dist/eval-viewer/generate_review.js <workspace>/iteration-N \
   --static <workspace>/iteration-N/review.html
 ```
 
-For later iterations, add `--previous-workspace`.
+For later iterations, add `--previous-workspace`. The static and live modes render the same canonical decision IR; see [Decision-oriented evaluation review](review-viewer.md) for verdict, evidence, filtering, accessibility, and security semantics.
 
 ### 8. Validate and verify
 

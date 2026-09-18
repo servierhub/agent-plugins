@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { validateCapabilityContract } from "./validation.js";
 import { validateEvaluationPlan } from "./evaluation.js";
 import { validateResultContract } from "./result.js";
+import { OUTCOME_METRIC_IDS, OUTCOME_METRICS_SCHEMA_ID, OUTCOME_METRICS_VERSION } from "./outcome-metrics-types.js";
+import { validateOutcomeMetricsInput } from "./outcome-metrics.js";
 import { isRfc3339Timestamp } from "./host-adapter.js";
 
 const isRecord=(value:unknown):value is Record<string,unknown>=>typeof value==="object"&&value!==null&&!Array.isArray(value);
@@ -29,6 +31,7 @@ const here=dirname(fileURLToPath(import.meta.url));
 const schema=(name:string):Record<string,unknown>=>JSON.parse(readFileSync(join(here,"..","schema","1.0.0",name),"utf8")) as Record<string,unknown>;
 const evaluationSchema=schema("evaluation-plan.schema.json"),resultSchema=schema("result-contract.schema.json");
 const recommendationSchema=JSON.parse(readFileSync(join(here,"..","schema","recommendation","1.0.0","artifact-recommendation.schema.json"),"utf8")) as Record<string,unknown>;
+const outcomeMetricsSchema=JSON.parse(readFileSync(join(here,"..","schema","outcome-metrics","1.0.0","outcome-productivity-metrics.schema.json"),"utf8")) as Record<string,unknown>;
 const productionApprovalDocument=JSON.parse(readFileSync(join(here,"..","fixtures","compatibility","cases","schema.hook-production-approval.v1.json"),"utf8")) as Record<string,unknown>;
 const hostProtocolSchema=schema("host-execution-adapter.schema.json"),hostEventSchema=schema("host-execution-event.schema.json");
 const deepEqual=(left:unknown,right:unknown):boolean=>JSON.stringify(left)===JSON.stringify(right);
@@ -191,14 +194,17 @@ const productionApprovalBindings=(v:unknown)=>isRecord(v)&&exact(v,["artifact_sh
 const productionApprovalEvent=(v:unknown)=>isRecord(v)&&exact(v,["revision","action","reviewer","timestamp","rationale","accepted_risks","waivers","previous_event_sha256","signature"],["revision","action","reviewer","timestamp","rationale","accepted_risks","waivers","superseded_by","previous_event_sha256","signature"])&&positiveInteger(v.revision)&&enumValue(v.action,["review","approve","reject","expire","supersede"])&&productionApprovalIdentity(v.reviewer)&&rfc3339(v.timestamp)&&nonBlank(v.rationale)&&stringArray(v.accepted_risks)&&stringArray(v.waivers)&&sha256(v.previous_event_sha256)&&isRecord(v.signature)&&exact(v.signature,["algorithm","keyid","value"])&&v.signature.algorithm==="Ed25519"&&sha256(v.signature.keyid)&&nonBlank(v.signature.value)&&optional(v.superseded_by,productionApprovalLineage)&&((v.action==="supersede")===(v.superseded_by!==undefined));
 const productionApproval=(v:unknown)=>isRecord(v)&&exact(v,["version","request_id","requested_at","expires_at","requester","automated_evidence","bindings","events"],["version","request_id","requested_at","expires_at","requester","automated_evidence","bindings","events","supersedes"])&&v.version==="hook-production-approval/v1"&&nonBlank(v.request_id)&&rfc3339(v.requested_at)&&rfc3339(v.expires_at)&&Date.parse(String(v.expires_at))>Date.parse(String(v.requested_at))&&productionApprovalIdentity(v.requester)&&isRecord(v.automated_evidence)&&exact(v.automated_evidence,["status","attestation_sha256"])&&enumValue(v.automated_evidence.status,["pass","fail"])&&sha256(v.automated_evidence.attestation_sha256)&&productionApprovalBindings(v.bindings)&&arrayOf(v.events,productionApprovalEvent)&&optional(v.supersedes,productionApprovalLineage);
 const productionApprovalSchema=(v:unknown)=>deepEqual(v,productionApprovalDocument);
-const schemaDocument=(surfaceId:string,v:unknown)=>deepEqual(v,surfaceId==="schema.host-adapter.v1"?hostProtocolSchema:surfaceId==="schema.host-event.v1"?hostEventSchema:surfaceId==="schema.artifact-recommendation.v1"?recommendationSchema:null);
+const schemaDocument=(surfaceId:string,v:unknown)=>deepEqual(v,surfaceId==="schema.host-adapter.v1"?hostProtocolSchema:surfaceId==="schema.host-event.v1"?hostEventSchema:surfaceId==="schema.artifact-recommendation.v1"?recommendationSchema:surfaceId==="schema.outcome-metrics.v1"?outcomeMetricsSchema:null);
+const metricTarget=(v:unknown)=>isRecord(v)&&exact(v,["operator","value","unit"])&&enumValue(v.operator,["<=",">="])&&finite(v.value)&&nonBlank(v.unit);
+const outcomeMetricResult=(v:unknown)=>isRecord(v)&&exact(v,["id","status","unit","target","provenanceIds"],["id","status","value","unit","target","met","numerator","denominator","provenanceIds"])&&OUTCOME_METRIC_IDS.includes(v.id as any)&&enumValue(v.status,["computed","missing","opted-out","guardrail-blocked"])&&optional(v.value,finite)&&nonBlank(v.unit)&&metricTarget(v.target)&&optional(v.met,x=>typeof x==="boolean")&&optional(v.numerator,finite)&&optional(v.denominator,finite)&&stringArray(v.provenanceIds)&&new Set(v.provenanceIds).size===v.provenanceIds.length;
+const outcomeMetricsReport=(v:unknown)=>isRecord(v)&&exact(v,["schemaVersion","dictionaryVersion","journeyId","privacyStatus","metrics","northStar","guardrails","computationHash"])&&v.schemaVersion===OUTCOME_METRICS_VERSION&&v.dictionaryVersion===OUTCOME_METRICS_VERSION&&nonBlank(v.journeyId)&&enumValue(v.privacyStatus,["local-only","opted-out"])&&Array.isArray(v.metrics)&&v.metrics.length===OUTCOME_METRIC_IDS.length&&v.metrics.every(outcomeMetricResult)&&v.metrics.every((x:any,i:number)=>x.id===OUTCOME_METRIC_IDS[i])&&outcomeMetricResult(v.northStar)&&isRecord(v.northStar)&&(v.northStar as any).id===OUTCOME_METRIC_IDS.at(-1)&&isRecord(v.guardrails)&&exact(v.guardrails,["releaseEligible","blockedRunIds","reasons"])&&typeof v.guardrails.releaseEligible==="boolean"&&stringArray(v.guardrails.blockedRunIds)&&stringArray(v.guardrails.reasons)&&typeof v.computationHash==="string"&&/^sha256:[a-f0-9]{64}$/.test(v.computationHash);
 const html=(surfaceId:string,v:unknown)=>{
  if(typeof v!=="string"||!/^\s*<!doctype html>/i.test(v)||!/<html[\s>]/i.test(v)||!/<body[\s>]/i.test(v)||!/<\/html>\s*$/i.test(v))return false;
  const escaped=surfaceId.replace(/[^A-Za-z0-9_-]/g,"\$&");
  const fixture=v.includes("<title>"+surfaceId+"</title>")&&v.includes('data-surface="'+surfaceId+'"');
  if(fixture)return true;
  if(surfaceId==="skill.run-loop-report.unversioned")return /Skill Description Optimization/.test(v)&&/<h1/.test(v);
- if(surfaceId.startsWith("skill."))return /<title>Eval Review<\/title>/.test(v)&&/Eval Review:/.test(v)&&!/Agent Eval Review:/.test(v)&&(v.includes("const EMBEDDED_DATA =")||v.includes("/*__EMBEDDED_DATA__*/"));
+ if(surfaceId.startsWith("skill."))return ((/<title>Eval Review<\/title>/.test(v)&&/Eval Review:/.test(v)&&v.includes("const EMBEDDED_DATA ="))||(/<title>Evaluation decision review<\/title>/.test(v)&&/Evaluation decision review/.test(v)&&v.includes("REVIEW_IR")))&&!/Agent Eval Review:/.test(v)&&(v.includes("/*__EMBEDDED_DATA__*/")||v.includes("const REVIEW_IR="));
  if(surfaceId.startsWith("agent."))return /<title>Eval Review<\/title>/.test(v)&&/Agent Eval Review:/.test(v)&&(v.includes("const EMBEDDED_DATA =")||v.includes("/*__EMBEDDED_DATA__*/"));
  return false;
 };
@@ -248,7 +254,9 @@ export function validateShapeById(surfaceId:string,validatorId:string,value:unkn
  if(validatorId==="schema:evaluation-plan")return validateEvaluationPlan(value).valid;
  if(validatorId==="schema:result-contract")return validateResultContract(value).valid;
  if(validatorId==="schema:artifact-recommendation")return validatesSchema(recommendationSchema,value,recommendationSchema);
- if(validatorId==="shape:json-schema-document"||validatorId==="shape:artifact-recommendation-schema-document")return schemaDocument(surfaceId,value);
+ if(validatorId==="schema:outcome-metrics-input")return validateOutcomeMetricsInput(value).valid;
+ if(validatorId==="artifact:outcome-metrics-report")return outcomeMetricsReport(value);
+ if(validatorId==="shape:json-schema-document"||validatorId==="shape:artifact-recommendation-schema-document"||validatorId==="shape:outcome-metrics-schema-document")return schemaDocument(surfaceId,value);
  if(validatorId==="shape:production-approval-schema-document")return productionApprovalSchema(value);
  const hostMap:Record<string,string>={"host:capability-report":"capabilityReport","host:negotiation-request":"negotiationRequest","host:run-request":"runRequest","host:artifact-exchange":"artifactExchange","host:error":"error","host:cancellation-request":"cancellationRequest","host:cancellation-response":"cancellationResponse","host:resume-request":"resumeRequest","host:artifact-request":"artifactRequest"};
  if(validatorId==="host:negotiation-result")return Boolean(hostValidators[surfaceId.endsWith("blocked.v1")?"negotiationBlocked":"negotiationAccepted"]?.(value));
