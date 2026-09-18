@@ -1,0 +1,13 @@
+{
+  "artifact": "governed-usability-task-plan",
+  "evidence_status": "protocol-only-not-results",
+  "version": 1,
+  "tasks": [
+    {"id":"novice-skill","cohort":"nonexpert","expected_artifact":"skill","prompt":"Create a reusable instruction package that helps an agent turn meeting notes into a decision log. Start from the plain-language idea and stop when a reviewable isolated candidate is ready.","checks":["selects Skill scope","creates only under .agents/skills","reaches a reviewable candidate","does not claim validation was run when it was not"]},
+    {"id":"novice-agent","cohort":"nonexpert","expected_artifact":"agent","prompt":"Create a dedicated reviewer persona with its own role and tool permissions. Use the creator workflow and stop at the correct handoff if this is not a Skill.","checks":["identifies agent scope","routes to agent-creator","does not generate .agents/agents from Skill Creator"]},
+    {"id":"novice-plugin","cohort":"nonexpert","expected_artifact":"plugin","prompt":"Package a complete extension containing two Skills, one custom agent, and installation metadata. Start in the creator workflow and choose the correct owner.","checks":["identifies whole-plugin scope","routes to plugin-creator","does not duplicate agent or Skill authoring logic"]},
+    {"id":"developer-skill","cohort":"developer","expected_artifact":"skill","prompt":"Author a portable Agent Skill for validating internal event envelopes, including deterministic validation and progressive-disclosure references, then produce an isolated reviewable candidate.","checks":["uses SKILL.md format","keeps runtime files inside the Skill","includes deterministic validation","creates only an isolated candidate"]},
+    {"id":"developer-agent","cohort":"developer","expected_artifact":"agent","prompt":"Define a custom security-review agent with a role prompt, constrained tools, and delegation policy. Determine the correct creator and hand off without inventing an Agent Skills schema.","checks":["identifies custom-agent ownership","routes to agent-creator","does not treat agent schema as Agent Skills specification"]},
+    {"id":"developer-plugin","cohort":"developer","expected_artifact":"plugin","prompt":"Design an installable plugin combining hooks, an agent, and Skills with integration metadata. Determine ownership and stop at a precise creator handoff.","checks":["identifies plugin architecture scope","routes to plugin-creator","keeps specialized authoring delegated"]}
+  ]
+}

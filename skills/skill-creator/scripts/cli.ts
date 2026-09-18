@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 type Format = "text" | "json";
-type Command = "candidate" | "validate" | "audit" | "design-evals" | "freeze-evals" | "analyze" | "evidence-loop" | "trigger-eval" | "aggregate" | "review" | "verify" | "package" | "full-eval";
+type Command = "candidate" | "validate" | "audit" | "design-evals" | "freeze-evals" | "analyze" | "evidence-loop" | "trigger-eval" | "aggregate" | "review" | "verify" | "package" | "full-eval" | "usability-study";
 
 const commands: Record<Command, { entry: string; usage: string; required: (args: string[]) => boolean }> = {
   candidate: { entry: "idea_to_candidate.js", usage: "candidate <workspace> [--idea <plain-language idea>] [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
@@ -21,6 +21,7 @@ const commands: Record<Command, { entry: string; usage: string; required: (args:
   review: { entry: "../eval-viewer/generate_review.js", usage: "review <workspace> [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   verify: { entry: "verify_skill_gates.js", usage: "verify <skill-directory> [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   package: { entry: "package_skill.js", usage: "package <skill-directory> [output-directory]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+  "usability-study": { entry: "usability_study.js", usage: "usability-study [--validate] <session.json|sessions-directory|sessions.json> [-o report.json]", required: (a) => a.some((value) => !value.startsWith("-")) },
 };
 
 function hasValue(args: string[], option: string): boolean {
@@ -51,6 +52,7 @@ Commands:
   review        Generate or serve the evaluation review viewer
   verify        Verify release gates
   package       Build a distributable .skill archive
+  usability-study Validate or analyze governed anonymous study sessions
 
 Run "skill-creator <command> --help" for command usage.`;
 }

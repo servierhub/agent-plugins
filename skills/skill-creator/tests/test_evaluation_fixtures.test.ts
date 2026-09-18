@@ -78,3 +78,11 @@ test("skill-creator scenarios are autonomous, target-backed, and intentionally m
     for (const path of item.files ?? []) assert.ok(existsSync(join(SKILL, path)), `${item.id}: ${path}`);
   }
 });
+
+test("quick validation guidance uses a canonical absolute skill path", () => {
+  const guidance = readFileSync(join(SKILL, "AGENTS.md"), "utf8");
+  assert.doesNotMatch(guidance, /quick_validate\.js \.`/);
+  assert.match(guidance, /quick_validate\.js \"\$\(realpath \.\)\"/);
+  const result = validateSkill(SKILL);
+  assert.equal(result[0], true, result[1]);
+});

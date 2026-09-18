@@ -29,6 +29,7 @@ Read only the references required by the current request:
 | Design or review evaluation scenarios | [Evaluation design](references/evaluation-design.md) and [schemas](references/schemas.md) |
 | Evaluate behavioral quality or compare versions | [Behavioral evaluation](references/evaluation-workflow.md) |
 | Test or optimize activation | [Trigger evaluation](references/trigger-evaluation.md) and [description optimization](references/description-optimization.md) |
+| Prepare or analyze governed intake usability sessions | [Governed usability study kit](references/usability-study-kit.md) |
 | Improve after evaluation or real usage | [Evidence-driven improvement](references/improvement.md) and [pattern catalog](references/skill-authoring-best-practices.md) |
 | Package or assess release readiness | [Packaging and release](references/packaging-and-release.md) and [verification gates](references/verification-gates.md) |
 
@@ -112,6 +113,10 @@ node dist/scripts/cli.js analyze <iteration-directory> --skill-path <skill-direc
 
 # Govern evidence-linked, challenged, approval-gated isolated revisions
 node dist/scripts/cli.js evidence-loop <iteration-directory> --skill-path <skill-directory> --loop <separate-ledger> --format json
+
+# Governed anonymous usability study validation and analysis
+node dist/scripts/cli.js usability-study --validate <session.json> --format json
+node dist/scripts/cli.js usability-study <sessions-directory> --format json
 
 # Release gates and packaging
 node dist/scripts/cli.js verify <skill-directory> [options]

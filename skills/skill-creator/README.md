@@ -36,6 +36,8 @@ node dist/scripts/cli.js trigger-eval --eval-set /path/to/trigger-evals.json --s
 node dist/scripts/cli.js aggregate /path/to/iteration-workspace
 node dist/scripts/cli.js review /path/to/iteration-workspace --static review.html
 node dist/scripts/cli.js evidence-loop /path/to/iteration-workspace --skill-path /path/to/skill --loop /path/to/separate-ledger
+node dist/scripts/cli.js usability-study --validate /path/to/session.json --format json
+node dist/scripts/cli.js usability-study /path/to/anonymous-sessions --format json
 node dist/scripts/cli.js verify /path/to/skill --evaluation benchmark.json --human-review feedback.json
 node dist/scripts/cli.js package /path/to/skill ./dist-out
 ```
@@ -55,7 +57,7 @@ Only `--fake` execution is bundled. It writes beneath the realpath-contained con
 ## Legacy validate and package entrypoints
 
 ```bash
-node dist/scripts/quick_validate.js /path/to/skill
+node dist/scripts/quick_validate.js "$(realpath /path/to/skill)"
 node dist/scripts/package_skill.js /path/to/skill ./dist-out
 ```
 
@@ -112,6 +114,10 @@ Use `--runner goose` or set `SKILL_CREATOR_RUNNER`. Additional hosts can be adde
 | Instructions | `AGENTS.md` | host-dependent | No — repository guidance only |
 
 Only the skill directory and `SKILL.md` contract are covered by the Agent Skills specification. `.agents/skills` is an emerging installation convention. This repository intentionally does not define agent or plugin schemas.
+
+## Governed usability study kit
+
+`references/usability-study-kit.md` provides the consent script, facilitator protocol, cohort tasks, retention rules, and metric definitions. Session records are strict, anonymous, consent-required JSON validated against `assets/usability-study/session.schema.json`. Checked-in fixtures are explicitly synthetic validator data, never participant evidence. The deterministic analyzer requires at least five sessions and both developer and nonexpert cohorts before evaluating the 80% completion-without-correction threshold. It classifies findings and prints suggested P0/P1 `bd create` commands without executing them.
 
 ## Attribution and license
 

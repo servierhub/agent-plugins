@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/skill-creator/usability-session.schema.json",
+  "title": "Anonymous governed usability session",
+  "description": "Strict structured session record. Exactly one catalog task is attempted per session. Direct identifiers, repository URLs, home paths, recordings, transcripts, and unlisted fields are prohibited; runtime validation also enforces task/cohort/artifact bindings and privacy-safe text.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "cohort",
+    "consent",
+    "retention",
+    "tasks",
+    "findings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^S-[A-Z0-9]{8}$"
+    },
+    "cohort": {
+      "enum": [
+        "nonexpert",
+        "developer"
+      ]
+    },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "granted",
+        "protocol_version",
+        "captured_at",
+        "collection_mode"
+      ],
+      "properties": {
+        "granted": {
+          "const": true
+        },
+        "protocol_version": {
+          "type": "string",
+          "pattern": "^v[0-9]+$"
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+        },
+        "collection_mode": {
+          "const": "anonymous-structured-only"
+        }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_version",
+        "delete_after"
+      ],
+      "properties": {
+        "policy_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "delete_after": {
+          "type": "string",
+          "format": "date",
+          "description": "Must be on or after consent.captured_at and no more than 90 calendar days later; enforced at runtime.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "task_id",
+          "expected_artifact",
+          "initial_artifact",
+          "final_artifact",
+          "completed",
+          "facilitator_corrections",
+          "participant_questions",
+          "wrong_artifact_recovered",
+          "comprehension_score",
+          "time_to_first_candidate_ms",
+          "confidence"
+        ],
+        "properties": {
+          "task_id": {
+            "enum": [
+              "novice-skill",
+              "novice-agent",
+              "novice-plugin",
+              "developer-skill",
+              "developer-agent",
+              "developer-plugin"
+            ]
+          },
+          "expected_artifact": {
+            "enum": [
+              "skill",
+              "agent",
+              "plugin"
+            ]
+          },
+          "initial_artifact": {
+            "enum": [
+              "skill",
+              "agent",
+              "plugin",
+              "undecided"
+            ]
+          },
+          "final_artifact": {
+            "enum": [
+              "skill",
+              "agent",
+              "plugin",
+              "undecided"
+            ]
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "facilitator_corrections": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "participant_questions": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "wrong_artifact_recovered": {
+            "type": "boolean",
+            "description": "May be true only when initial_artifact differs from expected_artifact and final_artifact equals expected_artifact."
+          },
+          "comprehension_score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "time_to_first_candidate_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "confidence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
+        }
+      },
+      "maxItems": 1
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "title",
+          "classification",
+          "severity",
+          "task_id",
+          "description",
+          "privacy_reviewed"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9-]{2,30}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "classification": {
+            "enum": [
+              "product-defect",
+              "documentation-gap"
+            ]
+          },
+          "severity": {
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P3"
+            ]
+          },
+          "task_id": {
+            "enum": [
+              "novice-skill",
+              "novice-agent",
+              "novice-plugin",
+              "developer-skill",
+              "developer-agent",
+              "developer-plugin"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "privacy_reviewed": {
+            "const": true,
+            "description": "Confirms a reviewer checked bounded finding text for direct identifiers before storage."
+          }
+        }
+      }
+    }
+  }
+}

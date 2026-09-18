@@ -17,6 +17,7 @@ const commands = {
     review: { entry: "../eval-viewer/generate_review.js", usage: "review <workspace> [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
     verify: { entry: "verify_skill_gates.js", usage: "verify <skill-directory> [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
     package: { entry: "package_skill.js", usage: "package <skill-directory> [output-directory]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+    "usability-study": { entry: "usability_study.js", usage: "usability-study [--validate] <session.json|sessions-directory|sessions.json> [-o report.json]", required: (a) => a.some((value) => !value.startsWith("-")) },
 };
 function hasValue(args, option) {
     const index = args.indexOf(option);
@@ -46,6 +47,7 @@ Commands:
   review        Generate or serve the evaluation review viewer
   verify        Verify release gates
   package       Build a distributable .skill archive
+  usability-study Validate or analyze governed anonymous study sessions
 
 Run "skill-creator <command> --help" for command usage.`;
 }

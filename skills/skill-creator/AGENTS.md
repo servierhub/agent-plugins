@@ -11,4 +11,4 @@ This repository maintains a portable, vendor-neutral Agent Skill Creator.
 - Keep agent and plugin schemas host-aware; they are not part of the Agent Skills specification.
 - Keep runner-specific behavior isolated in `scripts/runners/`.
 - Run `npm run build` (TypeScript compile) after script changes.
-- Run `node dist/scripts/quick_validate.js .` after `SKILL.md` changes.
+- Run `node dist/scripts/quick_validate.js "$(realpath .)"` from this skill directory after `SKILL.md` changes; the argument must be the canonical absolute skill path, never a bare `.`.
