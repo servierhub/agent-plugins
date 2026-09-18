@@ -56,3 +56,8 @@
 ## Evaluation plan 1.1.0
 - Added a backward-compatible role-aware multi-model matrix with deterministic pre-execution job expansion, concrete/alias/documented-default identity resolution, ordered fallback, identity receipts, collision-free matrix-entry/run job IDs, opaque host aliases with unknown identity confidence, and strict complete budget bounds.
 - Kept evaluation plan 1.0.0 and its single-model adapter unchanged.
+
+## Transitive Evidence Graph 1.0.0
+- Adds strict transitive DAG verification with whole-envelope canonical hashes, full endpoint/relation edge bindings, Ed25519 or externally trusted digest authenticity, independently anchored approval subjects, issuer trust/revocation, and future/stale/expired timestamp rejection.
+- Reports every invalid-node reason, deterministic first-invalid-edge attribution, and the union of conclusions affected by all invalid nodes and edges.
+- Adds schema, specification, types, distribution output, every-node-kind fixtures and mutation scenarios, replay/substitution/downgrade/stale attacks, and hostile proxy/getter conformance coverage.
