@@ -35,6 +35,7 @@ node dist/scripts/cli.js full-eval /path/to/skill --workspace /path/to/workspace
 node dist/scripts/cli.js trigger-eval --eval-set /path/to/trigger-evals.json --skill-path /path/to/skill
 node dist/scripts/cli.js aggregate /path/to/iteration-workspace
 node dist/scripts/cli.js review /path/to/iteration-workspace --static review.html
+node dist/scripts/cli.js evidence-loop /path/to/iteration-workspace --skill-path /path/to/skill --loop /path/to/separate-ledger
 node dist/scripts/cli.js verify /path/to/skill --evaluation benchmark.json --human-review feedback.json
 node dist/scripts/cli.js package /path/to/skill ./dist-out
 ```

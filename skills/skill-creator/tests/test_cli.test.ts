@@ -36,7 +36,7 @@ test("quiet suppresses successful text output", () => {
 });
 
 test("every unified subcommand exposes help", () => {
-  for (const command of ["candidate", "validate", "audit", "design-evals", "freeze-evals", "analyze", "full-eval", "trigger-eval", "aggregate", "review", "verify", "package"]) assert.equal(invoke([command, "--help"]).status, 0, command);
+  for (const command of ["candidate", "validate", "audit", "design-evals", "freeze-evals", "analyze", "evidence-loop", "full-eval", "trigger-eval", "aggregate", "review", "verify", "package"]) assert.equal(invoke([command, "--help"]).status, 0, command);
 });
 
 test("verify maps an incomplete release pipeline to blocked", () => {

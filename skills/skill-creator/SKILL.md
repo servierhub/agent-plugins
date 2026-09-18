@@ -110,6 +110,9 @@ node dist/scripts/cli.js full-eval <skill-directory> --workspace <iteration-dire
 # Map evaluation failures to authoring patterns
 node dist/scripts/cli.js analyze <iteration-directory> --skill-path <skill-directory> --format json
 
+# Govern evidence-linked, challenged, approval-gated isolated revisions
+node dist/scripts/cli.js evidence-loop <iteration-directory> --skill-path <skill-directory> --loop <separate-ledger> --format json
+
 # Release gates and packaging
 node dist/scripts/cli.js verify <skill-directory> [options]
 node dist/scripts/cli.js package <skill-directory> [output-directory]

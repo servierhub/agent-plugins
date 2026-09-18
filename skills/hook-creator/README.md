@@ -61,6 +61,10 @@ node dist/validate_hook.js /path/to/plugin
 
 Hook evaluations use the canonical format in `references/evaluation-run-manifest.md` and `schemas/evaluation-run-manifest.schema.json`. The same schema applies locally and in CI; verification invalidates receipts after any bound input changes. Host adapters, runners, and graders—like tools—must record exactly one concrete version or an explicit unavailability reason, and retain their declared trust boundary in either case.
 
+## Attested test and evaluation evidence
+
+Use the attestation create and verify CLI commands for DSSE-wrapped in-toto evidence. Local evidence is unsigned and lower trust; production requires an offline-verifiable Ed25519 CI signature and rejects manual tests status. See references/evidence-attestation.md and schemas/evidence-attestation.schema.json.
+
 ## Development
 
 ```bash

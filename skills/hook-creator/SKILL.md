@@ -143,3 +143,4 @@ A hook component is ready only when:
 - `dist/validate_hook.js`: legacy validation entrypoint preserved for compatibility.
 - `evals/evals.json`: autonomous creation, safety-audit, handler-behavior, and plugin-handoff scenarios.
 - `assets/evaluation-fixtures/`: immutable plugin roots, hook configurations, executable handlers, and inert payloads.
+- `references/evidence-attestation.md`: DSSE/in-toto evidence and offline trust policy.

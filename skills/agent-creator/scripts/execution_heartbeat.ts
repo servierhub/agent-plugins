@@ -1,6 +1,7 @@
 /** Privacy-safe progress heartbeats for long-running agent executions. */
 
 import type { ExecutionEtaEstimate } from "./execution_eta.js";
+import { redactValue } from "./privacy_policy.js";
 
 export const EXECUTION_HEARTBEAT_SCHEMA = "agent-creator.execution-heartbeat/v1" as const;
 export const DEFAULT_HEARTBEAT_INTERVAL_MS = 30_000;
@@ -62,7 +63,6 @@ export interface ExecutionHeartbeatOptions {
 }
 
 const TERMINAL = new Set(["completed", "failed", "cancelled", "canceled", "terminated"]);
-const PROTECTED_KEY = /(?:prompt|content|message|response|output|input|secret|token|password|authorization|credential|api[_-]?key)/i;
 
 const systemClock: HeartbeatClock = {
   now: () => Date.now(),
@@ -89,21 +89,9 @@ function statusOf(value: string): ExecutionStatus | undefined {
   return (["pending", "running", "completed", "failed", "retry"] as string[]).includes(value) ? value as ExecutionStatus : undefined;
 }
 
-/** Redacts protected fields before arbitrary checkpoint values cross an event boundary. */
-export function redactHeartbeatValue(value: unknown, seen = new WeakSet<object>(), topLevel = true): unknown {
-  // A scalar checkpoint may itself be prompt/output content. It has no key that can
-  // establish safety, so never publish it verbatim. Named object fields can retain
-  // non-sensitive progress metadata while protected keys are still redacted.
-  if (value === null || value === undefined) return null;
-  if (typeof value !== "object") return topLevel ? "[REDACTED]" : value;
-  if (Array.isArray(value)) return value.map(item => redactHeartbeatValue(item, seen, false));
-  if (seen.has(value as object)) return "[REDACTED]";
-  seen.add(value as object);
-  const output: Record<string, unknown> = {};
-  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
-    output[key] = PROTECTED_KEY.test(key) ? "[REDACTED]" : redactHeartbeatValue(child, seen, false);
-  }
-  return output;
+/** Uses the central policy redactor before arbitrary checkpoint values cross an event boundary. */
+export function redactHeartbeatValue(value: unknown, _seen = new WeakSet<object>(), topLevel = true): unknown {
+  return redactValue(value, { topLevel });
 }
 
 /** Converts one executor snapshot into the stable, event-compatible heartbeat envelope. */

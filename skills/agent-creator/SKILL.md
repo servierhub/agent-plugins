@@ -217,7 +217,7 @@ Evaluate the custom agent as a reusable role, not as a skill trigger. The key qu
 - Use the same task inputs and assertions for specialized and baseline runs.
 - Prefer deterministic checks for factual or structural requirements and human review for judgment quality.
 - Test non-goals and restraint, not only successful task completion.
-- Preserve transcripts and timing so regressions can be explained.
+- Preserve timing so regressions can be explained; retain transcripts only under the explicit privacy policy because aggregate evidence can outlive transcript content.
 - Treat the neutral baseline as a control, not as a claim that Goose has no general capabilities.
 - Freeze current/baseline provenance, model, tools, inputs, and budget before paired runs.
 - Copy declared fixtures into each isolated project; do not mutate packaged fixture sources.
@@ -268,11 +268,13 @@ An agent is ready only when:
 - `references/custom-agents.md`: vendored Goose custom-agents documentation.
 - `references/UPSTREAM.md`: source and refresh instructions for the reference snapshot.
 - `references/manual-external-evidence.md`: secure host-neutral evidence export/import contract, schema, trust, and diagnostics.
+- `references/privacy-retention.md`: versioned data classification, central redaction, transcript retention, protected references, deletion, and local/CI guidance.
 - `dist/scripts/init_agent.js`: create a minimal agent definition.
 - `dist/scripts/validate_agent.js`: validate agent frontmatter and body.
 - `dist/scripts/install_agent.js`: install an agent at project or user scope.
 - `dist/scripts/run_agent_eval.js`: run paired isolated agent and baseline evaluations.
 - `dist/scripts/evidence_exchange.js`: export immutable host-neutral jobs and securely import closed-schema evidence runs.
+- `dist/scripts/privacy_policy.js`: apply central redaction and manage expiring content-addressed protected artifacts and tombstones.
 - `dist/scripts/grade_agent_eval.js`: grade deterministic and semantic assertions.
 - `dist/scripts/aggregate_benchmark.js`: aggregate pass rate, timing, and token metrics.
 - `dist/eval-viewer/generate_review.js`: review qualitative outputs and benchmark results.

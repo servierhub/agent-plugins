@@ -1,8 +1,8 @@
 /** Privacy-safe progress heartbeats for long-running agent executions. */
+import { redactValue } from "./privacy_policy.js";
 export const EXECUTION_HEARTBEAT_SCHEMA = "agent-creator.execution-heartbeat/v1";
 export const DEFAULT_HEARTBEAT_INTERVAL_MS = 30_000;
 const TERMINAL = new Set(["completed", "failed", "cancelled", "canceled", "terminated"]);
-const PROTECTED_KEY = /(?:prompt|content|message|response|output|input|secret|token|password|authorization|credential|api[_-]?key)/i;
 const systemClock = {
     now: () => Date.now(),
     setInterval: (callback, intervalMs) => setInterval(callback, intervalMs),
@@ -30,25 +30,9 @@ function statusOf(value) {
         return "retry";
     return ["pending", "running", "completed", "failed", "retry"].includes(value) ? value : undefined;
 }
-/** Redacts protected fields before arbitrary checkpoint values cross an event boundary. */
-export function redactHeartbeatValue(value, seen = new WeakSet(), topLevel = true) {
-    // A scalar checkpoint may itself be prompt/output content. It has no key that can
-    // establish safety, so never publish it verbatim. Named object fields can retain
-    // non-sensitive progress metadata while protected keys are still redacted.
-    if (value === null || value === undefined)
-        return null;
-    if (typeof value !== "object")
-        return topLevel ? "[REDACTED]" : value;
-    if (Array.isArray(value))
-        return value.map(item => redactHeartbeatValue(item, seen, false));
-    if (seen.has(value))
-        return "[REDACTED]";
-    seen.add(value);
-    const output = {};
-    for (const [key, child] of Object.entries(value)) {
-        output[key] = PROTECTED_KEY.test(key) ? "[REDACTED]" : redactHeartbeatValue(child, seen, false);
-    }
-    return output;
+/** Uses the central policy redactor before arbitrary checkpoint values cross an event boundary. */
+export function redactHeartbeatValue(value, _seen = new WeakSet(), topLevel = true) {
+    return redactValue(value, { topLevel });
 }
 /** Converts one executor snapshot into the stable, event-compatible heartbeat envelope. */
 export function buildExecutionHeartbeat(snapshot, now = Date.now(), staleAfterMs = DEFAULT_HEARTBEAT_INTERVAL_MS * 2) {

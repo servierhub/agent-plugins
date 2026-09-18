@@ -46,11 +46,30 @@ node dist/scripts/cli.js analyze <evaluation-workspace> \
 
 Generalize from the failure category, not the exact prompt. Preserve useful behavior, add a regression case for the discovered risk, and do not copy grader language into the Skill.
 
-## 5. Rerun
+## 5. Run the governed improvement loop
 
-- Create a new iteration workspace.
-- Keep the frozen baseline appropriate to the claim.
-- Rerun the original scenarios plus the new regression case.
-- Compare behavior, trigger metrics, navigation, time, and tokens.
-- Generate a new viewer with the previous iteration attached.
-- Require human review before release.
+Use the immutable loop ledger after `analyze` has complete repeated-run evidence:
+
+```bash
+# Classify evidence into mechanisms and emit the proposal contract.
+node dist/scripts/cli.js evidence-loop <evaluation-workspace> \
+  --skill-path <user-owned-skill> --loop <separate-ledger>
+
+# Preview a challenged proposal. This does not mutate the Skill.
+node dist/scripts/cli.js evidence-loop <evaluation-workspace> \
+  --skill-path <user-owned-skill> --loop <separate-ledger> --proposal proposal.json
+
+# Apply exactly the previewed proposal to an isolated revision only.
+node dist/scripts/cli.js evidence-loop <evaluation-workspace> \
+  --skill-path <user-owned-skill> --loop <separate-ledger> --approve <complete-plan-integrity-sha256>
+
+# After executing the isolated revision, attach complete results.
+node dist/scripts/cli.js evidence-loop <evaluation-workspace> \
+  --skill-path <user-owned-skill> --loop <separate-ledger> --results <new-workspace>
+```
+
+The enforced lifecycle is proposal -> preview -> approval -> awaiting-results -> results. Each change must cite failed evidence and a recommended catalog pattern; exceptions require a substantive reason linked to a challenge objection. Challenges are integrity-hashed, source-bound, independently provenanced, and require substantive objections plus responses. Regressions must be new, unique, frozen, canonically hashed, and provenance-bound. Approval binds the complete plan integrity hash and isolated source-hashed revision.
+
+Results require the approved pending revision. Receipt, benchmark, and execution evidence must bind that source, evidence digest, run count, and exact preserved-plus-regression scenario IDs. Every transition performs budget preflight. Tokens are summed from timing.json total_tokens, never means; non-finite values fail closed. Reports include effectiveness, variance, total time, total tokens, and total cost.
+
+Adversarial coverage is executable in `tests/test_evidence_improvement.test.ts`: it attacks state, plan, and revision tampering; partial-hash approval; challenge identity and integrity; non-catalog patterns; duplicate, existing, non-frozen, and unprovenanced regressions; premature or unbound results; and non-finite budgets.

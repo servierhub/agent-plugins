@@ -151,6 +151,10 @@ For host-neutral evaluation handoff, canonical manifest verification, the closed
 
 `estimateExecutionEta(state, job, timestamp)` and `updateEtaEstimator(state, event)` read no wall clock and perform no I/O. Persist returned state in the host if cross-process learning is required. ETA precision is intentionally rounded (seconds, tens of seconds, or five minutes according to scale); the range is the contract, not an exact deadline. Snapshot chronology is validated before estimation: phase plans and records must be unique and ordered, completed phases must be bounded by their job, active timestamps cannot exceed the snapshot, and the current phase must be the single non-completed running phase in the plan. Invalid or contradictory snapshots return stable `unavailable` components with reason `invalid_input`, never a misleading numeric ETA. Invalid completed evidence is rejected. An already-generated estimate may optionally be attached as `snapshot.eta` and will then appear in heartbeat data. Heartbeats never invent an ETA or maintain hidden history.
 
+## Privacy and retention
+
+The versioned privacy policy classifies metadata, content, and protected artifacts; centralizes credential/private-path redaction; supports content-addressed protected references, expiry, deletion tombstones, and unavailable dependent claims; and separates transcript retention from aggregate evidence. See [`references/privacy-retention.md`](references/privacy-retention.md) for the CLI and local/CI access and expiry guidance.
+
 ## Execution heartbeats
 
 Long-running evaluators can consume executor snapshots through `dist/scripts/execution_heartbeat.js`. The API emits the stable `agent-creator.execution-heartbeat/v1` event envelope every 30 seconds by default, marks a snapshot stale after two intervals without an update, and stops before emitting when a terminal snapshot is observed. Counts, actual active workers/models, elapsed time, a privacy-safe checkpoint, and per-unit budget consumption and limits are included. Top-level primitive checkpoints are always redacted; use a structured artifact reference for a publishable checkpoint.
@@ -166,6 +170,6 @@ const heartbeat = createExecutionHeartbeat(
 // heartbeat.stop() for an externally cancelled execution.
 ```
 
-The evaluation runner enables this by default and appends non-terminal event envelopes to `<workspace>/execution_heartbeats.jsonl`. Each event reports runs, turns, and token consumption (with limits where available), and those counters advance as delayed Goose runs complete. Configure it with `--heartbeat-interval <seconds>`, or disable it with `--no-heartbeat`.
+The evaluation runner enables this by default and appends non-terminal event envelopes to `<workspace>/execution_heartbeats.jsonl`. Each event reports runs, turns, and token consumption (with limits where available), and those counters advance as delayed Goose runs complete. Checkpoints use the central privacy redactor. Configure it with `--heartbeat-interval <seconds>`, or disable it with `--no-heartbeat`.
 
 The scheduler accepts an injectable clock for deterministic tests. Heartbeat construction is benchmarked in the test suite against an agreed average overhead ceiling of 0.25 ms for a representative 20-task snapshot.

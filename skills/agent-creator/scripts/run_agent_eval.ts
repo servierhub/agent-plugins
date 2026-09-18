@@ -9,6 +9,7 @@ import { promisify } from "node:util";
 import { normalizeAssertions, assertionHash, variantManifest } from "./assertion_grading.js";
 import { parseAgent, renderAgent, type AgentDocument } from "./agent_format.js";
 import { createExecutionHeartbeat, type ExecutionStatus } from "./execution_heartbeat.js";
+import { parseRetentionPolicy, redactString, redactValue, type TranscriptRetention } from "./privacy_policy.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -65,7 +66,8 @@ async function runCase(
   model: string | undefined,
   timeoutMs: number,
   maxTurns: number,
-  fixtureRoot: string
+  fixtureRoot: string,
+  transcriptRetention: TranscriptRetention
 ): Promise<RunResult> {
   const evalId = evalCase.id;
   const runDir = join(workspace, `eval-${evalId}`, configuration);
@@ -117,10 +119,9 @@ async function runCase(
         maxBuffer: 1024 * 1024 * 64,
       });
       stdout = result.stdout;
-    } catch (error: any) {
-      throw new Error(
-        `Goose failed for eval ${evalId}/${configuration}: ${(error.stderr ?? error.message ?? "").trim()}`
-      );
+    } catch {
+      // Child stderr can contain model responses or credentials. Never reflect it.
+      throw new Error(`Goose failed for eval ${evalId}/${configuration}; raw runner diagnostics withheld`);
     }
     duration = (performance.now() - started) / 1000;
     try {
@@ -133,8 +134,9 @@ async function runCase(
   }
 
   const outputText = extractAssistantText(document);
-  writeFileSync(join(outputs, "response.md"), `${outputText}\n`, "utf-8");
-  writeFileSync(join(runDir, "transcript.json"), `${JSON.stringify(document, null, 2)}\n`, "utf-8");
+  // Aggregate evidence is written independently below; transcript content is optional.
+  writeFileSync(join(outputs, "response.md"), `${redactString(outputText)}\n`, "utf-8");
+  if (transcriptRetention === "retain") writeFileSync(join(runDir, "transcript.json"), `${JSON.stringify(redactValue(document, { topLevel: false }), null, 2)}\n`, "utf-8");
   const metadata = document.metadata ?? {};
   const timing = {
     total_tokens: Number.isFinite(metadata.total_tokens) ? metadata.total_tokens : 0,
@@ -207,6 +209,7 @@ async function main() {
       workers: { type: "string", default: "2" },
       "heartbeat-interval": { type: "string", default: "30" },
       "no-heartbeat": { type: "boolean", default: false },
+      "transcript-retention": { type: "string", default: "retain" },
     },
   });
 
@@ -224,6 +227,7 @@ async function main() {
   const cases = validateEvalSet(JSON.parse(readFileSync(evalSetPath, "utf-8")));
   const workspace = resolve(values.workspace as string);
   mkdirSync(workspace, { recursive: true });
+  const retention = parseRetentionPolicy({ transcript_retention: values["transcript-retention"] });
 
   const temporary = mkdtempSync(join(tmpdir(), "agent-baseline-"));
   let baselineConfiguration: string;
@@ -248,7 +252,7 @@ async function main() {
       const assertions = normalizeAssertions(evalCase.assertions ?? []);
       const evalDir = join(workspace, `eval-${evalCase.id}`);
       mkdirSync(evalDir, { recursive: true });
-      writeFileSync(join(evalDir, "eval_metadata.json"), JSON.stringify({
+      writeFileSync(join(evalDir, "eval_metadata.json"), JSON.stringify(redactValue({
         schema_version: 2,
         eval_id: evalCase.id,
         eval_name: evalCase.name ?? String(evalCase.id),
@@ -264,7 +268,7 @@ async function main() {
         variants: Object.keys(variantDocuments).sort(),
         variant_sources: variantManifest(variantDocuments),
         assertion_hash: assertionHash(assertions, variantDocuments),
-      }, null, 2) + "\n");
+      }, { topLevel: false }), null, 2) + "\n");
     }
 
     const jobs: Array<{ evalCase: EvalCase; configuration: string; path: string }> = [];
@@ -302,7 +306,7 @@ async function main() {
         },
         status: executionStatus,
       }),
-      event => appendFileSync(heartbeatPath, JSON.stringify(event) + "\n", "utf-8"),
+      event => appendFileSync(heartbeatPath, JSON.stringify(redactValue(event, { topLevel: false, redactProtectedKeys: false })) + "\n", "utf-8"),
       { intervalMs: heartbeatIntervalMs }
     );
 
@@ -322,7 +326,8 @@ async function main() {
             values.model as string | undefined,
             timeoutMs,
             maxTurns,
-            fixtureRoot
+            fixtureRoot,
+            retention.transcriptRetention
           );
           consumedTokens += result.total_tokens;
           consumedTurns += result.total_turns;
@@ -349,7 +354,7 @@ async function main() {
 
     const summary = {
       agent: agent.name,
-      agent_path: agentPath,
+      agent_path: redactString(agentPath),
       eval_count: cases.length,
       configurations: ["with_agent", baselineConfiguration],
       runs: results.sort((a, b) =>
@@ -358,7 +363,7 @@ async function main() {
           : String(a.eval_id).localeCompare(String(b.eval_id))
       ),
     };
-    writeFileSync(join(workspace, "run_summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
+    writeFileSync(join(workspace, "run_summary.json"), `${JSON.stringify(redactValue(summary, { topLevel: false }), null, 2)}\n`);
     console.log(workspace);
   } finally {
     rmSync(temporary, { recursive: true, force: true });
@@ -367,7 +372,9 @@ async function main() {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    console.error(error?.message ?? error);
+    // Emit only known application diagnostics; arbitrary thrown values may be raw responses.
+    const message = error instanceof Error ? redactString(error.message) : "evaluation failed; raw diagnostics withheld";
+    console.error(message);
     process.exit(1);
   });
 }

@@ -11,8 +11,9 @@ const COMMANDS = {
     grade: { script: "grade_agent_eval.js", usage: "grade <workspace> [--llm-grader --grader <id=model> --grader <id=model> --max-grader-calls <n>]" },
     aggregate: { script: "aggregate_benchmark.js", usage: "aggregate <workspace> [--agent-name <name>] [--agent-path <path>] [-o <output.json>]" },
     install: { script: "install_agent.js", usage: "install <agent-file> (--project <dir> | --global) [--force]" },
+    privacy: { script: "privacy_policy.js", usage: "privacy <policy|redact|put|status|delete> [options]" },
 };
-const GENERAL_HELP = "Usage: agent-creator <command> [options]\n\nCommands:\n  init        Create an agent definition\n  validate    Validate an agent definition\n  evaluate    Run paired agent evaluations\n  grade       Grade evaluation outputs\n  aggregate   Aggregate benchmark results\n  install     Install an agent at project or user scope\n\nCommon options:\n  --format <text|json>  Select output format (default: text)\n  --quiet               Suppress successful text output\n  -h, --help            Show help\n\nExit codes: 0 success, 1 failure, 2 usage error, 3 blocked operation.";
+const GENERAL_HELP = "Usage: agent-creator <command> [options]\n\nCommands:\n  init        Create an agent definition\n  validate    Validate an agent definition\n  evaluate    Run paired agent evaluations\n  grade       Grade evaluation outputs\n  aggregate   Aggregate benchmark results\n  install     Install an agent at project or user scope\n  privacy     Inspect policy, redact, or manage protected artifacts\n\nCommon options:\n  --format <text|json>  Select output format (default: text)\n  --quiet               Suppress successful text output\n  -h, --help            Show help\n\nExit codes: 0 success, 1 failure, 2 usage error, 3 blocked operation.";
 function commandHelp(command) {
     return "Usage: agent-creator " + COMMANDS[command].usage + "\n\nCommon options: --format <text|json>, --quiet, -h, --help";
 }

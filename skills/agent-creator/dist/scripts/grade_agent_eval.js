@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { execFile } from "node:child_process";
 import { normalizeAssertions, assertionHashFromManifest, runDeterministic, sha256 } from "./assertion_grading.js";
+import { redactValue } from "./privacy_policy.js";
 function execInput(bin, args, input, timeout) { return new Promise((ok, bad) => { const c = execFile(bin, args, { timeout, maxBuffer: 16 * 1024 * 1024, encoding: "utf-8" }, (e, out, err) => { if (e) {
     e.stderr = err;
     bad(e);
@@ -59,7 +60,7 @@ async function gradeRun(dir, name, meta, graders, command, llm, budget) { const 
     const resolved = resolveJudgments(judgments);
     expectations.push({ id: a.id, version: a.version, classification: "semantic", text: a.criterion, criterion: a.criterion, ...resolved, passed: resolved.verdict === "pass", evidence: judgments.map(j => j.evidence_quote), judgments });
 } const passed = expectations.filter(x => x.verdict === "pass").length, failed = expectations.filter(x => x.verdict === "fail").length, inconclusive = expectations.length - passed - failed; let timing = {}; const tp = join(dir, "timing.json"); if (existsSync(tp))
-    timing = JSON.parse(readFileSync(tp, "utf-8")); writeFileSync(join(dir, "grading.json"), JSON.stringify({ schema_version: 2, assertion_hash: meta.assertion_hash, expectations, summary: { passed, failed, inconclusive, total: expectations.length, pass_rate: expectations.length ? passed / expectations.length : 0, human_review: inconclusive > 0 }, grading_budget: { used: budget.used, limit: budget.max }, timing }, null, 2) + "\n"); }
+    timing = JSON.parse(readFileSync(tp, "utf-8")); writeFileSync(join(dir, "grading.json"), JSON.stringify(redactValue({ schema_version: 2, assertion_hash: meta.assertion_hash, expectations, summary: { passed, failed, inconclusive, total: expectations.length, pass_rate: expectations.length ? passed / expectations.length : 0, human_review: inconclusive > 0 }, grading_budget: { used: budget.used, limit: budget.max }, timing }, { topLevel: false }), null, 2) + "\n"); }
 export function verifiedRuns(evalName, evalDir, meta) {
     const assertions = normalizeAssertions(meta.assertions ?? []), names = meta.variants;
     if (!Array.isArray(names) || names.length < 2 || !names.every((name) => typeof name === "string" && name.length > 0) || new Set(names).size !== names.length)
