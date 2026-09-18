@@ -50,13 +50,15 @@ export function loadCiEvalConfig(path) {
             throw new ConfigError("host.required_credentials contains an invalid environment name");
     let environment;
     if (raw.host.environment !== undefined) {
-        if (!object(raw.host.environment) || Object.entries(raw.host.environment).some(([k, v]) => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(k) || typeof v !== "string" || v.includes("\0")))
-            throw new ConfigError("host.environment must map valid environment names to strings");
-        environment = raw.host.environment;
+        environment = strings(raw.host.environment, "host.environment");
+        if (environment.some(k => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(k)))
+            throw new ConfigError("host.environment must contain only valid environment names");
+        const secretNames = environment.filter(k => required_credentials.includes(k) || /(?:^|_)(?:api_?key|token|secret|password|credential)(?:$|_)/i.test(k));
+        if (secretNames.length)
+            throw new ConfigError("credentials must be declared only in host.required_credentials");
     }
-    const secretKeys = Object.keys(environment ?? {}).filter(k => required_credentials.includes(k) || /(?:^|_)(?:api_?key|token|secret|password|credential)(?:$|_)/i.test(k));
     const secretArgs = args.filter(v => /(?:bearer\s+|(?:api[_-]?key|token|secret|password)[=:]|gh[pousr]_|sk-[A-Za-z0-9])/i.test(v));
-    if (secretKeys.length || secretArgs.length)
+    if (secretArgs.length)
         throw new ConfigError("credentials and secret values must be supplied only through required_credentials environment names");
     if (!object(raw.limits))
         throw new ConfigError("limits is required");
@@ -125,10 +127,10 @@ function validatePaths(configPath, c) { const checkout = realpathSync(dirname(co
     throw new ConfigError("evaluation.integration must be inside workspace"); const archive = e.archive ? safePath(checkout, e.archive, "evaluation.archive", "any") : join(workspace, basename(plugin) + ".zip"); if (!isPathWithin(workspace, archive) || archive === workspace)
     throw new ConfigError("evaluation.archive must be a file inside workspace"); if (existsSync(archive) && !statSync(archive).isFile())
     throw new ConfigError("evaluation.archive must be a file"); const receipts = (e.component_receipts ?? []).map((p, i) => safePath(checkout, p, "evaluation.component_receipts[" + i + "]", "file", true)); return { checkout, plugin, workspace, integration, archive, receipts }; }
-async function hostPhase(c, phase, cwd, request) { return await new Promise(resolveRun => { const inherited = {}; for (const key of ["PATH", "HOME", "TMPDIR", "TEMP", "TMP", "SystemRoot", "ComSpec", "PATHEXT", "NODE_PATH", ...c.host.required_credentials])
+async function hostPhase(c, phase, cwd, request) { return await new Promise(resolveRun => { const inherited = {}; for (const key of ["PATH", "HOME", "TMPDIR", "TEMP", "TMP", "SystemRoot", "ComSpec", "PATHEXT", "NODE_PATH", ...c.host.required_credentials, ...(c.host.environment ?? [])])
     if (process.env[key] !== undefined)
         inherited[key] = process.env[key]; let child; try {
-    child = spawn(c.host.command, [...c.host.args, phase, "--request", request], { cwd, env: { ...inherited, ...c.host.environment, CI: "true", NO_COLOR: "1", PLUGIN_CREATOR_NON_INTERACTIVE: "1" }, stdio: ["ignore", "pipe", "pipe"] });
+    child = spawn(c.host.command, [...c.host.args, phase, "--request", request], { cwd, env: { ...inherited, CI: "true", NO_COLOR: "1", PLUGIN_CREATOR_NON_INTERACTIVE: "1" }, stdio: ["ignore", "pipe", "pipe"] });
 }
 catch (e) {
     return resolveRun({ code: 127, stdout: "", stderr: e.message });

@@ -16,6 +16,11 @@
     "required_capabilities": [
       "non-interactive",
       "plugin-evaluation"
+    ],
+    "environment": [
+      "GOOSE_CI_VERIFIED_MODELS",
+      "GOOSE_PROVIDER",
+      "GOOSE_MODEL"
     ]
   },
   "evaluation": {

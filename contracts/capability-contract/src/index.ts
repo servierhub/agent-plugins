@@ -6,6 +6,8 @@ export * from "./elicitation-types.js";
 export * from "./elicitation.js";
 export * from "./evaluation-types.js";
 export * from "./evaluation.js";
+export * from "./evaluation-matrix-types.js";
+export * from "./evaluation-matrix.js";
 export * from "./result-types.js";
 export * from "./result.js";
 export * from "./host-adapter-types.js";

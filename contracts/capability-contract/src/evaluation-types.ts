@@ -55,6 +55,6 @@ export type EvaluationDiagnosticCode =
   | "EVALUATION_PAIR_EQUIVALENCE_MISMATCH" | "EVALUATION_REPETITIONS_INVALID" | "EVALUATION_CONCURRENCY_INVALID"
   | "EVALUATION_BUDGET_INVALID" | "EVALUATION_BUDGET_UNBOUNDED" | "EVALUATION_BUDGET_CONTRADICTORY"
   | "EVALUATION_THRESHOLDS_INVALID" | "EVALUATION_RETRIES_INVALID" | "EVALUATION_STOP_POLICY_INVALID"
-  | "EVALUATION_UNKNOWN_FIELD";
+  | "EVALUATION_MATRIX_INVALID" | "EVALUATION_IDENTITY_UNAVAILABLE" | "EVALUATION_UNKNOWN_FIELD";
 export interface EvaluationDiagnostic { code: EvaluationDiagnosticCode; path: string; message: string; remediation: string; }
 export interface EvaluationValidationResult { valid: boolean; diagnostics: EvaluationDiagnostic[]; }

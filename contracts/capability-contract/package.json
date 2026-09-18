@@ -41,7 +41,9 @@
       "types": "./dist/challenge-types.d.ts",
       "default": "./dist/challenge-types.js"
     },
-    "./challenge-schema/1.0.0": "./schema/challenge/1.0.0/contract-scenario-challenge.schema.json"
+    "./challenge-schema/1.0.0": "./schema/challenge/1.0.0/contract-scenario-challenge.schema.json",
+    "./evaluation-schema/1.1.0": "./schema/1.1.0/evaluation-plan.schema.json",
+    "./evaluation-resolution-schema/1.1.0": "./schema/1.1.0/evaluation-resolution-receipt.schema.json"
   },
   "files": [
     "dist",
@@ -61,7 +63,8 @@
     "ADAPTIVE_ELICITATION_SPECIFICATION.md",
     "fixtures/elicitation",
     "CONTRACT_SCENARIO_CHALLENGE_SPECIFICATION.md",
-    "fixtures/challenge"
+    "fixtures/challenge",
+    "fixtures/evaluation-plan"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

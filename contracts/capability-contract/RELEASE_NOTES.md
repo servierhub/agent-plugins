@@ -45,3 +45,7 @@
 - `plugin.manifest.draft-v1.1` was never activated and remains diagnostic-only; use `plugin.manifest.v1`.
 
 - Compatibility hardening now binds semantic producer/consumer sites with addition/removal-sensitive evidence, closes recursive validator shapes, enforces exact golden substitution aliases, and rejects encoded or serialized secret material with constant redacted diagnostics.
+
+## Evaluation plan 1.1.0
+- Added a backward-compatible role-aware multi-model matrix with deterministic pre-execution job expansion, concrete/alias/documented-default identity resolution, ordered fallback, identity receipts, collision-free matrix-entry/run job IDs, opaque host aliases with unknown identity confidence, and strict complete budget bounds.
+- Kept evaluation plan 1.0.0 and its single-model adapter unchanged.
