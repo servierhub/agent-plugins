@@ -195,7 +195,7 @@ export async function runCli(argv) { const [command, ...raw] = argv; if (!comman
                 const raw = pair.slice(at + 1);
                 overrides[pair.slice(0, at)] = raw === "true" ? true : raw === "false" ? false : Number.isFinite(Number(raw)) ? Number(raw) : raw;
             }
-        const result = runGoldenJourney({ journey, workspace, profile, overrides, resume: o.args.includes("--resume"), cancel: o.args.includes("--cancel") });
+        const result = await runGoldenJourney({ journey, workspace, profile, overrides, resume: o.args.includes("--resume"), cancel: o.args.includes("--cancel") });
         emit(result, "Golden journey " + journey + ": " + result.status + "; activation denied", o);
         return result.status === "pending-production-approval" ? 4 : 3;
     }

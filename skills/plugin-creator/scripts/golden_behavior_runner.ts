@@ -13,7 +13,7 @@ async function evaluate(args:string[]){
  const modulePath=resolve(dirname(artifact.path),match[1]);if(!modulePath.startsWith(resolve(candidateRoot)+sep)||!existsSync(modulePath))throw Error("candidate behavior module is missing or outside candidate root");
  const policy=await import(pathToFileURL(modulePath).href+"?sha="+hash(readFileSync(modulePath)));
  const missing=(policy.requiredInstructions as string[]).filter(text=>!artifact.text.includes(text));
- if(missing.length){process.stdout.write(JSON.stringify({policy_error:"behavioral instructions do not match executable policy",missing_instructions:missing,manual_interventions:3,input_fingerprint:hash(JSON.stringify(input)).slice(0,12)}));process.exitCode=3;return}
+ if(missing.length){process.stdout.write(JSON.stringify({policy_error:"behavioral instructions do not match executable policy",missing_instructions:missing,input_fingerprint:hash(JSON.stringify(input)).slice(0,12)}));process.exitCode=3;return}
  const output=await policy.evaluate(input,scenario);process.stdout.write(JSON.stringify({...output,input_fingerprint:hash(JSON.stringify(input)).slice(0,12),artifact_sha256:hash(artifact.text),policy_sha256:hash(readFileSync(modulePath))}));
 }
 

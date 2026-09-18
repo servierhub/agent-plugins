@@ -124,7 +124,7 @@ For local development, place the plugin under the project or user
 
 ## Golden offline E2E journeys
 
-Three immutable natural-language journeys exercise the complete creator lifecycle with novice defaults and bounded expert overrides. A deterministic offline executor generates isolated candidates, runs shipped validators and frozen scenario repetitions, derives metrics from baseline/result/timing records, archives provenance and heartbeat evidence, and can never activate an artifact. Its evidence is honestly `executed: true` for local fixture execution and `llm_executed: false`. Successful evaluation remains **pending production approval**. See [Golden end-to-end journeys](references/golden-e2e-journeys.md).
+Three immutable natural-language journeys exercise the complete creator lifecycle with novice defaults and bounded expert overrides. A deterministic offline executor loads generated candidate policies, runs shipped validators and varied scenario repetitions in cancellable child processes, derives productivity only from evaluator-owned observed-action events (never candidate-reported counters) while reporting wall time separately, and archives timer-heartbeat provenance. Independent challenger children inspect candidate, records, and criteria files; finding-specific changes are behaviorally rerun. Its evidence is honestly `executed: true` and `llm_executed: false`, it can never activate an artifact, and success remains **pending production approval**. See [Golden end-to-end journeys](references/golden-e2e-journeys.md).
 
 ## Format status
 
