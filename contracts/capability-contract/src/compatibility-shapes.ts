@@ -29,6 +29,7 @@ const here=dirname(fileURLToPath(import.meta.url));
 const schema=(name:string):Record<string,unknown>=>JSON.parse(readFileSync(join(here,"..","schema","1.0.0",name),"utf8")) as Record<string,unknown>;
 const evaluationSchema=schema("evaluation-plan.schema.json"),resultSchema=schema("result-contract.schema.json");
 const recommendationSchema=JSON.parse(readFileSync(join(here,"..","schema","recommendation","1.0.0","artifact-recommendation.schema.json"),"utf8")) as Record<string,unknown>;
+const productionApprovalDocument=JSON.parse(readFileSync(join(here,"..","fixtures","compatibility","cases","schema.hook-production-approval.v1.json"),"utf8")) as Record<string,unknown>;
 const hostProtocolSchema=schema("host-execution-adapter.schema.json"),hostEventSchema=schema("host-execution-event.schema.json");
 const deepEqual=(left:unknown,right:unknown):boolean=>JSON.stringify(left)===JSON.stringify(right);
 function resolveLocalRef(root:Record<string,unknown>,ref:string):unknown{
@@ -184,6 +185,12 @@ const pluginManifest=(v:unknown)=>isRecord(v)&&exact(v,["$schema","name","versio
 const mcpServer=(v:unknown)=>isRecord(v)&&nonBlank(v.type)&&enumValue(v.type,["stdio","streamable-http"])&&(v.type==="stdio"?exact(v,["type","command"],["type","command","args","env","cwd"])&&nonBlank(v.command)&&optional(v.args,stringArray)&&optional(v.env,x=>recordOf(x,nonBlank))&&optional(v.cwd,nonBlank):exact(v,["type","url"],["type","url","headers"])&&nonBlank(v.url)&&optional(v.headers,x=>recordOf(x,nonBlank)));
 const mcp=(v:unknown)=>isRecord(v)&&exact(v,["$schema","mcpServers"])&&typeof v.$schema==="string"&&/\/1\.0\.0\/mcp\.schema\.json$/.test(v.$schema)&&recordOf(v.mcpServers,mcpServer);
 const hookDocument=(v:unknown)=>isRecord(v)&&exact(v,["hooks"])&&isRecord(v.hooks)&&Object.values(v.hooks).every(x=>Array.isArray(x)&&x.every(y=>isRecord(y)&&nonBlank(y.type)&&nonBlank(y.command)));
+const productionApprovalIdentity=(v:unknown)=>isRecord(v)&&exact(v,["id","role"])&&nonBlank(v.id)&&nonBlank(v.role)&&String(v.id).trim().toLowerCase()!=="anonymous"&&String(v.role).trim().toLowerCase()!=="anonymous";
+const productionApprovalLineage=(v:unknown)=>isRecord(v)&&exact(v,["request_id","request_sha256"])&&nonBlank(v.request_id)&&sha256(v.request_sha256);
+const productionApprovalBindings=(v:unknown)=>isRecord(v)&&exact(v,["artifact_sha256","archive_sha256","manifest_sha256","benchmark_sha256","test_sha256","review_sha256"])&&Object.values(v).every(sha256);
+const productionApprovalEvent=(v:unknown)=>isRecord(v)&&exact(v,["revision","action","reviewer","timestamp","rationale","accepted_risks","waivers","previous_event_sha256","signature"],["revision","action","reviewer","timestamp","rationale","accepted_risks","waivers","superseded_by","previous_event_sha256","signature"])&&positiveInteger(v.revision)&&enumValue(v.action,["review","approve","reject","expire","supersede"])&&productionApprovalIdentity(v.reviewer)&&rfc3339(v.timestamp)&&nonBlank(v.rationale)&&stringArray(v.accepted_risks)&&stringArray(v.waivers)&&sha256(v.previous_event_sha256)&&isRecord(v.signature)&&exact(v.signature,["algorithm","keyid","value"])&&v.signature.algorithm==="Ed25519"&&sha256(v.signature.keyid)&&nonBlank(v.signature.value)&&optional(v.superseded_by,productionApprovalLineage)&&((v.action==="supersede")===(v.superseded_by!==undefined));
+const productionApproval=(v:unknown)=>isRecord(v)&&exact(v,["version","request_id","requested_at","expires_at","requester","automated_evidence","bindings","events"],["version","request_id","requested_at","expires_at","requester","automated_evidence","bindings","events","supersedes"])&&v.version==="hook-production-approval/v1"&&nonBlank(v.request_id)&&rfc3339(v.requested_at)&&rfc3339(v.expires_at)&&Date.parse(String(v.expires_at))>Date.parse(String(v.requested_at))&&productionApprovalIdentity(v.requester)&&isRecord(v.automated_evidence)&&exact(v.automated_evidence,["status","attestation_sha256"])&&enumValue(v.automated_evidence.status,["pass","fail"])&&sha256(v.automated_evidence.attestation_sha256)&&productionApprovalBindings(v.bindings)&&arrayOf(v.events,productionApprovalEvent)&&optional(v.supersedes,productionApprovalLineage);
+const productionApprovalSchema=(v:unknown)=>deepEqual(v,productionApprovalDocument);
 const schemaDocument=(surfaceId:string,v:unknown)=>deepEqual(v,surfaceId==="schema.host-adapter.v1"?hostProtocolSchema:surfaceId==="schema.host-event.v1"?hostEventSchema:surfaceId==="schema.artifact-recommendation.v1"?recommendationSchema:null);
 const html=(surfaceId:string,v:unknown)=>{
  if(typeof v!=="string"||!/^\s*<!doctype html>/i.test(v)||!/<html[\s>]/i.test(v)||!/<body[\s>]/i.test(v)||!/<\/html>\s*$/i.test(v))return false;
@@ -242,6 +249,7 @@ export function validateShapeById(surfaceId:string,validatorId:string,value:unkn
  if(validatorId==="schema:result-contract")return validateResultContract(value).valid;
  if(validatorId==="schema:artifact-recommendation")return validatesSchema(recommendationSchema,value,recommendationSchema);
  if(validatorId==="shape:json-schema-document"||validatorId==="shape:artifact-recommendation-schema-document")return schemaDocument(surfaceId,value);
+ if(validatorId==="shape:production-approval-schema-document")return productionApprovalSchema(value);
  const hostMap:Record<string,string>={"host:capability-report":"capabilityReport","host:negotiation-request":"negotiationRequest","host:run-request":"runRequest","host:artifact-exchange":"artifactExchange","host:error":"error","host:cancellation-request":"cancellationRequest","host:cancellation-response":"cancellationResponse","host:resume-request":"resumeRequest","host:artifact-request":"artifactRequest"};
  if(validatorId==="host:negotiation-result")return Boolean(hostValidators[surfaceId.endsWith("blocked.v1")?"negotiationBlocked":"negotiationAccepted"]?.(value));
  if(hostMap[validatorId])return Boolean(hostValidators[hostMap[validatorId]]?.(surfaceId.endsWith("adapter-error.v1")&&isRecord(value)?value.data:value));
@@ -259,6 +267,7 @@ export function validateShapeById(surfaceId:string,validatorId:string,value:unkn
  if(validatorId==="artifact:semantic-grading")return semanticGrading(value);
  if(validatorId==="artifact:independent-review")return independentReview(value);
  if(validatorId==="artifact:evaluation-run-manifest")return evaluationRunManifest(value);
+ if(validatorId==="artifact:production-approval")return productionApproval(value);
  if(validatorId==="artifact:execution-evidence")return executionEvidence(value);
  if(validatorId==="artifact:authoring-audit")return audit(value);
  if(validatorId==="artifact:evaluation-design")return design(value);

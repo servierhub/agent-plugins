@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import type AdmZipType from "adm-zip";
 import { collectPackageFiles } from "./package_manifest.js";
@@ -8,6 +8,7 @@ import { loadRuntimeDependency } from "./runtime-deps.js";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { validate } from "./validate_goose_plugin.js";
 import { loadPortablePlugin } from "./portable_loader.js";
+import {productionBindings,verifyProductionApproval} from "./production_approval.js";
 
 const AdmZip = loadRuntimeDependency<typeof AdmZipType>("adm-zip");
 
@@ -41,8 +42,8 @@ function main(): void {
   const writer=process.env.PLUGIN_CREATOR_TEST_DETACHED_WRITER_PATH;if(writer){const code=`const fs=require("fs"),p=process.argv[1];setInterval(()=>fs.appendFileSync(p,String(Date.now())+"\\n"),10)`;const child=spawn(process.execPath,["-e",code,writer],{detached:true,stdio:"ignore"});child.unref();if(process.env.PLUGIN_CREATOR_TEST_DETACHED_PID_PATH)writeFileSync(process.env.PLUGIN_CREATOR_TEST_DETACHED_PID_PATH,String(child.pid));}
   const testDelay=Number(process.env.PLUGIN_CREATOR_TEST_PACKAGE_DELAY_MS??0);
   if (Number.isFinite(testDelay) && testDelay > 0) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, testDelay);
-  const [pluginDirArg, outputArg] = process.argv.slice(2);
-  if (!pluginDirArg) { console.error("usage: package_goose_plugin.js <plugin_dir> [output.zip]"); process.exit(2); }
+  const raw=process.argv.slice(2),positionals=raw.filter((v,i)=>!v.startsWith("--")&&(i===0||!["--approval","--approval-trust-policy","--integration","--test-evidence"].includes(raw[i-1]))),[pluginDirArg,outputArg]=positionals;
+  if (!pluginDirArg) { console.error("usage: package_goose_plugin.js <plugin_dir> [output.zip] [--production --approval FILE --approval-trust-policy FILE --integration DIR --test-evidence FILE]"); process.exit(2); }
   const root = resolve(pluginDirArg);
   if (!isDirectory(root) || lstatSync(root).isSymbolicLink()) fail("plugin root must be a real directory");
 
@@ -64,7 +65,9 @@ function main(): void {
   const manifest = JSON.parse(readFileSync(join(root, "plugin.json"), "utf8"));
   const zip = new AdmZip();
   for (const file of files) zip.addFile(manifest.name + "/" + file.relative, readFileSync(file.absolute));
+  const production=process.argv.includes("--production");
   zip.writeZip(output);
+  if(production){const value=(name:string)=>{const i=process.argv.indexOf(name),v=i>=0?process.argv[i+1]:undefined;if(!v)fail(name+" is required for production packaging");return v};try{verifyProductionApproval(value("--approval"),value("--approval-trust-policy"),productionBindings(root,output,value("--integration"),value("--test-evidence")))}catch(error){rmSync(output,{force:true});fail((error as Error).message)}}
   console.log(output);
 }
 

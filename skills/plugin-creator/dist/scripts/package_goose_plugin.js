@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { collectPackageFiles } from "./package_manifest.js";
 import { loadRuntimeDependency } from "./runtime-deps.js";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { validate } from "./validate_goose_plugin.js";
 import { loadPortablePlugin } from "./portable_loader.js";
+import { productionBindings, verifyProductionApproval } from "./production_approval.js";
 const AdmZip = loadRuntimeDependency("adm-zip");
 function isDirectory(path) {
     try {
@@ -55,9 +56,9 @@ function main() {
     const testDelay = Number(process.env.PLUGIN_CREATOR_TEST_PACKAGE_DELAY_MS ?? 0);
     if (Number.isFinite(testDelay) && testDelay > 0)
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, testDelay);
-    const [pluginDirArg, outputArg] = process.argv.slice(2);
+    const raw = process.argv.slice(2), positionals = raw.filter((v, i) => !v.startsWith("--") && (i === 0 || !["--approval", "--approval-trust-policy", "--integration", "--test-evidence"].includes(raw[i - 1]))), [pluginDirArg, outputArg] = positionals;
     if (!pluginDirArg) {
-        console.error("usage: package_goose_plugin.js <plugin_dir> [output.zip]");
+        console.error("usage: package_goose_plugin.js <plugin_dir> [output.zip] [--production --approval FILE --approval-trust-policy FILE --integration DIR --test-evidence FILE]");
         process.exit(2);
     }
     const root = resolve(pluginDirArg);
@@ -101,7 +102,19 @@ function main() {
     const zip = new AdmZip();
     for (const file of files)
         zip.addFile(manifest.name + "/" + file.relative, readFileSync(file.absolute));
+    const production = process.argv.includes("--production");
     zip.writeZip(output);
+    if (production) {
+        const value = (name) => { const i = process.argv.indexOf(name), v = i >= 0 ? process.argv[i + 1] : undefined; if (!v)
+            fail(name + " is required for production packaging"); return v; };
+        try {
+            verifyProductionApproval(value("--approval"), value("--approval-trust-policy"), productionBindings(root, output, value("--integration"), value("--test-evidence")));
+        }
+        catch (error) {
+            rmSync(output, { force: true });
+            fail(error.message);
+        }
+    }
     console.log(output);
 }
 main();

@@ -2323,6 +2323,42 @@
       "migrationId": null,
       "artifactFormat": "json",
       "validatorId": "artifact:evaluation-run-manifest"
+    },
+    {
+      "id": "hook.production-approval.v1",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceFieldOrLayout": "hook-production-approval/v1",
+      "sourceEvidence": "export const APPROVAL_VERSION=\"hook-production-approval/v1\"",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "hook-production-approval/v1"
+      ],
+      "emittedVersion": "hook-production-approval/v1",
+      "versionField": "/version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:production-approval"
+    },
+    {
+      "id": "schema.hook-production-approval.v1",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/schemas/production-approval.schema.json",
+      "sourceFieldOrLayout": "production-approval.schema.json",
+      "sourceEvidence": "\"$id\": \"https://openplugins.dev/schemas/hook-production-approval-v1.json\"",
+      "kind": "schema-document",
+      "readVersionsOrRanges": [
+        "https://openplugins.dev/schemas/hook-production-approval-v1.json"
+      ],
+      "emittedVersion": "https://openplugins.dev/schemas/hook-production-approval-v1.json",
+      "versionField": "/$id",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "shape:production-approval-schema-document"
     }
   ],
   "host": {
@@ -2858,6 +2894,10 @@
     },
     {
       "sourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
       "expected": []
     }
   ],
@@ -3485,6 +3525,22 @@
       "emittedVersion": "hook-evaluation-run-manifest/v1",
       "versionSourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
       "versionEvidence": "MANIFEST_VERSION=\"hook-evaluation-run-manifest/v1\""
+    },
+    {
+      "id": "hook.production-approval.v1",
+      "versionSourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "versionEvidence": "export const APPROVAL_VERSION=\"hook-production-approval/v1\"",
+      "emittedVersion": "hook-production-approval/v1",
+      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceEvidence": "export const APPROVAL_VERSION=\"hook-production-approval/v1\""
+    },
+    {
+      "id": "schema.hook-production-approval.v1",
+      "versionSourceFile": "skills/hook-creator/schemas/production-approval.schema.json",
+      "versionEvidence": "\"$id\": \"https://openplugins.dev/schemas/hook-production-approval-v1.json\"",
+      "emittedVersion": "https://openplugins.dev/schemas/hook-production-approval-v1.json",
+      "sourceFile": "skills/hook-creator/schemas/production-approval.schema.json",
+      "sourceEvidence": "\"$id\": \"https://openplugins.dev/schemas/hook-production-approval-v1.json\""
     }
   ],
   "producerBackedSurfaceIds": [
@@ -3522,7 +3578,8 @@
     "agent.eval-metadata.v2",
     "agent.semantic-grading.v2",
     "plugin.independent-review.v1",
-    "hook.evaluation-run-manifest.v1"
+    "hook.evaluation-run-manifest.v1",
+    "hook.production-approval.v1"
   ],
   "canonicalArtifacts": [
     {
@@ -3894,6 +3951,18 @@
       "format": "json",
       "validatorId": "artifact:evaluation-run-manifest",
       "registrySurfaceId": "hook.evaluation-run-manifest.v1"
+    },
+    {
+      "canonicalArtifactId": "hook.production-approval.v1",
+      "format": "json",
+      "validatorId": "artifact:production-approval",
+      "registrySurfaceId": "hook.production-approval.v1"
+    },
+    {
+      "canonicalArtifactId": "schema.hook-production-approval.v1",
+      "format": "json",
+      "validatorId": "shape:production-approval-schema-document",
+      "registrySurfaceId": "schema.hook-production-approval.v1"
     }
   ],
   "producerSiteAliases": [
@@ -5264,6 +5333,15 @@
       "canonicalArtifactId": "hook.evaluation-run-manifest.v1",
       "sourceEvidence": "createEvaluationRunManifest",
       "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/hook-creator/scripts/production_approval.ts::ProductionApproval",
+      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceFieldOrArtifact": "ProductionApproval",
+      "role": "producer-consumer",
+      "canonicalArtifactId": "hook.production-approval.v1",
+      "sourceEvidence": "export function createApprovalRequest",
+      "evidenceOccurrences": 1
     }
   ],
   "structuralExclusions": [

@@ -2327,6 +2327,42 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
     "migrationId": null,
     "artifactFormat": "json",
     "validatorId": "artifact:evaluation-run-manifest"
+  },
+  {
+    "id": "hook.production-approval.v1",
+    "creator": "hook-creator",
+    "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+    "sourceFieldOrLayout": "hook-production-approval/v1",
+    "sourceEvidence": "export const APPROVAL_VERSION=\"hook-production-approval/v1\"",
+    "kind": "evaluation-artifact",
+    "readVersionsOrRanges": [
+      "hook-production-approval/v1"
+    ],
+    "emittedVersion": "hook-production-approval/v1",
+    "versionField": "/version",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "artifactFormat": "json",
+    "validatorId": "artifact:production-approval"
+  },
+  {
+    "id": "schema.hook-production-approval.v1",
+    "creator": "hook-creator",
+    "sourceFile": "skills/hook-creator/schemas/production-approval.schema.json",
+    "sourceFieldOrLayout": "production-approval.schema.json",
+    "sourceEvidence": "\"$id\": \"https://openplugins.dev/schemas/hook-production-approval-v1.json\"",
+    "kind": "schema-document",
+    "readVersionsOrRanges": [
+      "https://openplugins.dev/schemas/hook-production-approval-v1.json"
+    ],
+    "emittedVersion": "https://openplugins.dev/schemas/hook-production-approval-v1.json",
+    "versionField": "/$id",
+    "supportState": "supported",
+    "deprecation": null,
+    "migrationId": null,
+    "artifactFormat": "json",
+    "validatorId": "shape:production-approval-schema-document"
   }
 ] as CompatibilityEntry[]).map(E)) as readonly CompatibilityEntry[];
 export const RESULT_CONTRACT_REFERENCE=Object.freeze({version:RESULT_CONTRACT_VERSION,schemaId:RESULT_CONTRACT_SCHEMA_ID,mappingExport:"LEGACY_STATUS_MAPPINGS",classifierExport:"classifyResultExit"});

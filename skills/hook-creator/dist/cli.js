@@ -6,6 +6,7 @@ import { initHook, parseInitArgs, UsageError } from "./init_hook.js";
 import { validateHook } from "./validate_hook.js";
 import { verifyEvaluationRunManifest, writeEvaluationRunManifest } from "./evaluation_run_manifest.js";
 import { verifyEvidenceAttestation, writeEvidenceAttestation } from "./evidence_attestation.js";
+import { approvalSha, inspectApproval, updateApproval, writeApprovalRequest } from "./production_approval.js";
 const HELP = `Usage: hook-creator [--format text|json] [--quiet] <command> [options]
 
 Commands:
@@ -15,6 +16,10 @@ Commands:
   eval-manifest verify <manifest.json> [receipt.json]
   attestation create <spec.json> <envelope.json> [--private-key <pem>]
   attestation verify <envelope.json> [--policy local|production] [--trust-policy <json>]
+  approval request <spec.json> <approval.json>
+  approval review|approve|reject|expire|supersede <approval.json> <decision.json> --private-key <pem>
+  approval verify <approval.json> --trust-policy <json> [--bindings <json>]
+  approval consume <approval.json> --purpose deploy|install --trust-policy <json> --bindings <json>
 
 Common options:
   --format <text|json>  Select human-readable or JSON output (default: text)
@@ -66,6 +71,60 @@ catch (error) {
         const result = initHook(parseInitArgs(args));
         output({ ok: true, command, ...result }, common.format, common.quiet, [result.hooksPath, result.scriptPath]);
         return 0;
+    }
+    if (command === "approval") {
+        const [action, ...raw] = args;
+        if (action === "request") {
+            if (raw.length !== 2)
+                throw new UsageError("usage: hook-creator approval request <spec.json> <approval.json>");
+            const a = writeApprovalRequest(raw[0], raw[1]);
+            output({ ok: true, command, action, path: raw[1], state: "pending", approval_sha256: approvalSha(a) }, common.format, common.quiet, [raw[1], "pending"]);
+            return 0;
+        }
+        if (["review", "approve", "reject", "expire", "supersede"].includes(action)) {
+            const pos = [];
+            let key;
+            for (let i = 0; i < raw.length; i++)
+                if (raw[i] === "--private-key")
+                    key = raw[++i];
+                else
+                    pos.push(raw[i]);
+            if (pos.length !== 2 || !key)
+                throw new UsageError("approval transition requires <approval.json> <decision.json> --private-key <pem>");
+            const spec = JSON.parse(readFileSync(pos[1], "utf8"));
+            if (spec.action !== action)
+                throw new UsageError("decision action does not match command");
+            const a = updateApproval(pos[0], pos[1], key);
+            output({ ok: true, command, action, path: pos[0], approval_sha256: approvalSha(a), revision: a.events.length }, common.format, common.quiet, [pos[0], action]);
+            return 0;
+        }
+        if (action === "verify" || action === "consume") {
+            const pos = [];
+            let trust, bound, purpose;
+            for (let i = 0; i < raw.length; i++) {
+                const a = raw[i], v = raw[i + 1];
+                if (a === "--trust-policy") {
+                    trust = v;
+                    i++;
+                }
+                else if (a === "--bindings") {
+                    bound = v;
+                    i++;
+                }
+                else if (a === "--purpose") {
+                    purpose = v;
+                    i++;
+                }
+                else
+                    pos.push(a);
+            }
+            if (pos.length !== 1 || !trust || (action === "consume" && (!bound || !["deploy", "install"].includes(purpose))))
+                throw new UsageError("approval verify/consume requires approval, trust policy, and consume also exact bindings and deploy|install purpose");
+            const result = inspectApproval(JSON.parse(readFileSync(pos[0], "utf8")), { trustPolicy: JSON.parse(readFileSync(trust, "utf8")), expectedBindings: bound ? JSON.parse(readFileSync(bound, "utf8")) : undefined });
+            output({ command, action, purpose, ...result }, common.format, common.quiet && result.ok, result.ok ? ["OK: approved for " + (purpose ?? "production")] : result.errors.map((x) => "ERROR: " + x));
+            return result.ok ? 0 : 1;
+        }
+        throw new UsageError("usage: hook-creator approval request|review|approve|reject|expire|supersede|verify|consume ...");
     }
     if (command === "attestation") {
         const [action, ...raw] = args;

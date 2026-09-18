@@ -4,6 +4,7 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSy
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { sourceHash } from "./package_manifest.js";
 import { fullEval } from "./full_eval.js";
+import { productionBindings, verifyProductionApproval } from "./production_approval.js";
 import { isPathWithin, resolveContainedPath } from "./path_containment.js";
 export const CI_EXIT = { success: 0, evaluationFailure: 1, invalidConfig: 2, blockedCapability: 3, pendingApproval: 4 };
 class ConfigError extends Error {
@@ -81,7 +82,7 @@ export function loadCiEvalConfig(path) {
     if (raw.evaluation !== undefined) {
         if (!object(raw.evaluation))
             throw new ConfigError("evaluation must be an object");
-        keys(raw.evaluation, ["component_receipts", "integration", "archive", "tests_status", "human_review", "min_pass_rate", "min_delta"], "evaluation");
+        keys(raw.evaluation, ["component_receipts", "integration", "archive", "tests_status", "human_review", "production", "approval", "approval_trust_policy", "test_evidence", "min_pass_rate", "min_delta"], "evaluation");
         evaluation = {};
         if (raw.evaluation.component_receipts !== undefined)
             evaluation.component_receipts = strings(raw.evaluation.component_receipts, "evaluation.component_receipts");
@@ -93,6 +94,17 @@ export function loadCiEvalConfig(path) {
             evaluation.tests_status = enumValue(raw.evaluation.tests_status, ["pass", "fail", "blocked", "na"], "evaluation.tests_status");
         if (raw.evaluation.human_review !== undefined)
             evaluation.human_review = enumValue(raw.evaluation.human_review, ["pass", "pending", "na"], "evaluation.human_review");
+        if (raw.evaluation.production !== undefined) {
+            if (typeof raw.evaluation.production !== "boolean")
+                throw new ConfigError("evaluation.production must be boolean");
+            evaluation.production = raw.evaluation.production;
+        }
+        if (raw.evaluation.approval !== undefined)
+            evaluation.approval = nonempty(raw.evaluation.approval, "evaluation.approval");
+        if (raw.evaluation.approval_trust_policy !== undefined)
+            evaluation.approval_trust_policy = nonempty(raw.evaluation.approval_trust_policy, "evaluation.approval_trust_policy");
+        if (raw.evaluation.test_evidence !== undefined)
+            evaluation.test_evidence = nonempty(raw.evaluation.test_evidence, "evaluation.test_evidence");
         if (raw.evaluation.min_pass_rate !== undefined)
             evaluation.min_pass_rate = number(raw.evaluation.min_pass_rate, "evaluation.min_pass_rate", 0, 1);
         if (raw.evaluation.min_delta !== undefined)
@@ -126,7 +138,7 @@ function validatePaths(configPath, c) { const checkout = realpathSync(dirname(co
     throw new ConfigError("workspace must be a directory"); const e = c.evaluation ?? {}; const integration = e.integration ? safePath(checkout, e.integration, "evaluation.integration", "any") : join(workspace, "integration"); if (!isPathWithin(workspace, integration))
     throw new ConfigError("evaluation.integration must be inside workspace"); const archive = e.archive ? safePath(checkout, e.archive, "evaluation.archive", "any") : join(workspace, basename(plugin) + ".zip"); if (!isPathWithin(workspace, archive) || archive === workspace)
     throw new ConfigError("evaluation.archive must be a file inside workspace"); if (existsSync(archive) && !statSync(archive).isFile())
-    throw new ConfigError("evaluation.archive must be a file"); const receipts = (e.component_receipts ?? []).map((p, i) => safePath(checkout, p, "evaluation.component_receipts[" + i + "]", "file", true)); return { checkout, plugin, workspace, integration, archive, receipts }; }
+    throw new ConfigError("evaluation.archive must be a file"); const receipts = (e.component_receipts ?? []).map((p, i) => safePath(checkout, p, "evaluation.component_receipts[" + i + "]", "file", true)), approval = e.approval ? safePath(checkout, e.approval, "evaluation.approval", "file", true) : undefined, approvalTrust = e.approval_trust_policy ? safePath(checkout, e.approval_trust_policy, "evaluation.approval_trust_policy", "file", true) : undefined, testEvidence = e.test_evidence ? safePath(checkout, e.test_evidence, "evaluation.test_evidence", "file", true) : undefined; return { checkout, plugin, workspace, integration, archive, receipts, approval, approvalTrust, testEvidence }; }
 async function hostPhase(c, phase, cwd, request) { return await new Promise(resolveRun => { const inherited = {}; for (const key of ["PATH", "HOME", "TMPDIR", "TEMP", "TMP", "SystemRoot", "ComSpec", "PATHEXT", "NODE_PATH", ...c.host.required_credentials, ...(c.host.environment ?? [])])
     if (process.env[key] !== undefined)
         inherited[key] = process.env[key]; let child; try {
@@ -230,7 +242,7 @@ function outcomeFromEvidence(value) { if (!object(value) || !object(value.full_e
     return { status: "evaluation-failure", exit_code: 1, reason: "full-eval failed" }; if (status === "blocked" && review?.status === "blocked" && jobs.slice(0, jobs.indexOf(review)).every(j => j.status === "succeeded"))
     return { status: "pending-approval", exit_code: 4, reason: "evaluation evidence complete; human approval pending" }; if (status === "blocked")
     return { status: "blocked-capability", exit_code: 3, reason: "full-eval blocked" }; return null; }
-function validCache(workspace, configHash, artifactHash, credentials) { try {
+function validCache(workspace, configHash, artifactHash, credentials, production) { try {
     const cachePath = safePath(workspace, "ci-result.json", "cache result", "file", true), v = JSON.parse(readFileSync(cachePath, "utf8"));
     if (!object(v) || v.schema_version !== "1.0" || !object(v.binding) || !object(v.result) || !Array.isArray(v.inventory) || typeof v.envelope_sha256 !== "string")
         return null;
@@ -260,6 +272,12 @@ function validCache(workspace, configHash, artifactHash, credentials) { try {
     }
     if (hash(stable(v.result)) !== v.binding.result_sha256)
         return null;
+    if (production && v.result.status === "success") {
+        if (!production.approval || !production.trust || !production.testEvidence)
+            return null;
+        const expected = productionBindings(production.plugin, production.archive, production.integration, production.testEvidence);
+        verifyProductionApproval(production.approval, production.trust, expected, new Date());
+    }
     const derived = outcomeFromEvidence(v.result);
     if (!derived || v.result.status !== derived.status || v.result.exit_code !== derived.exit_code || v.result.reason !== derived.reason || v.result.archive !== archive || stable(v.result.inventory) !== stable(v.inventory))
         return null;
@@ -298,7 +316,7 @@ export async function runCiEval(configPath) {
     }
     const configHash = hash(readFileSync(configPath));
     if (c.cache?.enabled && c.cache.resume) {
-        const cached = validCache(paths.workspace, configHash, artifactHash, c.host.required_credentials);
+        const cached = validCache(paths.workspace, configHash, artifactHash, c.host.required_credentials, c.evaluation?.production ? { approval: paths.approval, trust: paths.approvalTrust, testEvidence: paths.testEvidence, plugin: paths.plugin, archive: paths.archive, integration: paths.integration } : undefined);
         if (cached)
             return cached;
     }
@@ -327,7 +345,7 @@ export async function runCiEval(configPath) {
     catch (e) {
         return fail(stage === "preflight" ? "blocked-capability" : "evaluation-failure", stage === "preflight" ? 3 : 1, e.message);
     }
-    const e = c.evaluation ?? {}, opts = { pluginPath: paths.plugin, workspace: paths.workspace, componentReceipts: paths.receipts, integration: paths.integration, archive: paths.archive, testsStatus: e.tests_status, humanReview: e.human_review, minPassRate: e.min_pass_rate, minDelta: e.min_delta, reliability: { total_budget_ms: c.limits.total_budget_ms }, resume: Boolean(c.cache?.resume) };
+    const e = c.evaluation ?? {}, opts = { pluginPath: paths.plugin, workspace: paths.workspace, componentReceipts: paths.receipts, integration: paths.integration, archive: paths.archive, testsStatus: e.tests_status, humanReview: e.human_review, approval: paths.approval, approvalTrustPolicy: paths.approvalTrust, testEvidence: paths.testEvidence, production: e.production, minPassRate: e.min_pass_rate, minDelta: e.min_delta, reliability: { total_budget_ms: c.limits.total_budget_ms }, resume: Boolean(c.cache?.resume) };
     let evaluated;
     try {
         evaluated = await fullEval(opts);

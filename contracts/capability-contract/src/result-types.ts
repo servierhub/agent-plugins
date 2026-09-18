@@ -28,7 +28,7 @@ export interface ResultExit { code: ResultExitCode; reason: ResultExitReason; }
 export type CreatorName = "agent-creator" | "hook-creator" | "plugin-creator" | "skill-creator";
 export type LegacyStatusContext =
   | "agent-cli-ok" | "agent-cli-exit" | "agent-grading-passed" | "agent-evidence-import-status"
-  | "hook-cli-ok" | "hook-cli-usage" | "hook-cli-exit"
+  | "hook-cli-ok" | "hook-cli-usage" | "hook-cli-exit" | "hook-production-approval-state"
   | "plugin-cli-ok" | "plugin-cli-exit" | "plugin-full-eval-status" | "plugin-full-eval-phase"
   | "plugin-gate-status" | "plugin-verification-receipt-status" | "plugin-component-evidence-status" | "plugin-evidence-applicability" | "plugin-human-review-status"
   | "plugin-validation-outcome" | "plugin-component-outcome-status" | "plugin-release-eligible" | "plugin-migration-status"

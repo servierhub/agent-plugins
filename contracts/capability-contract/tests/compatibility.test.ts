@@ -24,6 +24,11 @@ test("recommendation schema and API package surfaces are explicitly classified",
   assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="api.recommend-artifact.v1")?.supportState,"unsupported");
 });
 
+test("production approval artifact and schema are explicit supported surfaces",()=>{
+  assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="hook.production-approval.v1")?.validatorId,"artifact:production-approval");
+  assert.equal(COMPATIBILITY_REGISTRY.find(x=>x.id==="schema.hook-production-approval.v1")?.supportState,"supported");
+});
+
 test("source-derived discovery metadata and outcome IDs exactly match the registry",()=>{
   assert.equal(discovery.manifestVersion,"2.0.0");
   assert.equal(expected.manifestVersion,"2.0.0");

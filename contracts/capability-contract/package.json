@@ -43,7 +43,17 @@
     },
     "./challenge-schema/1.0.0": "./schema/challenge/1.0.0/contract-scenario-challenge.schema.json",
     "./evaluation-schema/1.1.0": "./schema/1.1.0/evaluation-plan.schema.json",
-    "./evaluation-resolution-schema/1.1.0": "./schema/1.1.0/evaluation-resolution-receipt.schema.json"
+    "./evaluation-resolution-schema/1.1.0": "./schema/1.1.0/evaluation-resolution-receipt.schema.json",
+    "./candidate-selection": {
+      "types": "./dist/candidate-selection.d.ts",
+      "default": "./dist/candidate-selection.js"
+    },
+    "./candidate-selection-types": {
+      "types": "./dist/candidate-selection-types.d.ts",
+      "default": "./dist/candidate-selection-types.js"
+    },
+    "./candidate-selection-schema/1.0.0": "./schema/candidate-selection/1.0.0/candidate-selection.schema.json",
+    "./candidate-selection-decision-schema/1.0.0": "./schema/candidate-selection/1.0.0/candidate-selection-decision.schema.json"
   },
   "files": [
     "dist",
@@ -64,7 +74,9 @@
     "fixtures/elicitation",
     "CONTRACT_SCENARIO_CHALLENGE_SPECIFICATION.md",
     "fixtures/challenge",
-    "fixtures/evaluation-plan"
+    "fixtures/evaluation-plan",
+    "CANDIDATE_SELECTION_SPECIFICATION.md",
+    "fixtures/candidate-selection"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

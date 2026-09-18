@@ -20,3 +20,5 @@ export * from "./compatibility-types.js";
 export * from "./compatibility.js";
 export * from "./challenge-types.js";
 export * from "./challenge.js";
+export * from "./candidate-selection-types.js";
+export * from "./candidate-selection.js";

@@ -1220,6 +1220,24 @@
         "diagnostic": null,
         "validatorId": "artifact:evaluation-run-manifest"
       }
+    },
+    {
+      "id": "hook.production-approval.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/hook.production-approval.v1.json",
+        "validatorId": "artifact:production-approval"
+      }
+    },
+    {
+      "id": "schema.hook-production-approval.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/schema.hook-production-approval.v1.json",
+        "validatorId": "shape:production-approval-schema-document"
+      }
     }
   ]
 }

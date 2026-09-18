@@ -9,8 +9,9 @@ import { loadRuntimeDependency } from "./runtime-deps.js";
 import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { validate } from "./validate_goose_plugin.js";
 import { assessEvidenceReceipt, discoverPluginComponents, evidenceSourceHash } from "./component_evidence.js";
+import { productionBindings, verifyProductionApproval } from "./production_approval.js";
 const AdmZip = loadRuntimeDependency("adm-zip");
-const PROFILES = new Set(["static", "evaluation", "release"]);
+const PROFILES = new Set(["static", "evaluation", "release", "production"]);
 const TEST_STATUSES = new Set(["pass", "fail", "blocked", "na"]);
 const REVIEW_STATUSES = new Set(["pass", "pending", "na"]);
 function isDirectory(path) {
@@ -36,7 +37,7 @@ function assertOptions(options) {
     const humanReview = options.humanReview ?? (profile === "static" ? "na" : "pending");
     const minPassRate = options.minPassRate ?? 0.8, minDelta = options.minDelta ?? 0;
     if (!PROFILES.has(profile))
-        throw new Error("profile must be static, evaluation, or release");
+        throw new Error("profile must be static, evaluation, release, or production");
     if (!TEST_STATUSES.has(testsStatus))
         throw new Error("tests-status must be pass, fail, blocked, or na");
     if (!REVIEW_STATUSES.has(humanReview))
@@ -183,21 +184,32 @@ export function verifyPlugin(options) {
         }
     }
     const distribution = strict ? distributionGate(root, name, archive) : { status: "na", reason: "not required" };
-    let review = "na", reviewReason = "not required";
+    let review = "na", reviewReason = "not required", approvalEvidence = [];
     const workspace = options.integration ? resolve(options.integration) : "";
     if (strict) {
         if (!workspace || !existsSync(join(workspace, "review.html"))) {
             review = "blocked";
             reviewReason = "integration review.html missing";
         }
-        else if (parsed.humanReview === "pass") {
-            review = "pass";
-            reviewReason = "human review complete";
+        else if (parsed.profile !== "production") {
+            review = parsed.humanReview === "pass" ? "pass" : "blocked";
+            reviewReason = review === "pass" ? "human review complete" : "human review " + parsed.humanReview;
         }
-        else {
+        else if (!options.approval || !options.approvalTrustPolicy || !options.testEvidence || !archive) {
             review = "blocked";
-            reviewReason = "human review " + parsed.humanReview;
+            reviewReason = "production requires approval file, trust policy, test evidence, and exact bindings; --human-review cannot approve release";
         }
+        else
+            try {
+                const expected = productionBindings(root, archive, workspace, options.testEvidence), verified = verifyProductionApproval(options.approval, options.approvalTrustPolicy, expected);
+                review = "pass";
+                reviewReason = "identity-bound production approval verified";
+                approvalEvidence = ["request " + verified.request_id, "approval " + verified.approval_sha256, ...Object.entries(expected).map(([k, v]) => k + ": " + v)];
+            }
+            catch (error) {
+                review = "blocked";
+                reviewReason = error.message;
+            }
     }
     const gates = {
         identity: makeGate(schema.valid && !operational.errors.length ? "pass" : "fail", true, ["Agent Plugins 1.0.0 schemas pass", "operational validation passes"], [...schema.errors.map(e => e.path + ": " + e.message), ...operational.errors, ...operational.warnings]),
@@ -205,17 +217,17 @@ export function verifyPlugin(options) {
         integration: makeGate(integrationStatus, strict, ["paired benchmark rates are valid", "plugin source hash is current", "all components have integration coverage", "cross-component handoffs are evidenced"], integrationEvidence, integrationStatus === "blocked" ? integrationEvidence.at(-1) : undefined),
         distribution: makeGate(distribution.status, strict, ["entries are safe and unique", "archive matches canonical package manifest"], [distribution.reason], distribution.status === "blocked" ? distribution.reason : undefined),
         regression: makeGate(parsed.testsStatus, strict, ["component and plugin tests pass", "offline smoke passes"], ["reported: " + parsed.testsStatus], parsed.testsStatus === "blocked" ? "test evidence missing" : undefined),
-        review: makeGate(review, strict, ["viewer exists", "human review complete"], [reviewReason], review === "blocked" ? reviewReason : undefined)
+        review: makeGate(review, strict, ["viewer exists", "identity-bound production approval verifies exact release inputs"], [reviewReason, ...approvalEvidence], review === "blocked" ? reviewReason : undefined)
     };
     const status = aggregate(gates);
-    return { schema_version: "1.0", artifact: "plugin", name, profile: parsed.profile, status, source_sha256: currentHash, generated_at: new Date().toISOString(), gates, critical_failures: Object.entries(gates).filter(([, gate]) => gate.required && gate.status === "fail").map(([gate]) => gate), release_eligible: parsed.profile === "release" && status === "pass", component_summary: { discovered: components.length, pass: Object.values(componentAggregation).filter((value) => value.status === "pass").length, fail: Object.values(componentAggregation).filter((value) => value.status === "fail").length, blocked: Object.values(componentAggregation).filter((value) => value.status === "blocked").length, na: Object.values(componentAggregation).filter((value) => value.status === "na").length }, components: componentAggregation, integration_evidence: integrationReceipt ? { status: integrationAssessment?.status, source_sha256: integrationReceipt.source_sha256, covered_components: integrationReceipt.payload?.covered_components ?? [], handoffs: integrationReceipt.payload?.handoffs ?? [] } : null, artifacts: { plugin: root, ...(workspace ? { integration_workspace: workspace, benchmark: join(workspace, "benchmark.json"), review: join(workspace, "review.html") } : {}), ...(archive ? { archive } : {}) } };
+    return { schema_version: "1.0", artifact: "plugin", name, profile: parsed.profile, status, source_sha256: currentHash, generated_at: new Date().toISOString(), gates, critical_failures: Object.entries(gates).filter(([, gate]) => gate.required && gate.status === "fail").map(([gate]) => gate), release_eligible: (parsed.profile === "release" || parsed.profile === "production") && status === "pass", component_summary: { discovered: components.length, pass: Object.values(componentAggregation).filter((value) => value.status === "pass").length, fail: Object.values(componentAggregation).filter((value) => value.status === "fail").length, blocked: Object.values(componentAggregation).filter((value) => value.status === "blocked").length, na: Object.values(componentAggregation).filter((value) => value.status === "na").length }, components: componentAggregation, integration_evidence: integrationReceipt ? { status: integrationAssessment?.status, source_sha256: integrationReceipt.source_sha256, covered_components: integrationReceipt.payload?.covered_components ?? [], handoffs: integrationReceipt.payload?.handoffs ?? [] } : null, artifacts: { plugin: root, ...(workspace ? { integration_workspace: workspace, benchmark: join(workspace, "benchmark.json"), review: join(workspace, "review.html") } : {}), ...(archive ? { archive } : {}) } };
 }
 function main() {
     try {
-        const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { profile: { type: "string", default: "release" }, "component-receipt": { type: "string", multiple: true }, integration: { type: "string" }, archive: { type: "string" }, "tests-status": { type: "string" }, "human-review": { type: "string" }, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" }, output: { type: "string", short: "o" } } });
+        const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { profile: { type: "string", default: "release" }, "component-receipt": { type: "string", multiple: true }, integration: { type: "string" }, archive: { type: "string" }, "tests-status": { type: "string" }, "human-review": { type: "string" }, approval: { type: "string" }, "approval-trust-policy": { type: "string" }, "test-evidence": { type: "string" }, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" }, output: { type: "string", short: "o" } } });
         if (!positionals[0])
             throw new Error("usage: verify_plugin_gates.js <plugin-dir> --component-receipt <receipt>... [options]");
-        const receipt = verifyPlugin({ pluginPath: positionals[0], profile: values.profile, componentReceipts: values["component-receipt"], integration: values.integration, archive: values.archive, testsStatus: values["tests-status"], humanReview: values["human-review"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]) });
+        const receipt = verifyPlugin({ pluginPath: positionals[0], profile: values.profile, componentReceipts: values["component-receipt"], integration: values.integration, archive: values.archive, testsStatus: values["tests-status"], humanReview: values["human-review"], approval: values.approval, approvalTrustPolicy: values["approval-trust-policy"], testEvidence: values["test-evidence"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]) });
         const json = JSON.stringify(receipt, null, 2) + "\n";
         if (values.output) {
             mkdirSync(dirname(resolve(values.output)), { recursive: true });

@@ -237,6 +237,30 @@
       ],
       "classification": "excluded",
       "rationale": "Evidence provenance qualifier, not approval."
+    },
+    {
+      "id": "hook-production-approval-state",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "field": "inspectApproval.state",
+      "sourceEvidence": [
+        "function state(events:O[]){let s=\"pending\"",
+        "return{ok:false,state:\"invalid\""
+      ],
+      "classification": "current",
+      "context": "hook-production-approval-state"
+    },
+    {
+      "id": "hook-production-approval-provenance",
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "field": "production approval identity, bindings, event history, signatures, rationale, accepted_risks, waivers, lineage",
+      "sourceEvidence": [
+        "export const BINDING_KEYS=",
+        "function signatureBody(a:O,e:O)"
+      ],
+      "classification": "excluded",
+      "rationale": "Identity, immutable bindings, signatures, rationale, risk acceptance, waivers, and lineage are approval provenance rather than independent result axes."
     }
   ]
 }

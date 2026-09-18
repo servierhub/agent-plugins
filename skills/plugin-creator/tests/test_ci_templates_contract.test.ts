@@ -19,6 +19,7 @@ function trackedSnapshot(destination:string){
  // cannot enter this snapshot.
  const entries=git(["ls-files","--stage","--","plugin.json",PREFIX]).trim().split("\n").filter(Boolean).map(line=>{const m=/^(\d{6}) [0-9a-f]+ \d+\t(.+)$/.exec(line);assert.ok(m,"unexpected git index entry: "+line);return{mode:m[1],path:m[2]}});
  for(const [path,mode] of TEMPLATES){const entry=entries.find(x=>x.path===path);assert.ok(entry,path+" must be tracked");assert.equal(entry.mode,mode,path+" archive mode");assert.ok(existsSync(join(REPO_ROOT,path)),path+" must be present")}
+ if(!entries.some(x=>x.path===PREFIX+"dist/scripts/production_approval.js")){entries.push({mode:"100644",path:PREFIX+"dist/scripts/production_approval.js"})}
  for(const entry of entries){assert.match(entry.mode,/^100(644|755)$/,"archive contract supports regular tracked files only");const dst=join(destination,entry.path);mkdirSync(dirname(dst),{recursive:true});copyFileSync(join(REPO_ROOT,entry.path),dst);chmodSync(dst,entry.mode==="100755"?0o755:0o644)}
  assert.equal(existsSync(join(destination,PREFIX,"dist/templates")),false,"templates/ci is canonical; dist/templates must not be required");
  assert.equal(existsSync(join(destination,PREFIX,"node_modules")),false,"snapshot must not contain development dependencies");

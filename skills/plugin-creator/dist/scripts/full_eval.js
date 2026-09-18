@@ -90,7 +90,15 @@ function context(options) {
 }
 function fingerprints(c, o) {
     const artifact = pluginHash(c.root, c.archive), componentInputs = c.components.map(x => ({ key: x.key, source: x.kind === "integration" ? artifact : x.source_sha256, receipt: fileHash(x.receipt) }));
-    const own = { validation: { artifact }, planning: { skills: c.skills, artifact }, execution: componentInputs, grading: { benchmark: fileHash(join(c.integration, "benchmark.json")), artifact, minPassRate: o.minPassRate ?? 0.8, minDelta: o.minDelta ?? 0 }, aggregation: { testsStatus: o.testsStatus ?? "blocked", artifact }, review: { review: fileHash(join(c.integration, "review.html")), humanReview: o.humanReview ?? "pending", artifact }, improvement: { artifact }, verification: { artifact, benchmark: fileHash(join(c.integration, "benchmark.json")), review: fileHash(join(c.integration, "review.html")), testsStatus: o.testsStatus ?? "blocked", humanReview: o.humanReview ?? "pending" } };
+    const approvalTemporal = (() => { if (!o.production || !o.approval)
+        return "not-required"; try {
+        const a = JSON.parse(requireText(o.approval)), now = Date.now(), requested = Date.parse(a.requested_at), expires = Date.parse(a.expires_at);
+        return { requested_at: a.requested_at, expires_at: a.expires_at, current_validity: Number.isFinite(requested) && Number.isFinite(expires) && requested <= now && now < expires ? "active" : now >= expires ? "expired" : "not-yet-valid" };
+    }
+    catch {
+        return "invalid";
+    } })();
+    const own = { validation: { artifact }, planning: { skills: c.skills, artifact }, execution: componentInputs, grading: { benchmark: fileHash(join(c.integration, "benchmark.json")), artifact, minPassRate: o.minPassRate ?? 0.8, minDelta: o.minDelta ?? 0 }, aggregation: { testsStatus: o.testsStatus ?? "blocked", artifact }, review: { review: fileHash(join(c.integration, "review.html")), humanReview: o.humanReview ?? "pending", artifact }, improvement: { artifact }, verification: { artifact, benchmark: fileHash(join(c.integration, "benchmark.json")), review: fileHash(join(c.integration, "review.html")), testsStatus: o.testsStatus ?? "blocked", humanReview: o.humanReview ?? "pending", production: Boolean(o.production), approval: fileHash(o.approval ?? ""), approvalTrustPolicy: fileHash(o.approvalTrustPolicy ?? ""), testEvidence: fileHash(o.testEvidence ?? ""), approvalTemporal } };
     const result = {};
     for (let i = 0; i < PHASES.length; i++) {
         const phase = PHASES[i], dependencies = i ? [result[PHASES[i - 1]]] : [];
@@ -98,7 +106,7 @@ function fingerprints(c, o) {
     }
     return result;
 }
-function persistedConfiguration(c, o) { return { pluginPath: c.root, workspace: c.workspace, componentReceipts: c.components.map(x => x.receipt), integration: c.integration, archive: c.archive, testsStatus: o.testsStatus, humanReview: o.humanReview, minPassRate: o.minPassRate, minDelta: o.minDelta }; }
+function persistedConfiguration(c, o) { return { pluginPath: c.root, workspace: c.workspace, componentReceipts: c.components.map(x => x.receipt), integration: c.integration, archive: c.archive, testsStatus: o.testsStatus, humanReview: o.humanReview, approval: o.approval, approvalTrustPolicy: o.approvalTrustPolicy, testEvidence: o.testEvidence, production: o.production, minPassRate: o.minPassRate, minDelta: o.minDelta }; }
 function optionsFromState(state) { return { ...state.configuration, componentReceipts: [...state.configuration.componentReceipts], resume: true }; }
 export function planFullEval(options) {
     const c = context(options), fp = fingerprints(c, options);
@@ -148,6 +156,11 @@ function mergeState(plan, old, resume) {
         return decision.retry ? transitionJob({ ...job, status: "failed", attempts: prior.attempts, attempt_records: records, detail: prior.detail }, "retry", "retry scheduled") : { ...job, status: "failed", attempts: prior.attempts, attempt_records: records, detail: prior.detail, stop_reason: prior.stop_reason ?? decision.reason };
     } if (prior.status === "blocked" || prior.status === "cancelled" || prior.status === "skipped")
         return transitionJob({ ...job, status: prior.status, attempts: prior.attempts, attempt_records: records, detail: prior.detail }, "resume", "resume scheduled"); return job; });
+    if (plan.configuration.production) {
+        const i = jobs.findIndex(j => j.phase === "verification");
+        if (i >= 0 && jobs[i].status === "succeeded")
+            jobs[i] = { ...jobs[i], status: "planned", detail: "production approval requires current-time re-verification", output_hashes: {} };
+    }
     const verification = jobs.find(j => j.phase === "verification")?.status === "succeeded" ? old.verification : undefined;
     return { ...plan, revision: old.revision, status: "planned", verification, jobs };
 }
@@ -342,7 +355,7 @@ export async function fullEval(options) {
         await run("improvement", async () => { mkdirSync(dirname(c.archive), { recursive: true }); const packaged = await packagePlugin(c.root, c.archive, deadline, cancelPath); if (packaged.cancelled)
             return { event: "cancel", detail: "cooperative cancellation requested", stop_reason: "cancelled" }; if (packaged.timedOut)
             return { event: "fail", detail: "total-budget-exhausted", stop_reason: "total-budget-exhausted" }; return { event: packaged.status === 0 ? "succeed" : "fail", detail: packaged.status === 0 ? c.archive : (packaged.stderr || packaged.stdout || "packaging failed").trim(), outputs: packaged.status === 0 ? [c.archive] : [] }; });
-        await run("verification", () => { verification = verifyPlugin({ pluginPath: c.root, profile: "release", componentReceipts: c.components.filter(x => x.available).map(x => x.receipt), integration: c.integration, archive: existsSync(c.archive) ? c.archive : undefined, testsStatus: options.testsStatus, humanReview: options.humanReview, minPassRate: options.minPassRate, minDelta: options.minDelta }); for (const [gate, value] of Object.entries(verification.gates))
+        await run("verification", () => { verification = verifyPlugin({ pluginPath: c.root, profile: options.production ? "production" : "release", componentReceipts: c.components.filter(x => x.available).map(x => x.receipt), integration: c.integration, archive: existsSync(c.archive) ? c.archive : undefined, testsStatus: options.testsStatus, humanReview: options.humanReview, approval: options.approval, approvalTrustPolicy: options.approvalTrustPolicy, testEvidence: options.testEvidence, minPassRate: options.minPassRate, minDelta: options.minDelta }); for (const [gate, value] of Object.entries(verification.gates))
             if (value.status === "blocked")
                 next_actions.push("resolve " + gate + " gate: " + (value.reason ?? "evidence missing")); return { event: verification.status === "pass" ? "succeed" : verification.status === "fail" ? "fail" : "block", detail: "release verification: " + verification.status, outputs: [c.archive, benchmark, review] }; });
         state.status = state.jobs.some(j => j.status === "failed") ? "failure" : state.jobs.every(j => j.status === "succeeded") ? "success" : "blocked";

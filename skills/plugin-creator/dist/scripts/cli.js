@@ -12,7 +12,7 @@ import { replayExecutionEvents } from "./execution_event_stream.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval|ci-eval|independent-review> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nindependent-review options:\n  --config FILE --host COMMAND [--host-arg ARG ...]  Run isolated review branches\n\nci-eval options:\n  --config FILE        Provider-neutral, non-interactive CI configuration\n\nCI exit codes: 0 success, 1 evaluation failure, 2 invalid config, 3 blocked capability/evidence, 4 pending approval.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval|ci-eval|independent-review> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--approval FILE --approval-trust-policy FILE --test-evidence FILE] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--production] [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nindependent-review options:\n  --config FILE --host COMMAND [--host-arg ARG ...]  Run isolated review branches\n\nci-eval options:\n  --config FILE        Provider-neutral, non-interactive CI configuration\n\nCI exit codes: 0 success, 1 evaluation failure, 2 invalid config, 3 blocked capability/evidence, 4 pending approval.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -83,10 +83,12 @@ async function runFullEval(o) {
         return usage("full-eval requires a plugin directory");
     const options = { pluginPath: o.args[0] }, receipts = [];
     let progressMode = o.quiet ? "quiet" : "normal";
-    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--min-pass-rate", "--min-delta", "--total-budget-ms", "--heartbeat-ms", "--stale-after-ms", "--lease-ms", "--cancellation-grace-ms", "--progress"]);
+    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--approval", "--approval-trust-policy", "--test-evidence", "--min-pass-rate", "--min-delta", "--total-budget-ms", "--heartbeat-ms", "--stale-after-ms", "--lease-ms", "--cancellation-grace-ms", "--progress"]);
     for (let i = 1; i < o.args.length; i++) {
         const a = o.args[i];
-        if (a === "--dry-run")
+        if (a === "--production")
+            options.production = true;
+        else if (a === "--dry-run")
             options.dryRun = true;
         else if (a === "--resume")
             options.resume = true;
@@ -113,6 +115,12 @@ async function runFullEval(o) {
                 options.testsStatus = v;
             else if (a === "--human-review")
                 options.humanReview = v;
+            else if (a === "--approval")
+                options.approval = v;
+            else if (a === "--approval-trust-policy")
+                options.approvalTrustPolicy = v;
+            else if (a === "--test-evidence")
+                options.testEvidence = v;
             else if (a === "--min-pass-rate")
                 options.minPassRate = Number(v);
             else if (a === "--min-delta")

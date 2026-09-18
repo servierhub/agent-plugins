@@ -91,3 +91,7 @@ explicit side-effect and failure-mode review.
 - Complete plugin assembly and packaging: `plugin-creator`.
 - Skills: `skill-creator`.
 - Custom agents: `agent-creator`.
+
+## Identity-bound production approval
+
+Production uses hook-production-approval/v1 and the CLI approval commands. Automated passing evidence only creates a pending request. Reviewer ID, RBAC-ready role, rationale, accepted risks, waivers, timestamp, and Ed25519 signature are retained. Artifact, archive, manifest, benchmark, test, and review hashes are immutable; any changed input is stale. Deploy/install integrations use read-only approval consume with exact bindings and cannot create approval. See references/production-approval.md and schemas/production-approval.schema.json.

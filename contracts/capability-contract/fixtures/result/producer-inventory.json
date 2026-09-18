@@ -114,6 +114,30 @@
       }
     },
     {
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "field": "inspectApproval.state",
+      "context": "hook-production-approval-state",
+      "tokens": [
+        "pending",
+        "reviewed",
+        "approved",
+        "rejected",
+        "expired",
+        "superseded",
+        "stale",
+        "invalid"
+      ],
+      "provenance": {
+        "classification": "current",
+        "sourceEvidence": [
+          "function state(events:O[]){let s=\"pending\"",
+          "state:errors.some(e=>e.includes(\"stale\"))?\"stale\":errors.some(e=>e.includes(\"expired\"))?\"expired\":s",
+          "return{ok:false,state:\"invalid\""
+        ]
+      }
+    },
+    {
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/cli.ts",
       "field": "JSON envelope ok",
@@ -233,7 +257,7 @@
     {
       "creator": "plugin-creator",
       "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
-      "field": "humanReview input",
+      "field": "humanReview input (review completion, not production approval)",
       "context": "plugin-human-review-status",
       "tokens": [
         "pass",
@@ -308,7 +332,7 @@
         "classification": "current",
         "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
         "sourceEvidence": [
-          "release_eligible: parsed.profile === \"release\" && status === \"pass\""
+          "release_eligible: (parsed.profile === \"release\"||parsed.profile === \"production\") && status === \"pass\""
         ]
       }
     },
@@ -1134,6 +1158,14 @@
         "verification receipt component_summary counts"
       ],
       "rationale": "Derived numeric aggregation counts are summaries, not independent categorical result axes."
+    },
+    {
+      "creator": "hook-creator",
+      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "fields": [
+        "production approval identity, bindings, event history, signatures, rationale, accepted_risks, waivers, lineage"
+      ],
+      "rationale": "These fields prove who decided what, bind the exact reviewed inputs, and preserve approval history; they qualify the approval state rather than independently asserting operation, evaluation, evidence availability, or approval outcome."
     }
   ]
 }

@@ -130,11 +130,19 @@ test("legacy mapping requires context and only explicit review contexts decide a
   for (const mapping of LEGACY_STATUS_MAPPINGS) {
     const result = mapLegacyStatus({ creator: mapping.creator, context: mapping.context, token: mapping.token });
     assert.equal(result.ok, true, mapping.creator + "/" + mapping.context + "/" + mapping.token);
-    if (mapping.result?.approval.state === "approved" || mapping.result?.approval.state === "rejected") assert.ok(mapping.context.endsWith("human-review-status"), JSON.stringify(mapping));
+    if (mapping.result?.approval.state === "approved" || mapping.result?.approval.state === "rejected") assert.ok(mapping.context.endsWith("human-review-status") || mapping.context === "hook-production-approval-state", JSON.stringify(mapping));
   }
   const ambiguous = mapLegacyStatus({ creator: "agent-creator", context: "agent-cli-ok", token: false });
   assert.equal(ambiguous.ok && ambiguous.mapping.result, undefined);
   assert.equal(ambiguous.ok && ambiguous.mapping.exit, undefined);
+});
+
+test("identity-bound approval states map independently from human-review completion", () => {
+  for (const token of ["pending","reviewed"]) assert.equal(mapLegacyStatus({creator:"hook-creator",context:"hook-production-approval-state",token}).ok && mapLegacyStatus({creator:"hook-creator",context:"hook-production-approval-state",token}).mapping.result?.approval.state,"pending");
+  assert.equal(mapLegacyStatus({creator:"hook-creator",context:"hook-production-approval-state",token:"approved"}).ok && mapLegacyStatus({creator:"hook-creator",context:"hook-production-approval-state",token:"approved"}).mapping.result?.approval.state,"approved");
+  assert.equal(mapLegacyStatus({creator:"hook-creator",context:"hook-production-approval-state",token:"rejected"}).ok && mapLegacyStatus({creator:"hook-creator",context:"hook-production-approval-state",token:"rejected"}).mapping.result?.approval.state,"rejected");
+  for (const token of ["expired","superseded","stale","invalid"]) assert.equal(mapLegacyStatus({creator:"hook-creator",context:"hook-production-approval-state",token}).ok && mapLegacyStatus({creator:"hook-creator",context:"hook-production-approval-state",token}).mapping.result,undefined);
+  assert.equal(mapLegacyStatus({creator:"plugin-creator",context:"plugin-human-review-status",token:"pass"}).ok && mapLegacyStatus({creator:"plugin-creator",context:"plugin-human-review-status",token:"pass"}).mapping.result?.approval.state,"not-applicable");
 });
 
 test("current mapping inventory is independently backed by named producer source and excludes documented non-current tokens", () => {
@@ -167,7 +175,7 @@ test("independent producer expectations cover receipt status, forwarded fail, va
     { context: "skill-full-eval-status", tokens: ["planned","success","failure","fail","blocked"], file: "skills/skill-creator/scripts/full_eval.ts", snippets: ["return envelope(options,job,verification.status,next"] },
     { context: "plugin-validation-outcome", tokens: ["accepted","rejected","partial"], file: "skills/plugin-creator/scripts/validation_outcomes.ts", snippets: ["return { mode, status: deriveOutcomeStatus(diagnostics, components), diagnostics, components };"] },
     { context: "plugin-component-outcome-status", tokens: ["accepted","skipped","skipped-invalid","skipped-unsupported","runtime-failed"], file: "skills/plugin-creator/scripts/mcp_runtime.ts", snippets: ["return{status:\"runtime-failed\""] },
-    { context: "plugin-release-eligible", tokens: ["true","false"], file: "skills/plugin-creator/scripts/verify_plugin_gates.ts", snippets: ["release_eligible: parsed.profile === \"release\" && status === \"pass\""] },
+    { context: "plugin-release-eligible", tokens: ["true","false"], file: "skills/plugin-creator/scripts/verify_plugin_gates.ts", snippets: ["release_eligible: (parsed.profile === \"release\"||parsed.profile === \"production\") && status === \"pass\""] },
   ];
   const mappings = new Set(LEGACY_STATUS_MAPPINGS.map((item) => item.creator + "/" + item.context + "/" + item.token));
   for (const item of expected) {
@@ -230,9 +238,9 @@ test("independent expectedConsumerFields fixture maps every field to exactly one
 
   const byClassification = { current: 0, copied: 0, excluded: 0 } as Record<string, number>;
   for (const record of expected.records as any[]) byClassification[record.classification] += 1;
-  assert.equal(byClassification.current, 8);
+  assert.equal(byClassification.current, 9);
   assert.equal(byClassification.copied, 8);
-  assert.equal(byClassification.excluded, 4);
+  assert.equal(byClassification.excluded, 5);
 });
 
 test("non-current status vocabularies remain absent from exact emitting fields and mappings", () => {

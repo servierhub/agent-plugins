@@ -1,5 +1,12 @@
 # Release notes — compatibility policy 1.0.0
 
+## Evidence-based candidate selection API 1.0.0
+
+- Adds a pure, independently versioned API with explicit conservative objective weights and thresholds for effectiveness, productivity, stability, and safety.
+- Makes critical safety vetoes absolute, uses Pareto comparison for trade-offs, bounds uncertainty and samples, and emits inconclusive human-decision outcomes rather than arbitrary tie-breaking.
+- Permits only attributable, rationale-bearing non-safety overrides and binds every disposition to candidate and evidence SHA-256 hashes.
+- Adds strict hostile validation, canonical permutation-invariant hashing, schema, fixture, specification, tests, package subpaths, and generated declarations. Existing 1.x surfaces remain unchanged.
+
 ## Contract/scenario challenge API 1.0.0
 
 - Adds a versioned pure API for isolated domain, UX, safety, and evaluation challenge findings, each citing a contract field or declared scenario.
