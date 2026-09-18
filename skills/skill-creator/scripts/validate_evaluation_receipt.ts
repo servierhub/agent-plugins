@@ -55,7 +55,7 @@ function validateRun(workspace: string, runDir: string, missing: string[]): void
         (item: any) =>
           typeof item?.text !== "string" ||
           typeof item?.passed !== "boolean" ||
-          typeof item?.evidence !== "string",
+          !(typeof item?.evidence === "string" || (grading.schema_version === 2 && ((Array.isArray(item?.evidence) && item.evidence.every((quote: unknown) => typeof quote === "string")) || (item?.classification === "deterministic" && item?.evidence !== null && typeof item?.evidence === "object" && !Array.isArray(item.evidence))))),
       )
     ) {
       missing.push(`${label}/grading.json fields`);

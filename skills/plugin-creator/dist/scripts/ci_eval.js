@@ -4,6 +4,8 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSy
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { sourceHash } from "./package_manifest.js";
 import { fullEval } from "./full_eval.js";
+import { atomicCheckpoint } from "./execution_reliability.js";
+import { LiveBudget } from "./usage_budget.js";
 import { productionBindings, verifyProductionApproval } from "./production_approval.js";
 import { isPathWithin, resolveContainedPath } from "./path_containment.js";
 export const CI_EXIT = { success: 0, evaluationFailure: 1, invalidConfig: 2, blockedCapability: 3, pendingApproval: 4 };
@@ -63,8 +65,10 @@ export function loadCiEvalConfig(path) {
         throw new ConfigError("credentials and secret values must be supplied only through required_credentials environment names");
     if (!object(raw.limits))
         throw new ConfigError("limits is required");
-    keys(raw.limits, ["timeout_ms", "max_output_bytes", "total_budget_ms"], "limits");
-    const limits = { timeout_ms: integer(raw.limits.timeout_ms, "limits.timeout_ms", 100, 3_600_000), max_output_bytes: integer(raw.limits.max_output_bytes, "limits.max_output_bytes", 1024, 16_777_216), total_budget_ms: integer(raw.limits.total_budget_ms, "limits.total_budget_ms", 100, 86_400_000) };
+    keys(raw.limits, ["timeout_ms", "max_output_bytes", "total_budget_ms", "max_runs", "max_turns", "max_wall_time_ms", "max_tokens", "max_cost", "currency", "missing_telemetry"], "limits");
+    const optional = (v, n) => v === undefined ? undefined : integer(v, n, 0, Number.MAX_SAFE_INTEGER), limits = { timeout_ms: integer(raw.limits.timeout_ms, "limits.timeout_ms", 100, 3_600_000), max_output_bytes: integer(raw.limits.max_output_bytes, "limits.max_output_bytes", 1024, 16_777_216), total_budget_ms: integer(raw.limits.total_budget_ms, "limits.total_budget_ms", 100, 86_400_000), max_runs: optional(raw.limits.max_runs, "limits.max_runs"), max_turns: optional(raw.limits.max_turns, "limits.max_turns"), max_wall_time_ms: optional(raw.limits.max_wall_time_ms, "limits.max_wall_time_ms"), max_tokens: optional(raw.limits.max_tokens, "limits.max_tokens"), max_cost: raw.limits.max_cost === undefined ? undefined : Number(raw.limits.max_cost), currency: raw.limits.currency === undefined ? undefined : nonempty(raw.limits.currency, "limits.currency"), missing_telemetry: raw.limits.missing_telemetry === undefined ? undefined : enumValue(raw.limits.missing_telemetry, ["block", "allow"], "limits.missing_telemetry") };
+    if (limits.max_cost !== undefined && (!Number.isFinite(limits.max_cost) || limits.max_cost < 0))
+        throw new ConfigError("limits.max_cost must be finite and nonnegative");
     if (limits.total_budget_ms < limits.timeout_ms)
         throw new ConfigError("limits.total_budget_ms must be at least limits.timeout_ms");
     if (!object(raw.privacy))
@@ -82,7 +86,7 @@ export function loadCiEvalConfig(path) {
     if (raw.evaluation !== undefined) {
         if (!object(raw.evaluation))
             throw new ConfigError("evaluation must be an object");
-        keys(raw.evaluation, ["component_receipts", "integration", "archive", "tests_status", "human_review", "production", "approval", "approval_trust_policy", "test_evidence", "min_pass_rate", "min_delta"], "evaluation");
+        keys(raw.evaluation, ["component_receipts", "integration", "archive", "tests_status", "human_review", "production", "approval", "approval_trust_policy", "test_evidence", "min_pass_rate", "min_delta", "efficiency"], "evaluation");
         evaluation = {};
         if (raw.evaluation.component_receipts !== undefined)
             evaluation.component_receipts = strings(raw.evaluation.component_receipts, "evaluation.component_receipts");
@@ -109,6 +113,22 @@ export function loadCiEvalConfig(path) {
             evaluation.min_pass_rate = number(raw.evaluation.min_pass_rate, "evaluation.min_pass_rate", 0, 1);
         if (raw.evaluation.min_delta !== undefined)
             evaluation.min_delta = number(raw.evaluation.min_delta, "evaluation.min_delta", -1, 1);
+        if (raw.evaluation.efficiency !== undefined) {
+            if (!object(raw.evaluation.efficiency))
+                throw new ConfigError("evaluation.efficiency must be an object");
+            keys(raw.evaluation.efficiency, ["max_regressions", "missing_telemetry"], "evaluation.efficiency");
+            const policy = {};
+            if (raw.evaluation.efficiency.missing_telemetry !== undefined)
+                policy.missing_telemetry = enumValue(raw.evaluation.efficiency.missing_telemetry, ["block", "warn", "ignore"], "evaluation.efficiency.missing_telemetry");
+            if (raw.evaluation.efficiency.max_regressions !== undefined) {
+                if (!object(raw.evaluation.efficiency.max_regressions))
+                    throw new ConfigError("evaluation.efficiency.max_regressions must be an object");
+                const allowed = ["p50_wall_latency_ms", "p95_wall_latency_ms", "actual_turns", "tokens.input", "tokens.output", "tokens.cached", "tokens.reasoning", "tokens.total", "cost"];
+                keys(raw.evaluation.efficiency.max_regressions, allowed, "evaluation.efficiency.max_regressions");
+                policy.max_regressions = Object.fromEntries(Object.entries(raw.evaluation.efficiency.max_regressions).map(([k, v]) => [k, number(v, "evaluation.efficiency.max_regressions." + k, 0, Number.MAX_SAFE_INTEGER)]));
+            }
+            evaluation.efficiency = policy;
+        }
     }
     let cache;
     if (raw.cache !== undefined) {
@@ -159,7 +179,7 @@ function hostJson(run, phase) { if (run.code !== 0)
 catch {
     throw new Error(phase + " host output must be one JSON object");
 } if (!object(value))
-    throw new Error(phase + " host output must be one JSON object"); const allowed = phase === "preflight" ? ["status", "capabilities", "models", "reason"] : ["status", "reason"]; keys(value, allowed, phase + " host output"); if (phase === "preflight") {
+    throw new Error(phase + " host output must be one JSON object"); const allowed = phase === "preflight" ? ["status", "capabilities", "models", "reason", "telemetry"] : ["status", "reason", "telemetry"]; keys(value, allowed, phase + " host output"); if (phase === "preflight") {
     enumValue(value.status, ["ready", "blocked"], "preflight status");
     strings(value.capabilities, "preflight capabilities");
     strings(value.models, "preflight models");
@@ -220,7 +240,7 @@ function archiveEvidence(workspace, c, configHash, artifactHash, transcripts) {
         for (const [name, text] of Object.entries(transcripts))
             writeFileSync(join(dir, name + ".log"), redact(text, c.host.required_credentials));
     }
-    const defaults = ["full-eval-events.jsonl", "**/benchmark.json", "**/review.html", "**/receipt.json"], globs = c.privacy.archive_globs ?? defaults, selected = selectedEvidence(workspace, archive, globs);
+    const defaults = ["full-eval-events.jsonl", "**/benchmark.json", "**/review.html", "**/efficiency-report.html", "**/receipt.json"], globs = c.privacy.archive_globs ?? defaults, selected = selectedEvidence(workspace, archive, globs);
     if (selected.length > 1024)
         throw new Error("archive_globs selected more than 1024 files");
     for (const src of selected) {
@@ -326,17 +346,37 @@ export async function runCiEval(configPath) {
     catch (e) {
         return fail("invalid-config", 2, e.message);
     }
-    const request = join(paths.workspace, "host-request.json");
-    writeFileSync(request, JSON.stringify({ schema_version: "1.0", non_interactive: true, network: "host-policy", plugin_path: paths.plugin, workspace: paths.workspace, required_models: c.host.required_models, required_capabilities: c.host.required_capabilities, limits: c.limits }, null, 2) + "\n");
+    const request = join(paths.workspace, "host-request.json"), budgetPath = join(paths.workspace, "ci-budget-state.json"), caps = { max_runs: c.limits.max_runs, max_turns: c.limits.max_turns, max_wall_time_ms: c.limits.max_wall_time_ms, max_tokens: c.limits.max_tokens, max_cost: c.limits.max_cost, currency: c.limits.currency, missing_telemetry: c.limits.missing_telemetry }, priorUsage = (() => { if (!c.cache?.resume || !existsSync(budgetPath))
+        return []; try {
+        return JSON.parse(readFileSync(budgetPath, "utf8")).usage_records ?? [];
+    }
+    catch {
+        return [];
+    } })(), live = new LiveBudget(caps, priorUsage), persistBudget = (stopReason) => atomicCheckpoint(budgetPath, { schema_version: "1.0", planned: caps, usage_records: live.all(), budget: live.snapshot(), stop_reason: stopReason ?? live.snapshot().stop_reason, availability: live.snapshot().availability, updated_at: new Date().toISOString() });
+    writeFileSync(request, JSON.stringify({ schema_version: "1.0", non_interactive: true, network: "host-policy", plugin_path: paths.plugin, workspace: paths.workspace, required_models: c.host.required_models, required_capabilities: c.host.required_capabilities, limits: c.limits, budget: live.snapshot() }, null, 2) + "\n");
     let preRun, fullRun, stage = "preflight";
     try {
+        if (!live.canStart().allowed) {
+            persistBudget(live.canStart().reason ?? undefined);
+            return fail("evaluation-failure", 1, live.canStart().reason);
+        }
         preRun = await hostPhase(c, "preflight", paths.checkout, request);
-        const pre = hostJson(preRun, "preflight"), caps = pre.capabilities, models = pre.models, absentCaps = c.host.required_capabilities.filter(x => !caps.includes(x)), absentModels = c.host.required_models.filter(x => !models.includes(x));
+        const pre = hostJson(preRun, "preflight"), capabilities = pre.capabilities, models = pre.models, absentCaps = c.host.required_capabilities.filter(x => !capabilities.includes(x)), absentModels = c.host.required_models.filter(x => !models.includes(x));
+        if (pre.telemetry)
+            live.add(pre.telemetry, "ci-preflight");
+        persistBudget();
         if (pre.status !== "ready" || absentCaps.length || absentModels.length)
             return fail("blocked-capability", 3, pre.reason ?? ([absentCaps.length && "capabilities: " + absentCaps.join(", "), absentModels.length && "models: " + absentModels.join(", ")].filter(Boolean).join("; ") || "host preflight blocked"));
+        if (!live.canStart().allowed) {
+            persistBudget(live.canStart().reason ?? undefined);
+            return fail("evaluation-failure", 1, live.canStart().reason);
+        }
         stage = "full_eval";
         fullRun = await hostPhase(c, "full_eval", paths.checkout, request);
         const host = hostJson(fullRun, "full_eval");
+        if (host.telemetry)
+            live.add(host.telemetry, "ci-full-eval");
+        persistBudget();
         if (host.status === "blocked")
             return fail("blocked-capability", 3, host.reason ?? "host evaluation blocked");
         if (host.status !== "pass")
@@ -345,7 +385,7 @@ export async function runCiEval(configPath) {
     catch (e) {
         return fail(stage === "preflight" ? "blocked-capability" : "evaluation-failure", stage === "preflight" ? 3 : 1, e.message);
     }
-    const e = c.evaluation ?? {}, opts = { pluginPath: paths.plugin, workspace: paths.workspace, componentReceipts: paths.receipts, integration: paths.integration, archive: paths.archive, testsStatus: e.tests_status, humanReview: e.human_review, approval: paths.approval, approvalTrustPolicy: paths.approvalTrust, testEvidence: paths.testEvidence, production: e.production, minPassRate: e.min_pass_rate, minDelta: e.min_delta, reliability: { total_budget_ms: c.limits.total_budget_ms }, resume: Boolean(c.cache?.resume) };
+    const e = c.evaluation ?? {}, opts = { pluginPath: paths.plugin, workspace: paths.workspace, componentReceipts: paths.receipts, integration: paths.integration, archive: paths.archive, testsStatus: e.tests_status, humanReview: e.human_review, approval: paths.approval, approvalTrustPolicy: paths.approvalTrust, testEvidence: paths.testEvidence, production: e.production, minPassRate: e.min_pass_rate, minDelta: e.min_delta, maxEfficiencyRegressions: e.efficiency?.max_regressions, missingEfficiencyTelemetry: e.efficiency?.missing_telemetry, reliability: { total_budget_ms: c.limits.total_budget_ms }, budgets: caps, telemetry: live.all(), resume: Boolean(c.cache?.resume) };
     let evaluated;
     try {
         evaluated = await fullEval(opts);

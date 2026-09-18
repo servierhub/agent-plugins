@@ -10,7 +10,12 @@ import { normalizeAssertions, assertionHash, variantManifest } from "./assertion
 import { parseAgent, renderAgent } from "./agent_format.js";
 import { createExecutionHeartbeat } from "./execution_heartbeat.js";
 import { parseRetentionPolicy, redactString, redactValue } from "./privacy_policy.js";
+import { timingArtifact } from "./resource_telemetry.js";
+import { evidenceSha256, parseAgentRunProfile, scheduleAgentPairs } from "./repeated_agent_runs.js";
 const execFileAsync = promisify(execFile);
+export function evalDirectoryName(id) {
+    return `eval-${encodeURIComponent(String(id))}`;
+}
 export function extractAssistantText(document) {
     const chunks = [];
     for (const message of document?.messages ?? []) {
@@ -31,9 +36,10 @@ function baselineAgent(agent, name) {
         "that are not present in the task itself.";
     return renderAgent(name, description, agent.model, body);
 }
-async function runCase(evalCase, configuration, agentPath, workspace, gooseCommand, model, timeoutMs, maxTurns, fixtureRoot, transcriptRetention) {
+async function runCase(evalCase, configuration, agentPath, workspace, gooseCommand, model, timeoutMs, maxTurns, fixtureRoot, transcriptRetention, pair, equivalence, flatLayout) {
     const evalId = evalCase.id;
-    const runDir = join(workspace, `eval-${evalId}`, configuration);
+    // Preserve the historical one-run layout while repeated profiles use run-N directories.
+    const runDir = flatLayout ? join(workspace, evalDirectoryName(evalId), configuration) : join(workspace, evalDirectoryName(evalId), configuration, `run-${pair.pair_index}`);
     const outputs = join(runDir, "outputs");
     mkdirSync(outputs, { recursive: true });
     const temporary = mkdtempSync(join(tmpdir(), "agent-eval-"));
@@ -107,15 +113,20 @@ async function runCase(evalCase, configuration, agentPath, workspace, gooseComma
     if (transcriptRetention === "retain")
         writeFileSync(join(runDir, "transcript.json"), `${JSON.stringify(redactValue(document, { topLevel: false }), null, 2)}\n`, "utf-8");
     const metadata = document.metadata ?? {};
-    const timing = {
-        total_tokens: Number.isFinite(metadata.total_tokens) ? metadata.total_tokens : 0,
-        total_turns: Number.isFinite(metadata.total_turns) ? metadata.total_turns : 0,
-        total_duration_seconds: Math.round(duration * 1000) / 1000,
-    };
+    const timing = timingArtifact({
+        duration_seconds: Math.round(duration * 1000) / 1000,
+        tokens: metadata.total_tokens,
+        turns: metadata.total_turns,
+        cost_usd: metadata.cost_usd,
+        provider: metadata.provider ?? metadata.provider_name,
+        model: metadata.model ?? metadata.model_name ?? model,
+        goose_version: metadata.goose_version,
+    });
     writeFileSync(join(runDir, "timing.json"), `${JSON.stringify(timing, null, 2)}\n`, "utf-8");
-    const evalMetadata = JSON.parse(readFileSync(join(workspace, `eval-${evalId}`, "eval_metadata.json"), "utf-8"));
+    const evalMetadata = JSON.parse(readFileSync(join(workspace, evalDirectoryName(evalId), "eval_metadata.json"), "utf-8"));
     writeFileSync(join(runDir, "assertion_hash.txt"), `${evalMetadata.assertion_hash}\n`, "utf-8");
-    return { eval_id: evalId, configuration, ...timing };
+    writeFileSync(join(runDir, "execution_evidence.json"), `${JSON.stringify({ eval_id: evalId, configuration, pair_index: pair.pair_index, seed: pair.seed, order: pair.order, pair_equivalence: equivalence }, null, 2)}\n`, "utf-8");
+    return { eval_id: evalId, configuration, total_tokens: timing.total_tokens, total_turns: timing.total_turns, total_duration_seconds: timing.total_duration_seconds, cost_usd: timing.cost_usd, pair_index: pair.pair_index, seed: pair.seed };
 }
 export function validateEvalSet(document) {
     if (typeof document !== "object" || document === null || !Array.isArray(document.evals)) {
@@ -180,6 +191,7 @@ async function main() {
             "heartbeat-interval": { type: "string", default: "30" },
             "no-heartbeat": { type: "boolean", default: false },
             "transcript-retention": { type: "string", default: "retain" },
+            "run-profile": { type: "string", default: "fast" },
         },
     });
     if (!values.agent || !values["eval-set"] || !values.workspace) {
@@ -200,7 +212,9 @@ async function main() {
     try {
         if (values["baseline-agent"]) {
             baselinePath = resolve(values["baseline-agent"]);
-            parseAgent(baselinePath);
+            const baseline = parseAgent(baselinePath);
+            if (!values.model && (baseline.model ?? null) !== (agent.model ?? null))
+                throw new Error("current and baseline agents must declare the same model for paired equivalence unless --model pins both runs");
             baselineConfiguration = "old_agent";
         }
         else {
@@ -213,10 +227,18 @@ async function main() {
             with_agent: readFileSync(agentPath, "utf-8"),
             [baselineConfiguration]: readFileSync(baselinePath, "utf-8"),
         };
+        const runProfile = parseAgentRunProfile(values["run-profile"]);
+        const timeoutSeconds = Number(values.timeout), maxTurns = Number(values["max-turns"]);
+        if (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0 || !Number.isInteger(maxTurns) || maxTurns <= 0)
+            throw new Error("--timeout and --max-turns must be positive; max-turns must be an integer");
+        const gooseCommand = values["goose-cli"].split(/\s+/).filter(Boolean);
         for (const evalCase of cases) {
             const assertions = normalizeAssertions(evalCase.assertions ?? []);
-            const evalDir = join(workspace, `eval-${evalCase.id}`);
+            const evalDir = join(workspace, evalDirectoryName(evalCase.id));
             mkdirSync(evalDir, { recursive: true });
+            const fixtureManifest = (evalCase.files ?? []).map(relative => ({ path: relative, sha256: evidenceSha256(readFileSync(resolve(fixtureRoot, relative))) }));
+            const equivalence = { model: values.model ?? agent.model ?? null, tools: Array.isArray(evalCase.capabilities?.tools) ? [...evalCase.capabilities.tools].map(String).sort() : [], fixture_sha256: evidenceSha256(fixtureManifest), timeout_seconds: timeoutSeconds, max_turns: maxTurns };
+            const executionSchedule = scheduleAgentPairs({ eval_id: evalCase.id, assertion_hash: assertionHash(assertions, variantDocuments), equivalence }, baselineConfiguration, runProfile);
             writeFileSync(join(evalDir, "eval_metadata.json"), JSON.stringify(redactValue({
                 schema_version: 2,
                 eval_id: evalCase.id,
@@ -233,17 +255,21 @@ async function main() {
                 variants: Object.keys(variantDocuments).sort(),
                 variant_sources: variantManifest(variantDocuments),
                 assertion_hash: assertionHash(assertions, variantDocuments),
+                run_profile: runProfile,
+                requested_pairs: executionSchedule.length,
+                execution_schedule: executionSchedule,
+                pair_equivalence: equivalence,
             }, { topLevel: false }), null, 2) + "\n");
         }
         const jobs = [];
         for (const evalCase of cases) {
-            jobs.push({ evalCase, configuration: "with_agent", path: agentPath });
-            jobs.push({ evalCase, configuration: baselineConfiguration, path: baselinePath });
+            const metadata = JSON.parse(readFileSync(join(workspace, evalDirectoryName(evalCase.id), "eval_metadata.json"), "utf-8"));
+            for (const pair of metadata.execution_schedule)
+                for (const configuration of pair.order)
+                    jobs.push({ evalCase, configuration, path: configuration === "with_agent" ? agentPath : baselinePath, pair, equivalence: metadata.pair_equivalence });
         }
-        const gooseCommand = values["goose-cli"].split(/\s+/).filter(Boolean);
         const workers = Number(values.workers);
-        const timeoutMs = Number(values.timeout) * 1000;
-        const maxTurns = Number(values["max-turns"]);
+        const timeoutMs = timeoutSeconds * 1000;
         const jobStates = jobs.map(() => "pending");
         const jobWorkers = jobs.map(() => undefined);
         const heartbeatStartedAt = Date.now();
@@ -270,26 +296,36 @@ async function main() {
         }), event => appendFileSync(heartbeatPath, JSON.stringify(redactValue(event, { topLevel: false, redactProtectedKeys: false })) + "\n", "utf-8"), { intervalMs: heartbeatIntervalMs });
         let results;
         try {
-            results = await mapLimit(jobs.map((job, index) => ({ ...job, index })), workers, async (job, workerId) => {
-                jobWorkers[job.index] = workerId;
-                jobStates[job.index] = "running";
-                heartbeatUpdatedAt = Date.now();
-                try {
-                    const result = await runCase(job.evalCase, job.configuration, job.path, workspace, gooseCommand, values.model, timeoutMs, maxTurns, fixtureRoot, retention.transcriptRetention);
-                    consumedTokens += result.total_tokens;
-                    consumedTurns += result.total_turns;
-                    jobStates[job.index] = "completed";
-                    console.log(`Completed eval ${result.eval_id} / ${result.configuration} (${result.total_duration_seconds}s)`);
-                    return result;
-                }
-                catch (error) {
-                    jobStates[job.index] = "failed";
-                    throw error;
-                }
-                finally {
+            const indexed = jobs.map((job, index) => ({ ...job, index }));
+            const pairJobs = Array.from({ length: Math.ceil(indexed.length / 2) }, (_, index) => indexed.slice(index * 2, index * 2 + 2));
+            const groupedResults = await mapLimit(pairJobs, workers, async (pairJobs, workerId) => {
+                const pairResults = [];
+                // A pair is the scheduling unit: variants within it must execute in recorded order.
+                for (const job of pairJobs) {
+                    jobWorkers[job.index] = workerId;
+                    jobStates[job.index] = "running";
                     heartbeatUpdatedAt = Date.now();
+                    try {
+                        const result = await runCase(job.evalCase, job.configuration, job.path, workspace, gooseCommand, values.model, timeoutMs, maxTurns, fixtureRoot, retention.transcriptRetention, job.pair, job.equivalence, runProfile === "fast");
+                        if (result.total_tokens !== null)
+                            consumedTokens += result.total_tokens;
+                        if (result.total_turns !== null)
+                            consumedTurns += result.total_turns;
+                        jobStates[job.index] = "completed";
+                        pairResults.push(result);
+                        console.log(`Completed eval ${result.eval_id} / ${result.configuration} (${result.total_duration_seconds}s)`);
+                    }
+                    catch (error) {
+                        jobStates[job.index] = "failed";
+                        throw error;
+                    }
+                    finally {
+                        heartbeatUpdatedAt = Date.now();
+                    }
                 }
+                return pairResults;
             });
+            results = groupedResults.flat();
             executionStatus = "completed";
         }
         catch (error) {

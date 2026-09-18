@@ -173,3 +173,11 @@ const heartbeat = createExecutionHeartbeat(
 The evaluation runner enables this by default and appends non-terminal event envelopes to `<workspace>/execution_heartbeats.jsonl`. Each event reports runs, turns, and token consumption (with limits where available), and those counters advance as delayed Goose runs complete. Checkpoints use the central privacy redactor. Configure it with `--heartbeat-interval <seconds>`, or disable it with `--no-heartbeat`.
 
 The scheduler accepts an injectable clock for deterministic tests. Heartbeat construction is benchmarked in the test suite against an agreed average overhead ceiling of 0.25 ms for a representative 20-task snapshot.
+
+### Repeated paired runs
+
+Use `--run-profile fast|standard|release` to collect exactly 1, 3, or 5 current/baseline pairs per evaluation. Pair order and seeds are deterministic and counterbalanced; each pair records the shared model, declared tools, fixture hash, timeout, and turn budget. Repeated runs are stored under each configuration as `run-N`. Grade every scheduled run before aggregation. Benchmark output includes paired 95% confidence intervals for quality, latency, actual turns, tokens, and cost. The one-pair `fast` profile is diagnostic only and can never establish stable improvement.
+
+### Resource telemetry
+
+Agent evaluation timing artifacts use nullable metrics with explicit availability reasons and metric sources. Missing or malformed duration, token, turn, and cost observations remain `null`; output character counts are never treated as tokens. Benchmark summaries report per-metric sample counts and coverage, and block efficiency/cost conclusions below `--minimum-coverage` (default `0.8`). Legacy timing artifacts remain readable and are normalized locally by agent-creator.

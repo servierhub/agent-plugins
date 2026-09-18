@@ -1,5 +1,7 @@
 # Protocol compatibility and migration policy
 
+The additive Goose Usage and Cost Evidence `1.0.0` input/schema and TypeScript APIs are independently versioned package subpaths. Existing surface versions and readers are preserved; unavailable usage and cost remain explicitly null rather than being backfilled into legacy contracts.
+
 `COMPATIBILITY_POLICY_VERSION` is `1.0.0`. The normative runtime registry is `COMPATIBILITY_REGISTRY`; `fixtures/compatibility/expected-public-surfaces.json` is its independently maintained review oracle. The oracle records every public surface's stable ID, owner, exact source file/field/evidence, kind, readable versions, emitted version, support state, deprecation/replacement/migration metadata, and an executable fixture result or explicit non-reader outcome.
 
 ## Drift and golden evidence

@@ -51,7 +51,9 @@ function required(value, keys, line) { for (const key of keys)
 function str(value) { return typeof value === "string" && value.length > 0; }
 function enumValue(value, values) { return typeof value === "string" && values.has(value); }
 function finiteNonnegative(value) { return typeof value === "number" && Number.isFinite(value) && value >= 0; }
-function budget(value) { return object(value) && Object.keys(value).every(k => ["consumed_ms", "total_ms", "remaining_ms"].includes(k)) && [value.consumed_ms, value.total_ms, value.remaining_ms].every(finiteNonnegative); }
+function wallClockBudget(value) { return object(value) && Object.keys(value).every(k => ["consumed_ms", "total_ms", "remaining_ms"].includes(k)) && [value.consumed_ms, value.total_ms, value.remaining_ms].every(finiteNonnegative); }
+function aggregateBudget(value) { return object(value) && typeof value.exhausted === "boolean" && (value.stop_reason === null || typeof value.stop_reason === "string") && object(value.planned) && object(value.consumed) && object(value.remaining) && object(value.availability); }
+function budget(value) { return wallClockBudget(value) || (object(value) && Object.keys(value).every(k => ["wall_clock", "aggregate"].includes(k)) && wallClockBudget(value.wall_clock) && aggregateBudget(value.aggregate)); }
 const COUNT_KEYS = ["total", "planned", "running", "succeeded", "failed", "blocked", "cancelled", "skipped", "completed"];
 function counts(value) { return object(value) && Object.keys(value).length === COUNT_KEYS.length && Object.keys(value).every(k => COUNT_KEYS.includes(k)) && COUNT_KEYS.every(k => Number.isInteger(value[k]) && Number(value[k]) >= 0); }
 function retry(value) { return object(value) && Object.keys(value).every(k => ["attempts", "retries", "max_attempts"].includes(k)) && [value.attempts, value.retries, value.max_attempts].every(x => Number.isInteger(x) && Number(x) >= 0); }

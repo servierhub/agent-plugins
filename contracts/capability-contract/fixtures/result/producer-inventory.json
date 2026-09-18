@@ -688,7 +688,7 @@
     {
       "creator": "skill-creator",
       "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
-      "field": "trigger-eval results[].pass",
+      "field": "trigger-eval v2 results[].pass",
       "context": "skill-trigger-result-pass",
       "tokens": [
         "true",
@@ -698,7 +698,7 @@
         "classification": "current",
         "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
         "sourceEvidence": [
-          "pass: boolean"
+          "interface EvalResult{query:string;should_trigger:boolean;trigger_rate:number;triggers:number;runs:number;pass:boolean;classification_runs:number;infrastructure_failures:number;outcomes:TriggerRunOutcome[]}"
         ]
       }
     },

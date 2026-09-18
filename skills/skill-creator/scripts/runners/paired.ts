@@ -47,7 +47,7 @@ export interface DeclaredCapabilities {
 
 export interface PairedExecutionPlan {
   prompt: string;
-  assertions: string[];
+  assertions: unknown[];
   cwd: string;
   model: string | null;
   tools: string[];
@@ -65,7 +65,6 @@ export interface PairedExecutionPlan {
 
 export interface PairedExecutionResult extends PairedExecutionEvidence {
   output: string;
-  expectations: Array<{ text: string; passed: boolean; evidence: string }>;
   tokens: number | null;
   tokenAvailabilityReason: string | null;
   exitCode: number;

@@ -1,5 +1,9 @@
 # Release notes — compatibility policy 1.0.0
 
+## Goose usage and cost evidence 1.0.0 (ap-rcj.8.2)
+
+Adds a portable, independently versioned executor/grader telemetry contract with nullable availability-aware token categories, turns, latency, provider/model and runtime identity, versioned pricing provenance, conservative cost derivation, combined totals, paired deltas, valid-coverage quality-per-dollar, strict hostile/privacy validation, canonical hashes, schema, fixtures, exports, and generated distribution files. Existing contracts are unchanged.
+
 ## Feedback annotations 1.0.0 (ap-rcj.7.2)
 
 Adds immutable, versioned annotation, interpretation, proposal, preview, decision, candidate/scenario revision, provenance, rerun/invalidation, schema, fixture, and public export contracts.

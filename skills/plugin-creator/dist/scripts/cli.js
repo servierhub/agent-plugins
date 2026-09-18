@@ -85,7 +85,7 @@ async function runFullEval(o) {
         return usage("full-eval requires a plugin directory");
     const options = { pluginPath: o.args[0] }, receipts = [];
     let progressMode = o.quiet ? "quiet" : "normal";
-    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--approval", "--approval-trust-policy", "--test-evidence", "--min-pass-rate", "--min-delta", "--total-budget-ms", "--heartbeat-ms", "--stale-after-ms", "--lease-ms", "--cancellation-grace-ms", "--progress"]);
+    const value = new Set(["--workspace", "--component-receipt", "--integration", "--archive", "--tests-status", "--human-review", "--approval", "--approval-trust-policy", "--test-evidence", "--min-pass-rate", "--min-delta", "--max-p50-wall-latency-regression-ms", "--max-p95-wall-latency-regression-ms", "--max-turn-regression", "--max-input-token-regression", "--max-output-token-regression", "--max-cached-token-regression", "--max-reasoning-token-regression", "--max-total-token-regression", "--max-cost-regression", "--missing-efficiency-telemetry", "--total-budget-ms", "--heartbeat-ms", "--stale-after-ms", "--lease-ms", "--cancellation-grace-ms", "--progress"]);
     for (let i = 1; i < o.args.length; i++) {
         const a = o.args[i];
         if (a === "--production")
@@ -127,6 +127,12 @@ async function runFullEval(o) {
                 options.minPassRate = Number(v);
             else if (a === "--min-delta")
                 options.minDelta = Number(v);
+            else if (a === "--missing-efficiency-telemetry")
+                options.missingEfficiencyTelemetry = v;
+            else if (a.startsWith("--max-") && a.endsWith("-regression") || a.endsWith("-regression-ms")) {
+                const dimensions = { "--max-p50-wall-latency-regression-ms": "p50_wall_latency_ms", "--max-p95-wall-latency-regression-ms": "p95_wall_latency_ms", "--max-turn-regression": "actual_turns", "--max-input-token-regression": "tokens.input", "--max-output-token-regression": "tokens.output", "--max-cached-token-regression": "tokens.cached", "--max-reasoning-token-regression": "tokens.reasoning", "--max-total-token-regression": "tokens.total", "--max-cost-regression": "cost" };
+                options.maxEfficiencyRegressions = { ...options.maxEfficiencyRegressions, [dimensions[a]]: Number(v) };
+            }
             else if (a === "--total-budget-ms")
                 options.reliability = { ...options.reliability, total_budget_ms: Number(v) };
             else if (a === "--heartbeat-ms")

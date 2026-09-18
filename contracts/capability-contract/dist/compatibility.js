@@ -1536,25 +1536,22 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "validatorId": "signature:html-document"
     },
     {
-        "id": "skill.trigger-eval-result.unversioned",
+        "id": "skill.trigger-eval-result.v2",
         "creator": "skill-creator",
         "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
         "sourceFieldOrLayout": "EvalOutput",
-        "sourceEvidence": "interface EvalOutput {",
+        "sourceEvidence": "interface EvalOutput{schema_version:\"2.0\"",
         "kind": "evaluation-artifact",
         "readVersionsOrRanges": [
-            "unversioned"
+            "2.0"
         ],
-        "emittedVersion": null,
-        "versionField": null,
-        "supportState": "legacy-readable",
-        "deprecation": {
-            "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
-            "replacement": "Future versioned trigger evaluation result."
-        },
+        "emittedVersion": "2.0",
+        "versionField": "/schema_version",
+        "supportState": "supported",
+        "deprecation": null,
         "migrationId": null,
         "artifactFormat": "json",
-        "validatorId": "artifact:trigger-eval"
+        "validatorId": "artifact:trigger-eval-v2"
     },
     {
         "id": "skill.run-loop-result.unversioned",
@@ -1645,7 +1642,7 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "creator": "agent-creator",
         "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
         "sourceFieldOrLayout": "agent.benchmark.unversioned",
-        "sourceEvidence": "join(benchmarkDirArg, \"benchmark.json\")",
+        "sourceEvidence": "join(root,\"benchmark.json\")",
         "kind": "envelope",
         "readVersionsOrRanges": [
             "unversioned"
@@ -1666,7 +1663,7 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "creator": "agent-creator",
         "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
         "sourceFieldOrLayout": "benchmark.md",
-        "sourceEvidence": "const outputMd = outputJson.replace(/\\.json$/, \".md\")",
+        "sourceEvidence": "out.replace(/\\.json$/,\".md\")",
         "kind": "evaluation-artifact",
         "artifactFormat": "markdown",
         "readVersionsOrRanges": [
@@ -1748,7 +1745,7 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "creator": "agent-creator",
         "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
         "sourceFieldOrLayout": "workspace.agent-eval.unversioned",
-        "sourceEvidence": "const runDir = join(workspace",
+        "sourceEvidence": "const runDir = flatLayout ? join(workspace",
         "kind": "workspace-layout",
         "readVersionsOrRanges": [
             "unversioned"
@@ -2812,6 +2809,204 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "deprecation": null,
         "migrationId": null,
         "validatorId": "unsupported:typescript-only"
+    },
+    {
+        "id": "contract.usage-cost-input.v1",
+        "creator": "shared",
+        "sourceFile": "contracts/capability-contract/src/usage-cost-types.ts",
+        "sourceFieldOrLayout": "UsageCostInput",
+        "sourceEvidence": "export interface UsageCostInput {",
+        "kind": "shared-contract",
+        "readVersionsOrRanges": [
+            "1.0.0"
+        ],
+        "emittedVersion": "1.0.0",
+        "versionField": "/schemaVersion",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "schema:usage-cost-input"
+    },
+    {
+        "id": "contract.usage-cost-evidence.v1",
+        "creator": "shared",
+        "sourceFile": "contracts/capability-contract/src/usage-cost-types.ts",
+        "sourceFieldOrLayout": "UsageCostEvidence",
+        "sourceEvidence": "export interface UsageCostEvidence {",
+        "kind": "shared-contract",
+        "readVersionsOrRanges": [
+            "1.0.0"
+        ],
+        "emittedVersion": "1.0.0",
+        "versionField": "/schemaVersion",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:usage-cost-evidence"
+    },
+    {
+        "id": "contract.usage-cost-delta.v1",
+        "creator": "shared",
+        "sourceFile": "contracts/capability-contract/src/usage-cost-types.ts",
+        "sourceFieldOrLayout": "UsageCostDelta",
+        "sourceEvidence": "export interface UsageCostDelta {",
+        "kind": "shared-contract",
+        "readVersionsOrRanges": [
+            "1.0.0"
+        ],
+        "emittedVersion": "1.0.0",
+        "versionField": "/schemaVersion",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:usage-cost-delta"
+    },
+    {
+        "id": "schema.usage-cost.v1",
+        "creator": "shared",
+        "sourceFile": "contracts/capability-contract/schema/usage-cost/1.0.0/goose-usage-cost-evidence.schema.json",
+        "sourceFieldOrLayout": "goose-usage-cost-evidence.schema.json",
+        "sourceEvidence": "\"$id\": \"https://agent-plugins.org/schemas/goose-usage-cost-evidence/1.0.0/goose-usage-cost-evidence.schema.json\"",
+        "kind": "schema-document",
+        "readVersionsOrRanges": [
+            "1.0.0"
+        ],
+        "emittedVersion": "1.0.0",
+        "versionField": "/$id",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "shape:usage-cost-schema-document"
+    },
+    {
+        "id": "api.validate-usage-cost-input.v1",
+        "creator": "shared",
+        "sourceFile": "contracts/capability-contract/src/usage-cost.ts",
+        "sourceFieldOrLayout": "validateUsageCostInput",
+        "sourceEvidence": "export function validateUsageCostInput(value:unknown):UsageCostValidation",
+        "kind": "public-api",
+        "readVersionsOrRanges": [
+            "1.0.0"
+        ],
+        "emittedVersion": "1.0.0",
+        "versionField": null,
+        "supportState": "unsupported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "unsupported:typescript-only"
+    },
+    {
+        "id": "api.compute-usage-cost-evidence.v1",
+        "creator": "shared",
+        "sourceFile": "contracts/capability-contract/src/usage-cost.ts",
+        "sourceFieldOrLayout": "computeUsageCostEvidence",
+        "sourceEvidence": "export function computeUsageCostEvidence(value:unknown):UsageCostEvidence",
+        "kind": "public-api",
+        "readVersionsOrRanges": [
+            "1.0.0"
+        ],
+        "emittedVersion": "1.0.0",
+        "versionField": null,
+        "supportState": "unsupported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "unsupported:typescript-only"
+    },
+    {
+        "id": "api.compute-paired-usage-cost-delta.v1",
+        "creator": "shared",
+        "sourceFile": "contracts/capability-contract/src/usage-cost.ts",
+        "sourceFieldOrLayout": "computePairedUsageCostDelta",
+        "sourceEvidence": "export function computePairedUsageCostDelta(baseline:UsageCostEvidence,candidate:UsageCostEvidence):UsageCostDelta",
+        "kind": "public-api",
+        "readVersionsOrRanges": [
+            "1.0.0"
+        ],
+        "emittedVersion": "1.0.0",
+        "versionField": null,
+        "supportState": "unsupported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "unsupported:typescript-only"
+    },
+    {
+        "id": "skill.evaluator-grading.v2",
+        "creator": "skill-creator",
+        "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+        "sourceFieldOrLayout": "gradeOutput return grading",
+        "sourceEvidence": "grading: { schema_version: 2, authority: \"evaluator\"",
+        "kind": "evaluation-artifact",
+        "readVersionsOrRanges": [
+            "2"
+        ],
+        "emittedVersion": "2",
+        "versionField": "/schema_version",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:evaluator-grading-v2"
+    },
+    {
+        "id": "skill.deterministic-evidence.v1",
+        "creator": "skill-creator",
+        "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+        "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/deterministic-evidence.json",
+        "sourceEvidence": "atomic(join(runDir,\"deterministic-evidence.json\")",
+        "kind": "evaluation-artifact",
+        "readVersionsOrRanges": [
+            "1"
+        ],
+        "emittedVersion": "1",
+        "versionField": "/schema_version",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:deterministic-evidence-v1"
+    },
+    {
+        "id": "skill.evidence-mode.v1",
+        "creator": "skill-creator",
+        "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+        "sourceFieldOrLayout": "eval_metadata.json/evidence_mode",
+        "sourceEvidence": "const evidence_mode={schema_version:1,planned:options.execute?\"goose-evaluator\":\"manual-governed-import\"};",
+        "kind": "evaluation-artifact",
+        "readVersionsOrRanges": [
+            "1"
+        ],
+        "emittedVersion": "1",
+        "versionField": "/schema_version",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:evidence-mode-v1"
+    },
+    {
+        "id": "skill.trigger-run-outcome.v1",
+        "creator": "skill-creator",
+        "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+        "sourceFieldOrLayout": "TriggerRunOutcome",
+        "sourceEvidence": "export interface TriggerRunOutcome{schema_version:typeof TRIGGER_OUTCOME_SCHEMA_VERSION;",
+        "kind": "evaluation-artifact",
+        "readVersionsOrRanges": [
+            "1.0"
+        ],
+        "emittedVersion": "1.0",
+        "versionField": "/schema_version",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:trigger-run-outcome-v1"
     }
 ].map(E));
 export const RESULT_CONTRACT_REFERENCE = Object.freeze({ version: RESULT_CONTRACT_VERSION, schemaId: RESULT_CONTRACT_SCHEMA_ID, mappingExport: "LEGACY_STATUS_MAPPINGS", classifierExport: "classifyResultExit" });
@@ -2884,7 +3079,7 @@ export function readPublicSurface(input, surfaceId) {
         if (typeof raw !== "string" && typeof raw !== "number")
             return { ok: false, surfaceId, supportState: "ambiguous", detectedVersion: null, entry: found, value, diagnostics: [D("COMPATIBILITY_VERSION_REQUIRED", "error", found.versionField, "The declared version field is missing.", "Do not infer a version; supply producer version.")] };
         let version = String(raw);
-        if (found.versionField === "/$schema") {
+        if (found.versionField === "/$schema" || found.versionField === "/$id") {
             const match = version.match(/\/(\d+\.\d+\.\d+)\//);
             version = match?.[1] ?? version;
         }

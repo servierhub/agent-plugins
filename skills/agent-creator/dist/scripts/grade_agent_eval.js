@@ -73,10 +73,27 @@ export function verifiedRuns(evalName, evalDir, meta) {
     const expected = assertionHashFromManifest(assertions, manifest);
     if (typeof meta.assertion_hash !== "string" || meta.assertion_hash !== expected)
         throw new GradingDiagnostic("STALE_VARIANTS", "Canonical assertion/variant hash changed for " + evalName + "; rerun all declared variants");
-    const missing = declared.filter(name => !isDir(join(evalDir, name)) || !isDir(join(evalDir, name, "outputs")) || !existsSync(join(evalDir, name, "outputs", "response.md")) || !existsSync(join(evalDir, name, "assertion_hash.txt")));
+    const requested = meta.requested_pairs === undefined ? 1 : Number(meta.requested_pairs);
+    if (!Number.isInteger(requested) || requested < 1)
+        throw new GradingDiagnostic("INCOMPLETE_VARIANTS", evalName + " has an invalid requested pair count");
+    const expanded = [];
+    const missing = [];
+    for (const name of declared) {
+        const base = join(evalDir, name), repeated = isDir(base) ? readdirSync(base).filter(x => /^run-\d+$/.test(x) && isDir(join(base, x))).sort((a, b) => Number(a.slice(4)) - Number(b.slice(4))) : [];
+        const dirs = repeated.length ? repeated.map(x => join(base, x)) : [base];
+        if (dirs.length !== requested)
+            missing.push(name + ` (${dirs.length}/${requested} runs)`);
+        for (const runDir of dirs) {
+            if (!isDir(join(runDir, "outputs")) || !existsSync(join(runDir, "outputs", "response.md")) || !existsSync(join(runDir, "assertion_hash.txt"))) {
+                missing.push(runDir);
+                continue;
+            }
+            expanded.push({ name, dir: runDir });
+        }
+    }
     if (missing.length)
-        throw new GradingDiagnostic("INCOMPLETE_VARIANTS", evalName + " is missing run directory, evidence, or marker for declared variant(s): " + missing.join(", ") + "; rerun all declared variants");
-    return declared.map(name => { const dir = join(evalDir, name), marker = join(dir, "assertion_hash.txt"); if (readFileSync(marker, "utf-8").trim() !== expected)
+        throw new GradingDiagnostic("INCOMPLETE_VARIANTS", evalName + " has explicitly incomplete paired evidence: " + missing.join(", ") + "; rerun all declared variants");
+    return expanded.map(({ name, dir }) => { const marker = join(dir, "assertion_hash.txt"); if (readFileSync(marker, "utf-8").trim() !== expected)
         throw new GradingDiagnostic("STALE_VARIANTS", "Assertion/variant hash changed for " + evalName + "/" + name + "; rerun all declared variants"); const grading = join(dir, "grading.json"); if (existsSync(grading) && JSON.parse(readFileSync(grading, "utf-8")).assertion_hash !== expected)
         throw new GradingDiagnostic("STALE_VARIANTS", "Assertion/variant hash changed for " + evalName + "/" + name + "; rerun all declared variants"); return { name, dir }; });
 }

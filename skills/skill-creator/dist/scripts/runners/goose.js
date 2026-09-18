@@ -72,15 +72,15 @@ function classify(stderr, code) { const value = stderr.toLowerCase(); if (/model
     return { code: "model-rejected", reason: "model-rejected" }; if (/tool/.test(value) && /(not found|unavailable|unknown|not configured)/.test(value))
     return { code: "tool-unavailable", reason: "tool-unavailable" }; if (/tool/.test(value) && /(reject|denied|forbidden|unauthori[sz]ed|not allowed)/.test(value))
     return { code: "tool-rejected", reason: "tool-rejected" }; return { code: "host-exit", reason: `exit:${code ?? "unknown"}` }; }
-function parseResponse(events, assertions) { const terminal = [...events].reverse().find(e => e.type === "complete") ?? events.at(-1) ?? {}; let output = text(terminal.output ?? terminal.response ?? terminal.message ?? terminal.result ?? terminal); let payload = terminal; try {
+function parseResponse(events) { const terminal = [...events].reverse().find(e => e.type === "complete") ?? events.at(-1) ?? {}; let output = text(terminal.output ?? terminal.response ?? terminal.message ?? terminal.result ?? terminal); let payload = terminal; try {
     const nested = JSON.parse(output);
-    if (nested && typeof nested === "object") {
+    if (nested && typeof nested === "object" && typeof nested.output === "string") {
         payload = nested;
-        output = text(nested.output ?? nested.response ?? output);
+        output = nested.output;
     }
 }
 catch { } if (!output.trim())
-    throw new PairedExecutionError("invalid-response", "Goose stream contained no output", "invalid-response"); const raw = payload.expectations ?? payload.grading?.expectations ?? terminal.expectations; const reported = Array.isArray(raw) ? raw : []; const expectations = assertions.map((assertion, index) => ({ text: assertion, passed: reported[index]?.passed === true, evidence: String(reported[index]?.evidence ?? "Execution host did not return grading for this assertion") })); const usage = terminal.usage ?? payload.usage ?? {}; const tokenCandidate = terminal.tokens ?? payload.tokens ?? usage.total_tokens ?? usage.totalTokens ?? null; return { output, expectations, tokens: Number.isFinite(Number(tokenCandidate)) ? Number(tokenCandidate) : null }; }
+    throw new PairedExecutionError("invalid-response", "Goose stream contained no output", "invalid-response"); const usage = terminal.usage ?? payload.usage ?? {}; const tokenCandidate = terminal.tokens ?? payload.tokens ?? usage.total_tokens ?? usage.totalTokens ?? null; return { output, tokens: Number.isFinite(Number(tokenCandidate)) ? Number(tokenCandidate) : null }; }
 export class GooseRunner {
     command;
     constructor(command) { this.command = configuredGooseArgv(command); }
@@ -129,7 +129,7 @@ export class GooseRunner {
         }
         const context = plan.configuration === "without_skill" ? "Complete the task without loading the evaluated Skill." : `The ${plan.skillName ?? "evaluated"} Skill is installed in this isolated workspace. Load and use it for the task.`;
         const reproducibility = plan.seed === undefined ? "" : `Evaluation seed: ${plan.seed}; paired repetition: ${plan.pairIndex}; order position: ${plan.orderPosition}.\n`;
-        const instruction = `${reproducibility}${context}\n\n${plan.prompt}\n\nReturn JSON with an output string and expectations array. Grade each assertion using exactly {text, passed, evidence}. Assertions:\n${plan.assertions.map(a => `- ${a}`).join("\n")}`;
+        const instruction = `${reproducibility}${context}\n\n${plan.prompt}\n\nReturn only the task result. Do not evaluate assertions, assign verdicts, or claim whether the task passed.`;
         return await new Promise((resolve, reject) => {
             const [bin, ...args] = command;
             let settled = false, timer, timedOut = false;
@@ -175,7 +175,7 @@ export class GooseRunner {
                 finish(new PairedExecutionError(typed.code, `Goose exited ${code}: ${stderr.trim()}`, typed.reason, code, evidence(typed.reason, code)));
                 return;
             } try {
-                const parsed = parseResponse(events.length ? events : parseEvents(stdout), plan.assertions);
+                const parsed = parseResponse(events.length ? events : parseEvents(stdout));
                 const ev = evidence("completed", code ?? 0);
                 finish(undefined, { ...parsed, ...ev, transcript: stdout, tokenAvailabilityReason: parsed.tokens === null ? "Goose stream output did not report token usage" : null, exitCode: code ?? 0 });
             }

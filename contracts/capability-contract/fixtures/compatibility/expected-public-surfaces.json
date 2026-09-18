@@ -782,16 +782,6 @@
       }
     },
     {
-      "id": "skill.trigger-eval-result.unversioned",
-      "expectedOutcome": {
-        "mode": "read-legacy",
-        "format": "json",
-        "fixture": "cases/skill.trigger-eval-result.unversioned.json",
-        "diagnostic": "COMPATIBILITY_LEGACY_UNVERSIONED",
-        "validatorId": "artifact:trigger-eval"
-      }
-    },
-    {
       "id": "skill.run-loop-result.unversioned",
       "expectedOutcome": {
         "mode": "read-legacy",
@@ -1487,6 +1477,117 @@
         "fixture": "cases/api.compare-feedback-revisions.v1.json",
         "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
         "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "skill.trigger-eval-result.v2",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/skill.trigger-eval-result.v2.json",
+        "validatorId": "artifact:trigger-eval-v2"
+      }
+    },
+    {
+      "id": "skill.trigger-run-outcome.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/skill.trigger-run-outcome.v1.json",
+        "validatorId": "artifact:trigger-run-outcome-v1"
+      }
+    },
+    {
+      "id": "skill.evaluator-grading.v2",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/skill.evaluator-grading.v2.json",
+        "validatorId": "artifact:evaluator-grading-v2"
+      }
+    },
+    {
+      "id": "skill.deterministic-evidence.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/skill.deterministic-evidence.v1.json",
+        "validatorId": "artifact:deterministic-evidence-v1"
+      }
+    },
+    {
+      "id": "skill.evidence-mode.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/skill.evidence-mode.v1.json",
+        "validatorId": "artifact:evidence-mode-v1"
+      }
+    },
+    {
+      "id": "contract.usage-cost-input.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "../usage-cost/valid.json",
+        "validatorId": "schema:usage-cost-input"
+      }
+    },
+    {
+      "id": "schema.usage-cost.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "../../schema/usage-cost/1.0.0/goose-usage-cost-evidence.schema.json",
+        "validatorId": "shape:usage-cost-schema-document"
+      }
+    },
+    {
+      "id": "api.validate-usage-cost-input.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "golden/unversioned.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.compute-usage-cost-evidence.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "golden/unversioned.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "api.compute-paired-usage-cost-delta.v1",
+      "expectedOutcome": {
+        "mode": "unsupported-diagnostic",
+        "format": "json",
+        "fixture": "golden/unversioned.json",
+        "diagnostic": "COMPATIBILITY_SURFACE_NOT_SERIALIZED",
+        "validatorId": "unsupported:typescript-only"
+      }
+    },
+    {
+      "id": "contract.usage-cost-evidence.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.usage-cost-evidence.v1.json",
+        "validatorId": "artifact:usage-cost-evidence"
+      }
+    },
+    {
+      "id": "contract.usage-cost-delta.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/contract.usage-cost-delta.v1.json",
+        "validatorId": "artifact:usage-cost-delta"
       }
     }
   ]

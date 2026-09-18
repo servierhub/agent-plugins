@@ -11,6 +11,7 @@ import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { validate } from "./validate_goose_plugin.js";
 import { assessEvidenceReceipt, discoverPluginComponents, evidenceSourceHash } from "./component_evidence.js";
 import {productionBindings,verifyProductionApproval} from "./production_approval.js";
+import { evaluateEfficiencyGate, writeEfficiencyViewer, type EfficiencyLimits, type MissingTelemetryPolicy } from "./efficiency_gate.js";
 const AdmZip = loadRuntimeDependency<typeof AdmZipType>("adm-zip");
 export type Status = "pass" | "fail" | "blocked" | "na";
 type Profile = "static" | "evaluation" | "release" | "production";
@@ -34,6 +35,8 @@ export interface VerifyOptions {
     testEvidence?: string;
     minPassRate?: number;
     minDelta?: number;
+    maxEfficiencyRegressions?: EfficiencyLimits;
+    missingEfficiencyTelemetry?: MissingTelemetryPolicy;
 }
 const PROFILES = new Set<Profile>(["static", "evaluation", "release", "production"]);
 const TEST_STATUSES = new Set<Status>(["pass", "fail", "blocked", "na"]);
@@ -107,8 +110,9 @@ function benchmarkGate(workspace: string, currentHash: string, minRate: number, 
     const summary = benchmark.run_summary;
     if (!summary || typeof summary !== "object")
         return { status: "blocked", reason: "benchmark run_summary missing" };
-    const currentKey = Object.keys(summary).find(key => key.includes("with_skill"));
-    const baseKey = Object.keys(summary).find(key => key.includes("old_skill") || key.includes("without_skill"));
+    const variants = Object.keys(summary).filter(key => !["delta", "paired", "efficiency_conclusions"].includes(key));
+    const currentKey = variants.find(key => /with_(skill|agent)|candidate|current/i.test(key));
+    const baseKey = variants.find(key => /old_(skill|agent)|without_(skill|agent)|baseline|control/i.test(key));
     const rate = finiteRate(currentKey ? summary[currentKey]?.pass_rate?.mean : undefined);
     const base = finiteRate(baseKey ? summary[baseKey]?.pass_rate?.mean : undefined);
     if (rate === null || base === null)
@@ -185,7 +189,12 @@ export function verifyPlugin(options: VerifyOptions) {
     const integrationAssessment = fullPlugin ? assessEvidenceReceipt(integrationReceipt, "integration", sourceHash(root), componentKeys) : null;
     const archive = options.archive ? resolve(options.archive) : undefined;
     const currentHash = sourceHash(root, archive ? [archive] : []);
+    const benchmarkPath = options.integration ? join(resolve(options.integration), "benchmark.json") : "";
+    const benchmarkDocument = benchmarkPath ? loadJson(benchmarkPath) : null;
     const benchmark = strict ? benchmarkGate(options.integration ? resolve(options.integration) : "", currentHash, parsed.minPassRate, parsed.minDelta) : { status: "na" as Status, reason: "not required" };
+    const efficiency = strict && benchmarkDocument ? evaluateEfficiencyGate(benchmarkDocument, { max_regressions: options.maxEfficiencyRegressions, missing_telemetry: options.missingEfficiencyTelemetry }) : null;
+    const efficiencyStatus: Status = !strict ? "na" : !benchmarkDocument ? "blocked" : efficiency!.status;
+    const efficiencyViewer = efficiency && options.integration ? writeEfficiencyViewer(resolve(options.integration), efficiency) : null;
     let integrationStatus: Status = benchmark.status;
     const integrationEvidence = [benchmark.reason];
     if (strict && fullPlugin) {
@@ -210,18 +219,19 @@ export function verifyPlugin(options: VerifyOptions) {
         identity: makeGate(schema.valid && !operational.errors.length ? "pass" : "fail", true, ["Agent Plugins 1.0.0 schemas pass", "operational validation passes"], [...schema.errors.map(e => e.path + ": " + e.message), ...operational.errors, ...operational.warnings]),
         components: makeGate(componentStatus, true, ["every discovered component has applicable typed evidence", "component source hashes are current", "N/A has an explicit reason"], componentProblems.length ? componentProblems : [components.length + " component receipts verified"], componentStatus === "blocked" ? "missing, invalid, non-passing, or stale component evidence" : undefined),
         integration: makeGate(integrationStatus, strict, ["paired benchmark rates are valid", "plugin source hash is current", "all components have integration coverage", "cross-component handoffs are evidenced"], integrationEvidence, integrationStatus === "blocked" ? integrationEvidence.at(-1) : undefined),
+        efficiency: makeGate(efficiencyStatus, strict, ["configured efficiency regressions pass", "missing telemetry follows explicit policy", "Pareto values, paired deltas, confidence intervals, and coverage are reported"], [efficiency?.reason ?? "benchmark telemetry unavailable"], efficiencyStatus === "blocked" ? "benchmark telemetry unavailable" : undefined),
         distribution: makeGate(distribution.status, strict, ["entries are safe and unique", "archive matches canonical package manifest"], [distribution.reason], distribution.status === "blocked" ? distribution.reason : undefined),
         regression: makeGate(parsed.testsStatus, strict, ["component and plugin tests pass", "offline smoke passes"], ["reported: " + parsed.testsStatus], parsed.testsStatus === "blocked" ? "test evidence missing" : undefined),
         review: makeGate(review, strict, ["viewer exists", "identity-bound production approval verifies exact release inputs"], [reviewReason,...approvalEvidence], review === "blocked" ? reviewReason : undefined)
     };
     const status = aggregate(gates);
-    return { schema_version: "1.0", artifact: "plugin", name, profile: parsed.profile, status, source_sha256: currentHash, generated_at: new Date().toISOString(), gates, critical_failures: Object.entries(gates).filter(([, gate]) => gate.required && gate.status === "fail").map(([gate]) => gate), release_eligible: (parsed.profile === "release"||parsed.profile === "production") && status === "pass", component_summary: { discovered: components.length, pass: Object.values(componentAggregation).filter((value: any) => value.status === "pass").length, fail: Object.values(componentAggregation).filter((value: any) => value.status === "fail").length, blocked: Object.values(componentAggregation).filter((value: any) => value.status === "blocked").length, na: Object.values(componentAggregation).filter((value: any) => value.status === "na").length }, components: componentAggregation, integration_evidence: integrationReceipt ? { status: integrationAssessment?.status, source_sha256: integrationReceipt.source_sha256, covered_components: integrationReceipt.payload?.covered_components ?? [], handoffs: integrationReceipt.payload?.handoffs ?? [] } : null, artifacts: { plugin: root, ...(workspace ? { integration_workspace: workspace, benchmark: join(workspace, "benchmark.json"), review: join(workspace, "review.html") } : {}), ...(archive ? { archive } : {}) } };
+    return { schema_version: "1.0", artifact: "plugin", name, profile: parsed.profile, status, source_sha256: currentHash, generated_at: new Date().toISOString(), gates, critical_failures: Object.entries(gates).filter(([, gate]) => gate.required && gate.status === "fail").map(([gate]) => gate), release_eligible: (parsed.profile === "release"||parsed.profile === "production") && status === "pass", component_summary: { discovered: components.length, pass: Object.values(componentAggregation).filter((value: any) => value.status === "pass").length, fail: Object.values(componentAggregation).filter((value: any) => value.status === "fail").length, blocked: Object.values(componentAggregation).filter((value: any) => value.status === "blocked").length, na: Object.values(componentAggregation).filter((value: any) => value.status === "na").length }, components: componentAggregation, efficiency: efficiency?.pareto_report ?? null, integration_evidence: integrationReceipt ? { status: integrationAssessment?.status, source_sha256: integrationReceipt.source_sha256, covered_components: integrationReceipt.payload?.covered_components ?? [], handoffs: integrationReceipt.payload?.handoffs ?? [] } : null, artifacts: { plugin: root, ...(workspace ? { integration_workspace: workspace, benchmark: join(workspace, "benchmark.json"), review: join(workspace, "review.html"), ...(efficiencyViewer ? { efficiency_report: efficiencyViewer } : {}) } : {}), ...(archive ? { archive } : {}) } };
 }
 function main() { try {
-    const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { profile: { type: "string", default: "release" }, "component-receipt": { type: "string", multiple: true }, integration: { type: "string" }, archive: { type: "string" }, "tests-status": { type: "string" }, "human-review": { type: "string" }, approval: {type:"string"}, "approval-trust-policy": {type:"string"}, "test-evidence": {type:"string"}, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" }, output: { type: "string", short: "o" } } });
+    const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { profile: { type: "string", default: "release" }, "component-receipt": { type: "string", multiple: true }, integration: { type: "string" }, archive: { type: "string" }, "tests-status": { type: "string" }, "human-review": { type: "string" }, approval: {type:"string"}, "approval-trust-policy": {type:"string"}, "test-evidence": {type:"string"}, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" }, "max-p50-wall-latency-regression-ms": { type: "string" }, "max-p95-wall-latency-regression-ms": { type: "string" }, "max-turn-regression": { type: "string" }, "max-input-token-regression": { type: "string" }, "max-output-token-regression": { type: "string" }, "max-cached-token-regression": { type: "string" }, "max-reasoning-token-regression": { type: "string" }, "max-total-token-regression": { type: "string" }, "max-cost-regression": { type: "string" }, "missing-efficiency-telemetry": { type: "string", default: "ignore" }, output: { type: "string", short: "o" } } });
     if (!positionals[0])
         throw new Error("usage: verify_plugin_gates.js <plugin-dir> --component-receipt <receipt>... [options]");
-    const receipt = verifyPlugin({ pluginPath: positionals[0], profile: values.profile, componentReceipts: values["component-receipt"], integration: values.integration, archive: values.archive, testsStatus: values["tests-status"], humanReview: values["human-review"], approval:values.approval, approvalTrustPolicy:values["approval-trust-policy"], testEvidence:values["test-evidence"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]) });
+    const receipt = verifyPlugin({ pluginPath: positionals[0], profile: values.profile, componentReceipts: values["component-receipt"], integration: values.integration, archive: values.archive, testsStatus: values["tests-status"], humanReview: values["human-review"], approval:values.approval, approvalTrustPolicy:values["approval-trust-policy"], testEvidence:values["test-evidence"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]), missingEfficiencyTelemetry: values["missing-efficiency-telemetry"] as MissingTelemetryPolicy, maxEfficiencyRegressions: Object.fromEntries([["p50_wall_latency_ms",values["max-p50-wall-latency-regression-ms"]],["p95_wall_latency_ms",values["max-p95-wall-latency-regression-ms"]],["actual_turns",values["max-turn-regression"]],["tokens.input",values["max-input-token-regression"]],["tokens.output",values["max-output-token-regression"]],["tokens.cached",values["max-cached-token-regression"]],["tokens.reasoning",values["max-reasoning-token-regression"]],["tokens.total",values["max-total-token-regression"]],["cost",values["max-cost-regression"]]].filter(([,v])=>v!==undefined).map(([k,v])=>[k,Number(v)])) });
     const json = JSON.stringify(receipt, null, 2) + "\n";
     if (values.output) {
         mkdirSync(dirname(resolve(values.output)), { recursive: true });

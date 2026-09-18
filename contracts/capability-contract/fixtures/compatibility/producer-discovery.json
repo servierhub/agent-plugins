@@ -1533,25 +1533,22 @@
       "validatorId": "signature:html-document"
     },
     {
-      "id": "skill.trigger-eval-result.unversioned",
+      "id": "skill.trigger-eval-result.v2",
       "creator": "skill-creator",
       "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
       "sourceFieldOrLayout": "EvalOutput",
-      "sourceEvidence": "interface EvalOutput {",
+      "sourceEvidence": "interface EvalOutput{schema_version:\"2.0\"",
       "kind": "evaluation-artifact",
       "readVersionsOrRanges": [
-        "unversioned"
+        "2.0"
       ],
-      "emittedVersion": null,
-      "versionField": null,
-      "supportState": "legacy-readable",
-      "deprecation": {
-        "window": "Readable through compatibility policy 1.x and at least 2027-09-30; removal requires a 2.0 breaking release.",
-        "replacement": "Future versioned trigger evaluation result."
-      },
+      "emittedVersion": "2.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
       "migrationId": null,
       "artifactFormat": "json",
-      "validatorId": "artifact:trigger-eval"
+      "validatorId": "artifact:trigger-eval-v2"
     },
     {
       "id": "skill.run-loop-result.unversioned",
@@ -1642,7 +1639,7 @@
       "creator": "agent-creator",
       "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
       "sourceFieldOrLayout": "agent.benchmark.unversioned",
-      "sourceEvidence": "join(benchmarkDirArg, \"benchmark.json\")",
+      "sourceEvidence": "join(root,\"benchmark.json\")",
       "kind": "envelope",
       "readVersionsOrRanges": [
         "unversioned"
@@ -1663,7 +1660,7 @@
       "creator": "agent-creator",
       "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
       "sourceFieldOrLayout": "benchmark.md",
-      "sourceEvidence": "const outputMd = outputJson.replace(/\\.json$/, \".md\")",
+      "sourceEvidence": "out.replace(/\\.json$/,\".md\")",
       "kind": "evaluation-artifact",
       "artifactFormat": "markdown",
       "readVersionsOrRanges": [
@@ -1745,7 +1742,7 @@
       "creator": "agent-creator",
       "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
       "sourceFieldOrLayout": "workspace.agent-eval.unversioned",
-      "sourceEvidence": "const runDir = join(workspace",
+      "sourceEvidence": "const runDir = flatLayout ? join(workspace",
       "kind": "workspace-layout",
       "readVersionsOrRanges": [
         "unversioned"
@@ -2809,6 +2806,204 @@
       "deprecation": null,
       "migrationId": null,
       "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "contract.usage-cost-input.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/usage-cost-types.ts",
+      "sourceFieldOrLayout": "UsageCostInput",
+      "sourceEvidence": "export interface UsageCostInput {",
+      "kind": "shared-contract",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/schemaVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "schema:usage-cost-input"
+    },
+    {
+      "id": "contract.usage-cost-evidence.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/usage-cost-types.ts",
+      "sourceFieldOrLayout": "UsageCostEvidence",
+      "sourceEvidence": "export interface UsageCostEvidence {",
+      "kind": "shared-contract",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/schemaVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:usage-cost-evidence"
+    },
+    {
+      "id": "contract.usage-cost-delta.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/usage-cost-types.ts",
+      "sourceFieldOrLayout": "UsageCostDelta",
+      "sourceEvidence": "export interface UsageCostDelta {",
+      "kind": "shared-contract",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/schemaVersion",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:usage-cost-delta"
+    },
+    {
+      "id": "schema.usage-cost.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/schema/usage-cost/1.0.0/goose-usage-cost-evidence.schema.json",
+      "sourceFieldOrLayout": "goose-usage-cost-evidence.schema.json",
+      "sourceEvidence": "\"$id\": \"https://agent-plugins.org/schemas/goose-usage-cost-evidence/1.0.0/goose-usage-cost-evidence.schema.json\"",
+      "kind": "schema-document",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": "/$id",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "shape:usage-cost-schema-document"
+    },
+    {
+      "id": "api.validate-usage-cost-input.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/usage-cost.ts",
+      "sourceFieldOrLayout": "validateUsageCostInput",
+      "sourceEvidence": "export function validateUsageCostInput(value:unknown):UsageCostValidation",
+      "kind": "public-api",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "api.compute-usage-cost-evidence.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/usage-cost.ts",
+      "sourceFieldOrLayout": "computeUsageCostEvidence",
+      "sourceEvidence": "export function computeUsageCostEvidence(value:unknown):UsageCostEvidence",
+      "kind": "public-api",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "api.compute-paired-usage-cost-delta.v1",
+      "creator": "shared",
+      "sourceFile": "contracts/capability-contract/src/usage-cost.ts",
+      "sourceFieldOrLayout": "computePairedUsageCostDelta",
+      "sourceEvidence": "export function computePairedUsageCostDelta(baseline:UsageCostEvidence,candidate:UsageCostEvidence):UsageCostDelta",
+      "kind": "public-api",
+      "readVersionsOrRanges": [
+        "1.0.0"
+      ],
+      "emittedVersion": "1.0.0",
+      "versionField": null,
+      "supportState": "unsupported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "unsupported:typescript-only"
+    },
+    {
+      "id": "skill.evaluator-grading.v2",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "sourceFieldOrLayout": "gradeOutput return grading",
+      "sourceEvidence": "grading: { schema_version: 2, authority: \"evaluator\"",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "2"
+      ],
+      "emittedVersion": "2",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:evaluator-grading-v2"
+    },
+    {
+      "id": "skill.deterministic-evidence.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/deterministic-evidence.json",
+      "sourceEvidence": "atomic(join(runDir,\"deterministic-evidence.json\")",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "1"
+      ],
+      "emittedVersion": "1",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:deterministic-evidence-v1"
+    },
+    {
+      "id": "skill.evidence-mode.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFieldOrLayout": "eval_metadata.json/evidence_mode",
+      "sourceEvidence": "const evidence_mode={schema_version:1,planned:options.execute?\"goose-evaluator\":\"manual-governed-import\"};",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "1"
+      ],
+      "emittedVersion": "1",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:evidence-mode-v1"
+    },
+    {
+      "id": "skill.trigger-run-outcome.v1",
+      "creator": "skill-creator",
+      "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "sourceFieldOrLayout": "TriggerRunOutcome",
+      "sourceEvidence": "export interface TriggerRunOutcome{schema_version:typeof TRIGGER_OUTCOME_SCHEMA_VERSION;",
+      "kind": "evaluation-artifact",
+      "readVersionsOrRanges": [
+        "1.0"
+      ],
+      "emittedVersion": "1.0",
+      "versionField": "/schema_version",
+      "supportState": "supported",
+      "deprecation": null,
+      "migrationId": null,
+      "artifactFormat": "json",
+      "validatorId": "artifact:trigger-run-outcome-v1"
     }
   ],
   "host": {
@@ -3060,6 +3255,7 @@
       "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
       "expected": [
         "eval_metadata.json",
+        "execution_evidence.json",
         "execution_heartbeats.jsonl",
         "response.md",
         "run_summary.json",
@@ -3069,6 +3265,10 @@
     },
     {
       "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "expected": []
+    },
+    {
+      "sourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
       "expected": []
     },
     {
@@ -3082,6 +3282,10 @@
       "expected": [
         "plugin.json"
       ]
+    },
+    {
+      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "expected": []
     },
     {
       "sourceFile": "skills/hook-creator/scripts/validate_hook.ts",
@@ -3110,6 +3314,10 @@
         "receipt.json",
         "review.html"
       ]
+    },
+    {
+      "sourceFile": "skills/plugin-creator/scripts/independent_review.ts",
+      "expected": []
     },
     {
       "sourceFile": "skills/plugin-creator/scripts/init_goose_plugin.ts",
@@ -3250,13 +3458,19 @@
     {
       "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
       "expected": [
+        "deterministic-evidence.json",
         "eval_metadata.json",
         "execution-evidence.json",
         "grading.json",
+        "manual-import-manifest.json",
         "navigation.json",
         "timing.json",
         "transcript.json"
       ]
+    },
+    {
+      "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "expected": []
     },
     {
       "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
@@ -3292,6 +3506,7 @@
     {
       "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
       "expected": [
+        "deterministic-evidence.json",
         "eval_metadata.json",
         "events.json",
         "execution-evidence.json",
@@ -3316,6 +3531,10 @@
       ]
     },
     {
+      "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "expected": []
+    },
+    {
       "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
       "expected": [
         "benchmark.json",
@@ -3338,18 +3557,6 @@
         "post-evaluation-pattern-review.json",
         "review.html"
       ]
-    },
-    {
-      "sourceFile": "skills/plugin-creator/scripts/independent_review.ts",
-      "expected": []
-    },
-    {
-      "sourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
-      "expected": []
-    },
-    {
-      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
-      "expected": []
     }
   ],
   "versionRules": [
@@ -4024,10 +4231,49 @@
       "emittedVersion": "1.0.0",
       "versionSourceFile": "contracts/capability-contract/schema/outcome-metrics/1.0.0/outcome-productivity-metrics.schema.json",
       "versionEvidence": "\"const\": \"1.0.0\""
+    },
+    {
+      "id": "contract.usage-cost-input.v1",
+      "sourceFile": "contracts/capability-contract/src/usage-cost-types.ts",
+      "sourceEvidence": "USAGE_COST_EVIDENCE_VERSION = \"1.0.0\"",
+      "emittedVersion": "1.0.0",
+      "versionSourceFile": "contracts/capability-contract/src/usage-cost-types.ts",
+      "versionEvidence": "USAGE_COST_EVIDENCE_VERSION = \"1.0.0\""
+    },
+    {
+      "id": "skill.evaluator-grading.v2",
+      "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "sourceEvidence": "grading: { schema_version: 2, authority: \"evaluator\"",
+      "emittedVersion": "2",
+      "versionSourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "versionEvidence": "grading: { schema_version: 2, authority: \"evaluator\""
+    },
+    {
+      "id": "skill.evidence-mode.v1",
+      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceEvidence": "const evidence_mode={schema_version:1,planned:options.execute?\"goose-evaluator\":\"manual-governed-import\"};",
+      "emittedVersion": "1",
+      "versionSourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "versionEvidence": "const evidence_mode={schema_version:1,planned:options.execute?\"goose-evaluator\":\"manual-governed-import\"};"
+    },
+    {
+      "id": "skill.trigger-run-outcome.v1",
+      "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "sourceEvidence": "TRIGGER_OUTCOME_SCHEMA_VERSION = \"1.0\"",
+      "emittedVersion": "1.0",
+      "versionSourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "versionEvidence": "TRIGGER_OUTCOME_SCHEMA_VERSION = \"1.0\""
+    },
+    {
+      "id": "skill.trigger-eval-result.v2",
+      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "sourceEvidence": "interface EvalOutput{schema_version:\"2.0\"",
+      "emittedVersion": "2.0",
+      "versionSourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "versionEvidence": "interface EvalOutput{schema_version:\"2.0\""
     }
   ],
   "producerBackedSurfaceIds": [
-    "agent.benchmark-markdown.unversioned",
     "agent.benchmark.unversioned",
     "agent.eval-metadata.unversioned",
     "agent.feedback.unversioned",
@@ -4062,7 +4308,10 @@
     "agent.semantic-grading.v2",
     "plugin.independent-review.v1",
     "hook.evaluation-run-manifest.v1",
-    "hook.production-approval.v1"
+    "hook.production-approval.v1",
+    "skill.evaluator-grading.v2",
+    "skill.deterministic-evidence.v1",
+    "skill.trigger-run-outcome.v1"
   ],
   "canonicalArtifacts": [
     {
@@ -4446,6 +4695,30 @@
       "format": "json",
       "validatorId": "shape:production-approval-schema-document",
       "registrySurfaceId": "schema.hook-production-approval.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.evaluator-grading.v2",
+      "format": "json",
+      "validatorId": "artifact:evaluator-grading-v2",
+      "registrySurfaceId": "skill.evaluator-grading.v2"
+    },
+    {
+      "canonicalArtifactId": "skill.deterministic-evidence.v1",
+      "format": "json",
+      "validatorId": "artifact:deterministic-evidence-v1",
+      "registrySurfaceId": "skill.deterministic-evidence.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.evidence-mode.v1",
+      "format": "json",
+      "validatorId": "artifact:evidence-mode-v1",
+      "registrySurfaceId": "skill.evidence-mode.v1"
+    },
+    {
+      "canonicalArtifactId": "skill.trigger-run-outcome.v1",
+      "format": "json",
+      "validatorId": "artifact:trigger-run-outcome-v1",
+      "registrySurfaceId": "skill.trigger-run-outcome.v1"
     }
   ],
   "producerSiteAliases": [
@@ -4540,22 +4813,13 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::benchmark.md",
-      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
-      "sourceFieldOrArtifact": "benchmark.md",
-      "role": "producer",
-      "canonicalArtifactId": "agent.benchmark-markdown.unversioned",
-      "sourceEvidence": "const outputMd = outputJson.replace(/\\.json$/, \".md\")",
-      "evidenceOccurrences": 1
-    },
-    {
       "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::eval_metadata.json",
       "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "agent.eval-metadata.unversioned",
       "sourceEvidence": "eval_metadata.json",
-      "evidenceOccurrences": 1
+      "evidenceOccurrences": 2
     },
     {
       "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::grading.json",
@@ -4564,7 +4828,7 @@
       "role": "consumer",
       "canonicalArtifactId": "agent.grading.unversioned",
       "sourceEvidence": "grading.json",
-      "evidenceOccurrences": 10
+      "evidenceOccurrences": 2
     },
     {
       "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::timing.json",
@@ -4573,7 +4837,7 @@
       "role": "consumer",
       "canonicalArtifactId": "agent.timing.unversioned",
       "sourceEvidence": "timing.json",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 1
     },
     {
       "siteId": "skills/agent-creator/scripts/cli.ts::JSON CLI envelope",
@@ -4627,7 +4891,7 @@
       "role": "producer",
       "canonicalArtifactId": "agent.eval-metadata.v2",
       "sourceEvidence": "eval_metadata.json",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 3
     },
     {
       "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::response.md",
@@ -5041,7 +5305,7 @@
       "role": "consumer",
       "canonicalArtifactId": "plugin.integration-benchmark.unversioned",
       "sourceEvidence": "benchmark.json",
-      "evidenceOccurrences": 3
+      "evidenceOccurrences": 4
     },
     {
       "siteId": "skills/plugin-creator/scripts/verify_plugin_gates.ts::plugin.json",
@@ -5581,7 +5845,7 @@
       "role": "consumer",
       "canonicalArtifactId": "skill.eval-metadata.unversioned",
       "sourceEvidence": "eval_metadata.json",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 4
     },
     {
       "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::execution-evidence.json",
@@ -5599,7 +5863,7 @@
       "role": "consumer",
       "canonicalArtifactId": "skill.grading.unversioned",
       "sourceEvidence": "grading.json",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 3
     },
     {
       "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::timing.json",
@@ -5608,7 +5872,7 @@
       "role": "consumer",
       "canonicalArtifactId": "skill.timing.unversioned",
       "sourceEvidence": "timing.json",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 3
     },
     {
       "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::transcript.json",
@@ -5660,7 +5924,7 @@
       "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "producer",
-      "canonicalArtifactId": "skill.grading.unversioned",
+      "canonicalArtifactId": "skill.evaluator-grading.v2",
       "sourceEvidence": "grading.json",
       "evidenceOccurrences": 3
     },
@@ -5834,6 +6098,42 @@
       "canonicalArtifactId": "skill.timing.unversioned",
       "sourceEvidence": "timing.json",
       "evidenceOccurrences": 2
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::deterministic-evidence.json",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFieldOrArtifact": "deterministic-evidence.json",
+      "role": "consumer",
+      "canonicalArtifactId": "skill.deterministic-evidence.v1",
+      "sourceEvidence": "deterministic-evidence.json",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/paired_execution.ts::deterministic-evidence.json",
+      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFieldOrArtifact": "deterministic-evidence.json",
+      "role": "producer",
+      "canonicalArtifactId": "skill.deterministic-evidence.v1",
+      "sourceEvidence": "deterministic-evidence.json",
+      "evidenceOccurrences": 3
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/evaluator_grading.ts::gradeOutput return grading",
+      "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "sourceFieldOrArtifact": "gradeOutput return grading",
+      "role": "producer",
+      "canonicalArtifactId": "skill.evaluator-grading.v2",
+      "sourceEvidence": "grading: { schema_version: 2, authority: \"evaluator\"",
+      "evidenceOccurrences": 1
+    },
+    {
+      "siteId": "skills/skill-creator/scripts/trigger_evaluation.ts::TriggerRunOutcome",
+      "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "sourceFieldOrArtifact": "TriggerRunOutcome",
+      "role": "producer",
+      "canonicalArtifactId": "skill.trigger-run-outcome.v1",
+      "sourceEvidence": "export interface TriggerRunOutcome{schema_version:typeof TRIGGER_OUTCOME_SCHEMA_VERSION;",
+      "evidenceOccurrences": 1
     }
   ],
   "structuralExclusions": [
@@ -6063,6 +6363,24 @@
       "sourceEvidence": "full-eval-cancel.json",
       "evidenceOccurrences": 1,
       "rationale": "The cancellation request is transient reliability control state governed by execution reliability semantics, not durable product evidence."
+    },
+    {
+      "site": "skills/agent-creator/scripts/run_agent_eval.ts::execution_evidence.json",
+      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::execution_evidence.json",
+      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFieldOrArtifact": "execution_evidence.json",
+      "sourceEvidence": "execution_evidence.json",
+      "evidenceOccurrences": 1,
+      "rationale": "Agent paired-run execution coordinates are governed by the repeated-run module and remain internal workspace provenance rather than a standalone portable public contract."
+    },
+    {
+      "site": "skills/skill-creator/scripts/evaluation_provenance.ts::manual-import-manifest.json",
+      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::manual-import-manifest.json",
+      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFieldOrArtifact": "manual-import-manifest.json",
+      "sourceEvidence": "manual-import-manifest.json",
+      "evidenceOccurrences": 2,
+      "rationale": "Governed manual-import authorization is an internal execution provenance marker; its portable evidence contract is represented by the existing evidence exchange artifacts."
     }
   ],
   "compatibleSurfaceAliases": [

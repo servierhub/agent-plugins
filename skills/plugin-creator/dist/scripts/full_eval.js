@@ -13,6 +13,7 @@ import { ExecutionEventWriter, protectedArtifactRef, replayExecutionEvents } fro
 import { projectExecutionProgress } from "./progress_projections.js";
 import { createEtaEstimatorState, updateEtaEstimator } from "./execution_eta.js";
 import { ExecutionLease, atomicCheckpoint, beginAttempt, chargeBudget, cleanupCheckpointPartials, clearCancellation, elapsedBudgetMs, finishAttempt, forceTerminate, mayRetry, newReliabilityLedger, normalizePlan, readCancellation, readLease, remainingBudgetMs, repairInterruptedJsonl, requestCancellation, sleep } from "./execution_reliability.js";
+import { budgetSnapshot, normalizeRunTelemetry } from "./usage_budget.js";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PHASES = ["validation", "planning", "execution", "grading", "aggregation", "review", "improvement", "verification"];
 const STATE_FILE = "full-eval-state.json";
@@ -40,15 +41,27 @@ catch {
     }
     catch { }
 } }
-function runCancellableChild(command, args, deadline, cancelPath) { return new Promise((resolveChild, reject) => { const child = spawn(command, args, { detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] }); let stdout = "", stderr = "", settled = false, cancelled = false, timedOut = false, forceTimer = null; child.stdout?.on("data", (data) => stdout += data.toString()); child.stderr?.on("data", (data) => stderr += data.toString()); const finish = (status) => { if (settled)
+function telemetryLine(text, runId) { for (const line of text.split(/\r?\n/).reverse()) {
+    const prefix = "PLUGIN_CREATOR_TELEMETRY ";
+    if (!line.startsWith(prefix))
+        continue;
+    try {
+        return normalizeRunTelemetry(JSON.parse(line.slice(prefix.length)), runId);
+    }
+    catch {
+        return undefined;
+    }
+} return undefined; }
+function runCancellableChild(command, args, deadline, cancelPath, onTelemetry, shouldStop) { return new Promise((resolveChild, reject) => { const child = spawn(command, args, { detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] }); let stdout = "", stderr = "", settled = false, cancelled = false, timedOut = false, forceTimer = null; child.stdout?.on("data", (data) => stdout += data.toString()); child.stderr?.on("data", (data) => stderr += data.toString()); const finish = (status) => { if (settled)
     return; settled = true; clearInterval(watch); if (forceTimer)
-    clearTimeout(forceTimer); resolveChild({ status, stdout, stderr, cancelled, timedOut }); }; const stop = (reason) => { if (cancelled || timedOut)
-    return; cancelled = reason === "cancel"; timedOut = reason === "deadline"; terminateTree(child.pid, "SIGTERM"); forceTimer = setTimeout(() => terminateTree(child.pid, "SIGKILL"), 25); forceTimer.unref(); }; const watch = setInterval(() => { if (readCancellation(cancelPath))
+    clearTimeout(forceTimer); const telemetry = telemetryLine(stdout + "\n" + stderr, "child-" + String(child.pid)); if (telemetry)
+    onTelemetry?.(telemetry); resolveChild({ status, stdout, stderr, cancelled, timedOut, telemetry }); }; const stop = (reason) => { if (cancelled || timedOut)
+    return; cancelled = reason === "cancel"; timedOut = reason === "deadline"; terminateTree(child.pid, "SIGTERM"); forceTimer = setTimeout(() => terminateTree(child.pid, "SIGKILL"), 25); forceTimer.unref(); }; const watch = setInterval(() => { if (readCancellation(cancelPath) || shouldStop?.())
     stop("cancel");
 else if (Date.now() >= deadline)
     stop("deadline"); }, 5); watch.unref(); child.once("error", (error) => { clearInterval(watch); reject(error); }); child.once("close", (code) => finish(code)); if (Date.now() >= deadline)
     stop("deadline"); }); }
-function packagePlugin(root, archive, deadline, cancelPath) { return runCancellableChild(process.execPath, [join(HERE, "package_goose_plugin.js"), root, archive], deadline, cancelPath); }
+function packagePlugin(root, archive, deadline, cancelPath, onTelemetry, shouldStop) { return runCancellableChild(process.execPath, [join(HERE, "package_goose_plugin.js"), root, archive], deadline, cancelPath, onTelemetry, shouldStop); }
 function requireText(path) { return readFileSync(path, "utf8"); }
 function receiptName(path) { try {
     return JSON.parse(requireText(path))?.name ?? null;
@@ -106,13 +119,13 @@ function fingerprints(c, o) {
     }
     return result;
 }
-function persistedConfiguration(c, o) { return { pluginPath: c.root, workspace: c.workspace, componentReceipts: c.components.map(x => x.receipt), integration: c.integration, archive: c.archive, testsStatus: o.testsStatus, humanReview: o.humanReview, approval: o.approval, approvalTrustPolicy: o.approvalTrustPolicy, testEvidence: o.testEvidence, production: o.production, minPassRate: o.minPassRate, minDelta: o.minDelta }; }
+function persistedConfiguration(c, o) { return { pluginPath: c.root, workspace: c.workspace, componentReceipts: c.components.map(x => x.receipt), integration: c.integration, archive: c.archive, budgets: o.budgets, testsStatus: o.testsStatus, humanReview: o.humanReview, approval: o.approval, approvalTrustPolicy: o.approvalTrustPolicy, testEvidence: o.testEvidence, production: o.production, minPassRate: o.minPassRate, minDelta: o.minDelta, maxEfficiencyRegressions: o.maxEfficiencyRegressions, missingEfficiencyTelemetry: o.missingEfficiencyTelemetry }; }
 function optionsFromState(state) { return { ...state.configuration, componentReceipts: [...state.configuration.componentReceipts], resume: true }; }
 export function planFullEval(options) {
     const c = context(options), fp = fingerprints(c, options);
     const jobs = PHASES.map((phase, i) => { const id = "full-eval/" + phase, depends_on = i ? ["full-eval/" + PHASES[i - 1]] : []; return { id, phase, depends_on, input_hash: fp[phase], idempotency_key: hash({ artifact: fp.validation, plan: fp.planning, scenario: phase, configuration: fp[phase], run_index: 0 }), status: "planned", attempts: 0, attempt_records: [], detail: "pending", output_hashes: {} }; });
-    const reliability_plan = normalizePlan(options.reliability);
-    return { context: c, state: { schema_version: "1.0", command: "full-eval", run_id: randomUUID(), graph_hash: hash(jobs.map(({ id, depends_on, input_hash, idempotency_key }) => ({ id, depends_on, input_hash, idempotency_key }))), revision: 0, status: "planned", configuration: persistedConfiguration(c, options), reliability_plan, reliability: newReliabilityLedger(), eta_state: createEtaEstimatorState(), jobs } };
+    const reliability_plan = normalizePlan(options.reliability), usage_records = (options.telemetry ?? []).map((x, i) => normalizeRunTelemetry(x, "initial-" + i)), budget = budgetSnapshot(options.budgets ?? {}, usage_records);
+    return { context: c, state: { schema_version: "1.0", command: "full-eval", run_id: randomUUID(), graph_hash: hash(jobs.map(({ id, depends_on, input_hash, idempotency_key }) => ({ id, depends_on, input_hash, idempotency_key }))), revision: 0, status: "planned", configuration: persistedConfiguration(c, options), reliability_plan, reliability: newReliabilityLedger(), budget, usage_records, eta_state: createEtaEstimatorState(), jobs } };
 }
 export function transitionJob(job, event, detail = job.detail) {
     const allowed = { planned: ["start", "cancel", "skip"], running: ["succeed", "fail", "block", "cancel", "skip"], succeeded: ["succeed"], failed: ["fail", "retry"], blocked: ["block", "resume", "cancel"], cancelled: ["cancel", "resume"], skipped: ["skip", "resume"] };
@@ -128,6 +141,8 @@ function loadState(path) { try {
         return null;
     value.reliability_plan = normalizePlan(value.reliability_plan);
     value.reliability = value.reliability ?? newReliabilityLedger();
+    value.usage_records = value.usage_records ?? [];
+    value.budget = budgetSnapshot(value.configuration.budgets ?? {}, value.usage_records);
     value.eta_state = value.eta_state ?? createEtaEstimatorState();
     value.jobs = value.jobs.map((job) => ({ ...job, attempt_records: job.attempt_records ?? [] }));
     return value;
@@ -142,6 +157,8 @@ function mergeState(plan, old, resume) {
     plan.run_id = old.run_id ?? old.graph_hash;
     plan.reliability_plan = normalizePlan(old.reliability_plan);
     plan.reliability = old.reliability ?? newReliabilityLedger();
+    plan.usage_records = old.usage_records ?? [];
+    plan.budget = budgetSnapshot(plan.configuration.budgets ?? {}, plan.usage_records);
     plan.eta_state = old.eta_state ?? createEtaEstimatorState();
     let stale = false;
     const jobs = plan.jobs.map(job => { const prior = old.jobs.find(x => x.id === job.id); const records = prior?.attempt_records ?? []; if (stale || !prior || prior.input_hash !== job.input_hash || (prior.status === "succeeded" && !outputsCurrent(prior.output_hashes))) {
@@ -176,7 +193,7 @@ function checkpoint(path, state, expectedRevision, lease) {
         write();
 }
 function legacyStatus(status) { return status === "succeeded" ? "pass" : status === "failed" ? "fail" : status === "cancelled" || status === "skipped" ? "skipped" : status; }
-function output(state, c, next_actions, verification, o) { const status = state.status, exit_code = status === "success" ? 0 : status === "blocked" || status === "cancelled" ? 3 : status === "planned" ? 0 : 1; const phases = state.jobs.map(j => ({ name: j.phase, status: legacyStatus(j.status), detail: j.detail })); const event_file = join(c.workspace, EVENT_FILE), progress = o.dryRun ? null : projectExecutionProgress(replayExecutionEvents(event_file).events); return { schema_version: "1.0", command: "full-eval", status, exit_code, dry_run: Boolean(o.dryRun), resume: Boolean(o.resume), plugin: c.root, workspace: c.workspace, archive: c.archive, state_file: join(c.workspace, STATE_FILE), event_file, progress, graph_hash: state.graph_hash, revision: state.revision, jobs: state.jobs, phases, components: c.components, next_actions, verification }; }
+function output(state, c, next_actions, verification, o) { const status = state.status, exit_code = status === "success" ? 0 : status === "blocked" || status === "cancelled" ? 3 : status === "planned" ? 0 : 1; state.budget = budgetSnapshot(state.configuration.budgets ?? {}, state.usage_records ?? []); const phases = state.jobs.map(j => ({ name: j.phase, status: legacyStatus(j.status), detail: j.detail })); const event_file = join(c.workspace, EVENT_FILE), progress = o.dryRun ? null : projectExecutionProgress(replayExecutionEvents(event_file).events); return { schema_version: "1.0", command: "full-eval", status, exit_code, dry_run: Boolean(o.dryRun), resume: Boolean(o.resume), plugin: c.root, workspace: c.workspace, archive: c.archive, state_file: join(c.workspace, STATE_FILE), event_file, progress, graph_hash: state.graph_hash, revision: state.revision, budget: state.budget, jobs: state.jobs, phases, components: c.components, next_actions, verification }; }
 function reliabilityFor(state, options) { return state?.reliability_plan ?? normalizePlan(options.reliability); }
 const DONE_STATUSES = new Set(["succeeded", "failed", "blocked", "cancelled", "skipped"]);
 function progressCounts(jobs) { const out = { total: jobs.length, planned: 0, running: 0, succeeded: 0, failed: 0, blocked: 0, cancelled: 0, skipped: 0, completed: 0 }; for (const job of jobs) {
@@ -198,7 +215,7 @@ function completedEtaJob(state, completedAt) { const phases = []; for (const job
         return null;
     phases.push({ name: job.phase, startedAt: record.started_at, completedAt: record.completed_at, retries: Math.max(0, job.attempts - 1) });
 } return { id: state.run_id + ":" + state.reliability.started_at, kind: "plugin-full-eval", startedAt: state.reliability.started_at, completedAt, concurrency: 1, retries: Math.max(0, state.jobs.reduce((n, job) => n + job.attempts, 0) - state.jobs.length), phases }; }
-function heartbeatData(state, resume, lastCheckpoint, now = Date.now()) { const elapsed = elapsedBudgetMs(state.reliability, now), active = state.jobs.filter(job => job.status === "running"), retries = Math.max(0, state.jobs.reduce((n, job) => n + job.attempts, 0) - state.jobs.filter(job => job.attempts > 0).length), checkpointAge = lastCheckpoint.timestamp === null ? elapsed : Math.max(0, now - Date.parse(lastCheckpoint.timestamp)), etaUpdate = updateEtaEstimator(state.eta_state, { type: "snapshot", timestamp: now, job: runningEtaJob(state, now) }), eta = etaUpdate.estimate; state.eta_state = etaUpdate.state; return { status: state.status, resume, counts: progressCounts(state.jobs), retry: { attempts: state.jobs.reduce((n, job) => n + job.attempts, 0), retries, max_attempts: state.reliability_plan.max_attempts }, elapsed_ms: elapsed, active_workers: active.map(job => ({ worker_id: "plugin-creator", job_id: job.id, phase: job.phase, attempt: job.attempts })), active_models: [], checkpoint: lastCheckpoint, budget: { consumed_ms: elapsed, total_ms: state.reliability_plan.total_budget_ms, remaining_ms: Math.max(0, state.reliability_plan.total_budget_ms - elapsed) }, stale: { status: lastCheckpoint.timestamp === null ? "unavailable" : checkpointAge >= state.reliability_plan.stale_after_ms ? "stale" : "fresh", age_ms: checkpointAge, threshold_ms: state.reliability_plan.stale_after_ms }, eta }; }
+function heartbeatData(state, resume, lastCheckpoint, now = Date.now()) { const elapsed = elapsedBudgetMs(state.reliability, now), active = state.jobs.filter(job => job.status === "running"), retries = Math.max(0, state.jobs.reduce((n, job) => n + job.attempts, 0) - state.jobs.filter(job => job.attempts > 0).length), checkpointAge = lastCheckpoint.timestamp === null ? elapsed : Math.max(0, now - Date.parse(lastCheckpoint.timestamp)), etaUpdate = updateEtaEstimator(state.eta_state, { type: "snapshot", timestamp: now, job: runningEtaJob(state, now) }), eta = etaUpdate.estimate; state.eta_state = etaUpdate.state; return { status: state.status, resume, counts: progressCounts(state.jobs), retry: { attempts: state.jobs.reduce((n, job) => n + job.attempts, 0), retries, max_attempts: state.reliability_plan.max_attempts }, elapsed_ms: elapsed, active_workers: active.map(job => ({ worker_id: "plugin-creator", job_id: job.id, phase: job.phase, attempt: job.attempts })), active_models: [], checkpoint: lastCheckpoint, budget: { wall_clock: { consumed_ms: elapsed, total_ms: state.reliability_plan.total_budget_ms, remaining_ms: Math.max(0, state.reliability_plan.total_budget_ms - elapsed) }, aggregate: budgetSnapshot(state.configuration.budgets ?? {}, state.usage_records ?? []) }, stale: { status: lastCheckpoint.timestamp === null ? "unavailable" : checkpointAge >= state.reliability_plan.stale_after_ms ? "stale" : "fresh", age_ms: checkpointAge, threshold_ms: state.reliability_plan.stale_after_ms }, eta }; }
 export class FullEvalTelemetryError extends Error {
     operation;
     code = "FULL_EVAL_TELEMETRY_FAILURE";
@@ -289,6 +306,12 @@ export async function fullEval(options) {
             state.jobs[index] = { ...job, status: "cancelled", stop_reason: "cancelled", detail: "cooperative cancellation requested" };
             save();
             return;
+        } state.budget = budgetSnapshot(state.configuration.budgets ?? {}, state.usage_records ?? []); if (state.budget.exhausted) {
+            state.jobs[index] = { ...job, status: "cancelled", stop_reason: state.budget.stop_reason ?? "aggregate-budget-exhausted", detail: state.budget.stop_reason ?? "aggregate budget exhausted" };
+            state.reliability = { ...state.reliability, stop_reason: state.budget.stop_reason ?? "aggregate-budget-exhausted" };
+            events.append("cancellation", job.id, { status: "cancelled", reason: state.budget.stop_reason, budget: state.budget });
+            save();
+            return;
         } if (remainingBudgetMs(state.reliability, state.reliability_plan) <= 0) {
             state.jobs[index] = { ...job, status: "failed", stop_reason: "total-budget-exhausted", detail: "total-budget-exhausted" };
             state.reliability = { ...state.reliability, stop_reason: "total-budget-exhausted" };
@@ -352,10 +375,10 @@ export async function fullEval(options) {
         const review = join(c.integration, "review.html");
         await run("review", () => { const ok = existsSync(review) && options.humanReview === "pass"; if (!ok)
             next_actions.push("review " + q(review) + " then rerun with --human-review pass --resume"); return { event: ok ? "succeed" : "block", detail: !existsSync(review) ? "review output missing" : options.humanReview === "pass" ? "human review complete" : "human review pending", outputs: ok ? [review] : [] }; });
-        await run("improvement", async () => { mkdirSync(dirname(c.archive), { recursive: true }); const packaged = await packagePlugin(c.root, c.archive, deadline, cancelPath); if (packaged.cancelled)
+        await run("improvement", async () => { mkdirSync(dirname(c.archive), { recursive: true }); const packaged = await packagePlugin(c.root, c.archive, deadline, cancelPath, record => { state.usage_records.push(record); state.budget = budgetSnapshot(state.configuration.budgets ?? {}, state.usage_records); save(); }, () => budgetSnapshot(state.configuration.budgets ?? {}, state.usage_records).stop_reason); if (packaged.cancelled)
             return { event: "cancel", detail: "cooperative cancellation requested", stop_reason: "cancelled" }; if (packaged.timedOut)
             return { event: "fail", detail: "total-budget-exhausted", stop_reason: "total-budget-exhausted" }; return { event: packaged.status === 0 ? "succeed" : "fail", detail: packaged.status === 0 ? c.archive : (packaged.stderr || packaged.stdout || "packaging failed").trim(), outputs: packaged.status === 0 ? [c.archive] : [] }; });
-        await run("verification", () => { verification = verifyPlugin({ pluginPath: c.root, profile: options.production ? "production" : "release", componentReceipts: c.components.filter(x => x.available).map(x => x.receipt), integration: c.integration, archive: existsSync(c.archive) ? c.archive : undefined, testsStatus: options.testsStatus, humanReview: options.humanReview, approval: options.approval, approvalTrustPolicy: options.approvalTrustPolicy, testEvidence: options.testEvidence, minPassRate: options.minPassRate, minDelta: options.minDelta }); for (const [gate, value] of Object.entries(verification.gates))
+        await run("verification", () => { verification = verifyPlugin({ pluginPath: c.root, profile: options.production ? "production" : "release", componentReceipts: c.components.filter(x => x.available).map(x => x.receipt), integration: c.integration, archive: existsSync(c.archive) ? c.archive : undefined, testsStatus: options.testsStatus, humanReview: options.humanReview, approval: options.approval, approvalTrustPolicy: options.approvalTrustPolicy, testEvidence: options.testEvidence, minPassRate: options.minPassRate, minDelta: options.minDelta, maxEfficiencyRegressions: options.maxEfficiencyRegressions, missingEfficiencyTelemetry: options.missingEfficiencyTelemetry }); for (const [gate, value] of Object.entries(verification.gates))
             if (value.status === "blocked")
                 next_actions.push("resolve " + gate + " gate: " + (value.reason ?? "evidence missing")); return { event: verification.status === "pass" ? "succeed" : verification.status === "fail" ? "fail" : "block", detail: "release verification: " + verification.status, outputs: [c.archive, benchmark, review] }; });
         state.status = state.jobs.some(j => j.status === "failed") ? "failure" : state.jobs.every(j => j.status === "succeeded") ? "success" : "blocked";

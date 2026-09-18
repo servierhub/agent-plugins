@@ -26,6 +26,15 @@ Measure more than total accuracy:
 - false negatives by intent category;
 - variance across repeated runs and target models.
 
+
+## Typed outcomes and efficiency telemetry
+
+Each repetition now includes an additive, versioned outcome envelope. Outcomes are `triggered`, `not-triggered`, `timeout`, `host-failure`, `malformed-stream`, or `unsupported-telemetry`. The first two are classification decisions. The remaining four are infrastructure outcomes and are reported separately rather than scored as false positives or false negatives.
+
+The envelope reports total duration and, when available, time-to-trigger, actual turns, allowlisted usage categories, and USD cost. Missing host telemetry is represented as `value: null` plus an explicit `unavailable_reason`; it is never inferred. Aggregate output adds the confusion matrix, false-positive and false-negative counts, trigger and total-duration distributions, infrastructure-failure counts, and per-field telemetry coverage. Existing `results`, `trigger_rate`, `triggers`, `runs`, `pass`, and `summary` fields remain available.
+
+Stream processing is bounded. Non-JSON, oversized, excessive, or structurally invalid stream records produce `malformed-stream`; arbitrary event text and host errors are not copied into result artifacts.
+
 ## Optimization
 
 Keep train and held-out test cases separate. Select the best description by held-out performance, not training accuracy. Do not expand descriptions into multilingual keyword lists or examples from the eval set.

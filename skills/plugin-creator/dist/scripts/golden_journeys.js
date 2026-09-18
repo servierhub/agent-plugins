@@ -3,6 +3,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { budgetSnapshot, normalizeRunTelemetry } from "./usage_budget.js";
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = resolve(HERE, "../../assets/golden-e2e"), IDS = ["idea-api-review-skill", "dependency-review-agent", "multi-component-safety-plugin"];
 const stable = (v) => JSON.stringify(v, (_k, x) => x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x);
 const hash = (v) => createHash("sha256").update(v).digest("hex"), read = (p) => readFileSync(p, "utf8"), fixturePath = (id) => join(ROOT, id, "fixture.json"), expectedPath = (id) => join(ROOT, id, "expected-contract.json");
@@ -71,7 +72,12 @@ function child(command, args, input, signal, onHeartbeat, heartbeatMs) { return 
 else
     p.stdin.end(); const timer = setInterval(onHeartbeat, Math.max(1, heartbeatMs)); const abort = () => { if (!settled)
     p.kill("SIGTERM"); }; signal?.addEventListener("abort", abort, { once: true }); p.on("error", error => { settled = true; clearInterval(timer); signal?.removeEventListener("abort", abort); fail(error); }); p.on("close", status => { settled = true; clearInterval(timer); signal?.removeEventListener("abort", abort); if (signal?.aborted)
-    return fail(new Cancelled()); ok({ status, stdout, stderr, duration_ms: Number(process.hrtime.bigint() - started) / 1e6 }); }); }); }
+    return fail(new Cancelled()); const duration_ms = Number(process.hrtime.bigint() - started) / 1e6, raw = (() => { for (const line of (stdout + "\n" + stderr).split(/\r?\n/).reverse())
+    if (line.startsWith("PLUGIN_CREATOR_TELEMETRY "))
+        try {
+            return JSON.parse(line.slice(25));
+        }
+        catch { } return { actual_turns: null, wall_time_ms: duration_ms, tokens: { input: null, output: null, cached: null, reasoning: null, total: null }, cost: null }; })(); ok({ status, stdout, stderr, duration_ms, telemetry: normalizeRunTelemetry(raw, "golden-" + String(p.pid)) }); }); }); }
 async function executeSuite(f, root, repetitions, variant, workspace, startAt, signal, onHeartbeat, onRecord, heartbeatMs) { const records = []; for (let r = startAt; r <= repetitions; r++) {
     const isolated = join(workspace, "inputs", variant, String(r));
     mkdirSync(isolated, { recursive: true });
@@ -85,7 +91,7 @@ async function executeSuite(f, root, repetitions, variant, workspace, startAt, s
             return {};
         } })();
         const passed = grade(f, s.id, x.stdout), metric_events = [{ kind: passed ? "automated-success" : "manual-fallback", count: passed ? 0 : 1, source: "evaluator" }];
-        records.push({ repetition: r, scenario_id: s.id, fixture: relative(workspace, inputPath), expected: s.expect, observed: { status: x.status, stdout: x.stdout, stderr: x.stderr }, passed, duration_ms: x.duration_ms, metric_events, input_fingerprint: parsed.input_fingerprint, runner: "golden_behavior_runner.js", executed: true });
+        records.push({ repetition: r, scenario_id: s.id, usage: x.telemetry, fixture: relative(workspace, inputPath), expected: s.expect, observed: { status: x.status, stdout: x.stdout, stderr: x.stderr }, passed, duration_ms: x.duration_ms, metric_events, input_fingerprint: parsed.input_fingerprint, runner: "golden_behavior_runner.js", executed: true });
         onRecord(records);
     }
 } return records; }
@@ -94,7 +100,7 @@ async function executeChallenges(f, candidate, records, count, workspace, signal
     const x = await child(join(HERE, "golden_behavior_runner.js"), ["challenge", "--candidate", candidate, "--records", recordsPath, "--criteria", criteriaPath, "--branch", String(n)], undefined, signal, onHeartbeat, heartbeatMs);
     if (x.status !== 0)
         throw Error("challenger failed: " + x.stderr);
-    branches.push({ ...JSON.parse(x.stdout), duration_ms: x.duration_ms, runner: "golden_behavior_runner.js" });
+    branches.push({ ...JSON.parse(x.stdout), usage: x.telemetry, duration_ms: x.duration_ms, runner: "golden_behavior_runner.js" });
 } return branches; }
 function interventionCount(records) { let total = 0; for (const record of records) {
     if (!Array.isArray(record.metric_events))
@@ -153,16 +159,22 @@ export async function runGoldenJourney(o) {
         generateCandidate(f, candidateBase, baselineCapabilities);
         generateCandidate(f, baselineRoot, baselineCapabilities);
     }
+    let baselineRecords, initialRecords, revisedRecords;
     let sequence = prior?.heartbeat.sequence ?? 0;
     const heartbeats = [...(prior?.heartbeats ?? [])];
-    const beat = (phase, status = "running") => { const at = baseTime ? new Date(baseTime.getTime() + (++sequence) * 1000).toISOString() : new Date().toISOString(), b = { sequence, at, phase, status }; heartbeats.push(b); appendEvent(events, { schema_version: "1.0", event: "heartbeat", run_id: runId, ...b, provenance: { fixture_sha256: fixtureSha, input_sha256: inputSha } }); return b; };
-    const persistCancelled = (phase, baselineRecords, initialRecords, revisedRecords = []) => { const inImprovement = phase === "improvement" && existsSync(revisedRoot), activeRoot = inImprovement ? revisedRoot : candidateBase, completed = new Set((inImprovement ? revisedRecords : initialRecords).map(x => x.repetition)).size, candidateSha = treeHash(activeRoot), checkpoint = { phase, completed_repetitions: completed, remaining_repetitions: Math.max(0, repetitions - completed), baseline_records: baselineRecords, initial_records: initialRecords, revised_records: revisedRecords, state_sha256: hash(stable({ runId, phase, completed, baselineRecords, initialRecords, revisedRecords })) }, state = { schema_version: "1.0", run_id: runId, journey: f.id, fixture_sha256: fixtureSha, input_sha256: inputSha, revision: (prior?.revision ?? 0) + 1, status: "cancelled", activation: { allowed: false, reason: "active child interrupted; phase and repetition checkpoint persisted" }, profile, configuration, candidate: { relative_path: relative(workspace, activeRoot), sha256: candidateSha, initial_relative_path: relative(workspace, candidateBase) }, validation: inImprovement ? { initial: validateCandidate(f, candidateBase), revised: validateCandidate(f, revisedRoot) } : validateCandidate(f, candidateBase), records: revisedRecords, baseline_records: baselineRecords, metrics: { repetitions: { required: repetitions, completed }, effectiveness: 0, productivity: 0, outcome_success: 0, thresholds_met: false }, heartbeat: beat(phase, "cancelled"), heartbeats, checkpoint, provenance: { records_sha256: hash(stable(revisedRecords)), baseline_records_sha256: hash(stable(baselineRecords)) }, review: { status: "not-started", challenge_count: 0, improvement_count: 0 }, release: { status: "pending-production-approval", activation_allowed: false } }; save(statePath, state); archive(workspace, f, state); return state; };
+    const usageRecords = () => [...baselineRecordsSafe(), ...initialRecordsSafe(), ...revisedRecordsSafe()].map((x) => x.usage).filter(Boolean), baselineRecordsSafe = () => baselineRecords ?? prior?.checkpoint?.baseline_records ?? [], initialRecordsSafe = () => initialRecords ?? prior?.checkpoint?.initial_records ?? [], revisedRecordsSafe = () => revisedRecords ?? prior?.checkpoint?.revised_records ?? [], usageBudget = () => budgetSnapshot(o.budgets ?? prior?.budget?.planned ?? {}, usageRecords());
+    const beat = (phase, status = "running") => { const budget = usageBudget(), { records: _records, ...consumption } = budget.consumed, at = baseTime ? new Date(baseTime.getTime() + (++sequence) * 1000).toISOString() : new Date().toISOString(), b = { sequence, at, phase, status, consumption, coverage: budget.consumed.coverage, planned: budget.planned, stop_reason: budget.stop_reason, availability: budget.availability }; heartbeats.push(b); appendEvent(events, { schema_version: "1.0", event: "heartbeat", run_id: runId, ...b, provenance: { fixture_sha256: fixtureSha, input_sha256: inputSha } }); return b; };
+    const persistCancelled = (phase, baselineRecords, initialRecords, revisedRecords = [], reason = "cancelled") => { const inImprovement = phase === "improvement" && existsSync(revisedRoot), activeRoot = inImprovement ? revisedRoot : candidateBase, completed = new Set((inImprovement ? revisedRecords : initialRecords).map(x => x.repetition)).size, candidateSha = treeHash(activeRoot), checkpoint = { phase, completed_repetitions: completed, remaining_repetitions: Math.max(0, repetitions - completed), baseline_records: baselineRecords, initial_records: initialRecords, revised_records: revisedRecords, state_sha256: hash(stable({ runId, phase, completed, baselineRecords, initialRecords, revisedRecords })) }, state = { schema_version: "1.0", run_id: runId, journey: f.id, fixture_sha256: fixtureSha, input_sha256: inputSha, revision: (prior?.revision ?? 0) + 1, status: "cancelled", stop_reason: reason, budget: usageBudget(), usage_records: usageRecords(), activation: { allowed: false, reason: "active child interrupted; partial evidence and budget checkpoint persisted: " + reason }, profile, configuration, candidate: { relative_path: relative(workspace, activeRoot), sha256: candidateSha, initial_relative_path: relative(workspace, candidateBase) }, validation: inImprovement ? { initial: validateCandidate(f, candidateBase), revised: validateCandidate(f, revisedRoot) } : validateCandidate(f, candidateBase), records: revisedRecords, baseline_records: baselineRecords, metrics: { repetitions: { required: repetitions, completed }, effectiveness: 0, productivity: 0, outcome_success: 0, thresholds_met: false }, heartbeat: beat(phase, "cancelled"), heartbeats, checkpoint, provenance: { records_sha256: hash(stable(revisedRecords)), baseline_records_sha256: hash(stable(baselineRecords)) }, review: { status: "not-started", challenge_count: 0, improvement_count: 0 }, release: { status: "pending-production-approval", activation_allowed: false } }; save(statePath, state); archive(workspace, f, state); return state; };
     const validation = validateCandidate(f, candidateBase);
+    const enforceBudget = (phase) => { const b = usageBudget(); return b.exhausted ? persistCancelled(phase, baselineRecordsSafe(), initialRecordsSafe(), revisedRecordsSafe(), b.stop_reason ?? "aggregate-budget-exhausted") : null; };
     if (!prior)
         beat("generation", "completed");
     beat("validation", validation.valid ? "completed" : "failed");
     if (o.cancel && !o.signal)
         return persistCancelled("validation", [], []);
+    const initialStop = enforceBudget("validation");
+    if (initialStop)
+        return initialStop;
     const completedRecords = (xs) => { let completed = 0; for (let n = 1; n <= repetitions; n++) {
         const ids = new Set(xs.filter(x => x.repetition === n).map(x => x.scenario_id));
         if (f.scenario_suite.every(x => ids.has(x.id)))
@@ -170,16 +182,22 @@ export async function runGoldenJourney(o) {
         else
             break;
     } return xs.filter(x => x.repetition <= completed); };
-    let baselineRecords = completedRecords(prior?.checkpoint?.baseline_records ?? []), initialRecords = completedRecords(prior?.checkpoint?.initial_records ?? []), revisedRecords = completedRecords(prior?.checkpoint?.revised_records ?? []);
+    baselineRecords = completedRecords(prior?.checkpoint?.baseline_records ?? []);
+    initialRecords = completedRecords(prior?.checkpoint?.initial_records ?? []);
+    revisedRecords = completedRecords(prior?.checkpoint?.revised_records ?? []);
     const startAt = (xs) => xs.length ? Math.max(...xs.map(x => x.repetition)) + 1 : 1, onHeartbeat = (phase) => { beat(phase); }, onRecord = (target) => (chunk) => { const merged = [...(target === "baseline" ? baselineRecords : initialRecords), ...chunk]; if (target === "baseline")
         baselineRecords = merged;
     else
         initialRecords = merged; const checkpoint = { phase: "evaluation", completed_repetitions: Math.min(new Set(baselineRecords.map(x => x.repetition)).size, new Set(initialRecords.map(x => x.repetition)).size), remaining_repetitions: repetitions - Math.min(new Set(baselineRecords.map(x => x.repetition)).size, new Set(initialRecords.map(x => x.repetition)).size), baseline_records: baselineRecords, initial_records: initialRecords, state_sha256: hash(stable({ baselineRecords, initialRecords })) }; save(join(workspace, "repetition-checkpoint.json"), checkpoint); };
     try {
+        if (enforceBudget("evaluation"))
+            throw new Cancelled();
         if (startAt(baselineRecords) <= repetitions) {
             const prefix = [...baselineRecords];
             await executeSuite(f, baselineRoot, repetitions, "baseline", workspace, startAt(prefix), o.signal, onHeartbeat, (chunk) => { baselineRecords = [...prefix, ...chunk]; onRecord("baseline")([]); }, heartbeatMs);
         }
+        if (enforceBudget("evaluation"))
+            throw new Cancelled();
         if (startAt(initialRecords) <= repetitions) {
             const prefix = [...initialRecords];
             await executeSuite(f, candidateBase, repetitions, "baseline", workspace, startAt(prefix), o.signal, onHeartbeat, (chunk) => { initialRecords = [...prefix, ...chunk]; onRecord("initial")([]); }, heartbeatMs);
@@ -193,6 +211,8 @@ export async function runGoldenJourney(o) {
     beat("evaluation", "completed");
     let branches;
     try {
+        if (enforceBudget("challenge"))
+            throw new Cancelled();
         branches = await executeChallenges(f, candidateBase, initialRecords, Number(configuration.challenge_branches), workspace, o.signal, () => beat("challenge"), heartbeatMs);
     }
     catch (error) {
@@ -216,13 +236,16 @@ export async function runGoldenJourney(o) {
             return persistCancelled("improvement", baselineRecords, initialRecords, revisedRecords);
         throw error;
     }
+    const stopped = enforceBudget("improvement");
+    if (stopped)
+        return stopped;
     const records = revisedRecords;
     beat("improvement", "completed");
     const verification = changes.map(change => ({ finding_id: change.finding_id, capability: change.capability, changed: change.before !== change.after, behavior_passed: records.filter(x => x.scenario_id === change.capability).every(x => x.passed) }));
     beat("release-review", "completed");
     const metrics = computeGoldenMetrics(records, baselineRecords, repetitions);
     metrics.thresholds_met = metrics.repetitions.completed >= f.thresholds.repetitions && metrics.effectiveness >= f.thresholds.effectiveness && metrics.productivity >= f.thresholds.productivity && metrics.outcome_success >= f.thresholds.outcome_success;
-    const candidateSha = treeHash(revisedRoot), recordsSha = hash(stable(records)), phaseNames = ["generation", "validation", "evaluation", "challenge", "improvement", "release-review"], phases = phaseNames.map(name => ({ name, status: "completed", evidence: evidence(fixtureSha, inputSha, candidateSha, new Date().toISOString(), name, recordsSha) })), checkpoint = { phase: "release-review", completed_repetitions: repetitions, remaining_repetitions: 0, state_sha256: hash(stable({ runId, recordsSha })) }, challenge = { reviewer: "independent-deterministic-challenger-v2", independent: true, executed: true, branches, findings: branches, candidate_sha256: treeHash(candidateBase) }, state = { schema_version: "1.0", run_id: runId, journey: f.id, fixture_sha256: fixtureSha, input_sha256: inputSha, revision: (prior?.revision ?? 0) + 1, status: "pending-production-approval", activation: { allowed: false, reason: "explicit trusted human production approval is required; deterministic executor has no activation capability" }, profile, configuration, candidate: { relative_path: relative(workspace, revisedRoot), sha256: candidateSha, initial_relative_path: relative(workspace, candidateBase) }, validation: { initial: validation, revised: revisedValidation }, records, baseline_records: baselineRecords, metrics, heartbeat: heartbeats.at(-1), heartbeats, checkpoint, provenance: { records_sha256: recordsSha, baseline_records_sha256: hash(stable(baselineRecords)) }, review: { status: "pending", challenge_count: branches.length, improvement_count: changes.length, challenge, improvement: { addressed_finding_ids: branches.map(x => x.finding_id), changes, verification, rerun_passed: records.every(x => x.passed) } }, release: { status: "pending-production-approval", activation_allowed: false }, phases };
+    const candidateSha = treeHash(revisedRoot), recordsSha = hash(stable(records)), phaseNames = ["generation", "validation", "evaluation", "challenge", "improvement", "release-review"], phases = phaseNames.map(name => ({ name, status: "completed", evidence: evidence(fixtureSha, inputSha, candidateSha, new Date().toISOString(), name, recordsSha) })), checkpoint = { phase: "release-review", completed_repetitions: repetitions, remaining_repetitions: 0, state_sha256: hash(stable({ runId, recordsSha })) }, challenge = { reviewer: "independent-deterministic-challenger-v2", independent: true, executed: true, branches, findings: branches, candidate_sha256: treeHash(candidateBase) }, state = { schema_version: "1.0", run_id: runId, journey: f.id, fixture_sha256: fixtureSha, input_sha256: inputSha, revision: (prior?.revision ?? 0) + 1, status: "pending-production-approval", budget: usageBudget(), usage_records: usageRecords(), activation: { allowed: false, reason: "explicit trusted human production approval is required; deterministic executor has no activation capability" }, profile, configuration, candidate: { relative_path: relative(workspace, revisedRoot), sha256: candidateSha, initial_relative_path: relative(workspace, candidateBase) }, validation: { initial: validation, revised: revisedValidation }, records, baseline_records: baselineRecords, metrics, heartbeat: heartbeats.at(-1), heartbeats, checkpoint, provenance: { records_sha256: recordsSha, baseline_records_sha256: hash(stable(baselineRecords)) }, review: { status: "pending", challenge_count: branches.length, improvement_count: changes.length, challenge, improvement: { addressed_finding_ids: branches.map(x => x.finding_id), changes, verification, rerun_passed: records.every(x => x.passed) } }, release: { status: "pending-production-approval", activation_allowed: false }, phases };
     save(statePath, state);
     archive(workspace, f, state);
     return state;

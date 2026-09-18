@@ -14,10 +14,12 @@ import { auditSkill } from "./audit_skill.js";
 import { designEvals } from "./design_evals.js";
 import { analyzeEvaluation } from "./analyze_evaluation.js";
 import { executePairedRuns } from "./paired_execution.js";
+
 import { configuredGooseArgv } from "./runners/goose.js";
+import { canonical as gradingCanonical, sha256 as gradingSha256 } from "./evaluator_grading.js";
 import { parseRunProfile, RUN_PROFILE_COUNTS, schedulePairs, validateAggregateBudget, type RunProfile } from "./repeated_runs.js";
 import {
-  artifactHash, compositeHash, expectedRunDirs, listRunDirs,
+  artifactHash, compositeHash, evidenceModeHash, expectedRunDirs, listRunDirs,
   validateExecutionEvidence,
 } from "./evaluation_provenance.js";
 
@@ -74,6 +76,9 @@ export interface FullEvalOptions {
   model?: string;
   baselineSkillPath?: string;
   runProfile?: RunProfile;
+  graders?: Array<{id:string;model:string}>;
+  graderCommand?: string;
+  maxGraderCalls?: number;
 }
 
 function isDir(path: string): boolean { try { return statSync(path).isDirectory(); } catch { return false; } }
@@ -142,10 +147,10 @@ function phaseInput(name:PhaseName,job:JobRecord,options:FullEvalOptions):string
   switch(name){
     case "validate": case "authoring-audit": return digest([name,source]);
     case "evaluation-design": return digest([name,source,evalHash]);
-    case "scaffold": return digest([name,source,evalHash,job.baseline,String(options.runProfile??"fast")]);
+    case "scaffold": return digest([name,source,evalHash,job.baseline,String(options.runProfile??"fast"),JSON.stringify(options.graders??[]),String(options.model??"plan-default"),String(options.graderCommand??"default"),String(options.baselineSkillPath??"")]);
     case "paired-runs-and-grading": {
       const baselinePath=options.baselineSkillPath?resolve(options.baselineSkillPath):"";
-      return digest([name,source,evalHash,job.baseline,String(options.runProfile??"fast"),prior("scaffold"),String(options.execute),String(options.runner??"goose"),String(options.model??"plan-default"),baselinePath,baselinePath?artifactHash(baselinePath):""]);
+      return digest([name,source,evalHash,job.baseline,String(options.runProfile??"fast"),prior("scaffold"),String(options.execute),String(options.runner??"goose"),String(options.model??"plan-default"),JSON.stringify(options.graders??[]),String(options.graderCommand??"default"),String(options.maxGraderCalls??100),baselinePath,baselinePath?artifactHash(baselinePath):""]);
     }
     case "aggregate": {const evidence=validateExecutionEvidence(job.workspace,{skill_source_sha256:source,eval_plan_sha256:evalHash});return digest([name,prior("paired-runs-and-grading"),source,evalHash,evidence.evidence_sha256]);}
     case "static-review": return digest([name,fileDigest(join(job.workspace,"benchmark.json"))]);
@@ -193,13 +198,18 @@ export async function fullEval(options:FullEvalOptions){
           const scenario={eval_id:id,eval_name:item.name??slug(item.prompt),subject:item.subject??"",language:item.language??"",target:item.target??{},preconditions:item.preconditions??[],budget:item.budget??{},model:item.model??null,prompt:item.prompt??item.query??"",expected_output:item.expected_output??"",assertions:item.assertions??[],files:item.files??[],capabilities:item.capabilities??{filesystem:true,agent_runner:true,browser:false,network:false,tools:[]},coverage_tags:item.coverage_tags??[],navigation_expectations:item.navigation_expectations??{must_read:[],read_when_relevant:[],must_not_read:[]}};
           const executionBinding={skill_source_sha256:source,eval_plan_sha256:evalPlan,scenario_sha256:digest([JSON.stringify(scenario)])};
           const executionSchedule=schedulePairs(executionBinding,requestedPairs);
-          const normalized={...scenario,run_profile:runProfile,requested_pairs:requestedPairs,baseline_configuration:baseline,aggregate_budget:aggregateBudget,execution_schedule:executionSchedule,execution_binding:executionBinding};
+          const evidence_mode={schema_version:1,planned:options.execute?"goose-evaluator":"manual-governed-import"};
+          const plannedGraders=(options.graders??[{id:"grader-a",model:options.model??"default"},{id:"grader-b",model:options.model??"default"}]).map(g=>({id:g.id,model:g.model,provider:"unspecified",command:[],config:{},blinded:true}));
+          const source_bindings:Record<string,string|null>={with_skill:artifactHash(skill),without_skill:null,old_skill:options.baselineSkillPath?artifactHash(resolve(options.baselineSkillPath)):null};
+          const fixture_sha256=compositeHash((scenario.files as string[]).flatMap(file=>[file,artifactHash(resolve(skill,file))]));
+          const grading_plan={schema_version:1,evidence:"grader-evidence",graders:plannedGraders};
+          const normalized={...scenario,run_profile:runProfile,requested_pairs:requestedPairs,baseline_configuration:baseline,aggregate_budget:aggregateBudget,evidence_mode,grading_plan,source_bindings,fixture_sha256,execution_schedule:executionSchedule,execution_binding:{...executionBinding,evidence_mode_sha256:evidenceModeHash(evidence_mode),grading_plan_sha256:gradingSha256(gradingCanonical(grading_plan))}};
           artifacts.push(metadata);atomicJson(metadata,normalized);
           for(const config of ["with_skill",baseline]){const configDir=join(ed,config);mkdirSync(configDir,{recursive:true});for(const name of readdirSync(configDir).filter(n=>/^run-\d+$/.test(n))){const runIndex=Number(name.slice(4));if(runIndex>requestedPairs){const archive=join(workspace,".full-eval-archive",evalPlan);mkdirSync(archive,{recursive:true});renameSync(join(configDir,name),join(archive,"surplus-"+id+"-"+config+"-"+name));}}for(let run=1;run<=requestedPairs;run++)mkdirSync(join(configDir,"run-"+run,"outputs"),{recursive:true});}
         }phase.artifacts=artifacts;phase.detail=archived.length?`archived ${archived.length} scenario workspace(s) not present in the current eval plan`:undefined;
       }else if(phase.name==="paired-runs-and-grading"){
         if(options.execute){
-          const execution=await executePairedRuns({skillPath:skill,workspace,baseline,baselineSkillPath:options.baselineSkillPath,runner:options.runner,model:options.model??null});
+          const execution=await executePairedRuns({skillPath:skill,workspace,baseline,baselineSkillPath:options.baselineSkillPath,runner:options.runner,model:options.model??null,graders:options.graders,graderCommand:options.graderCommand,maxGraderCalls:options.maxGraderCalls});
           if(execution.status!=="complete"){
             phase.status=execution.status==="blocked"?"blocked":"failed";phase.detail=`paired execution ${execution.status}`;phase.error=execution.failures.map(f=>`${rel(workspace,f.run)} [${f.code}]: ${f.message}`).join("; ");job.status=execution.status==="blocked"?"blocked":"failed";checkpoint(job);
             return envelope(options,job,execution.status==="blocked"?"blocked":"failure",execution.failures.map(f=>`Paired run ${rel(workspace,f.run)} failed (${f.code}, ${f.exit_reason}): ${f.message}. Manual evidence remains supported; preserve or replace artifacts and rerun --resume.`),{execution,incomplete:{code:"incomplete-paired-runs",requested_pairs:requestedPairs,completed_runs:execution.completed.length,required_runs:(Array.isArray(evals)?evals.length:0)*requestedPairs*2}});
@@ -229,5 +239,5 @@ export async function fullEval(options:FullEvalOptions){
   if(job.status!=="succeeded"){job.status="succeeded";checkpoint(job);}receipt=receipt??validateEvaluationReceipt(workspace);verification=verification??(existsSync(join(workspace,"receipt.json"))?loadJson(join(workspace,"receipt.json")):undefined);return envelope(options,job,"success",[],{receipt,verification});
 }
 
-async function main(){try{const {positionals,values}=parseArgs({args:process.argv.slice(2),allowPositionals:true,options:{workspace:{type:"string"},"eval-set":{type:"string"},baseline:{type:"string",default:"without_skill"},"baseline-skill":{type:"string"},execute:{type:"boolean",default:false},runner:{type:"string"},model:{type:"string"},"run-profile":{type:"string",default:"fast"},"dry-run":{type:"boolean",default:false},resume:{type:"boolean",default:false},retry:{type:"boolean",default:false},cancel:{type:"boolean",default:false},"human-review":{type:"string"},"tests-status":{type:"string"},"triggering-status":{type:"string"},"triggering-reason":{type:"string"},"min-pass-rate":{type:"string",default:"0.8"},"min-delta":{type:"string",default:"0"}}});if(!positionals[0])throw new TypeError("skill directory is required");if(values.baseline!=="old_skill"&&values.baseline!=="without_skill")throw new TypeError("--baseline must be old_skill or without_skill");const result=await fullEval({skillPath:positionals[0],workspace:values.workspace,evalSet:values["eval-set"],baseline:values.baseline,baselineSkillPath:values["baseline-skill"],execute:values.execute,runner:values.runner,model:values.model,runProfile:parseRunProfile(values["run-profile"]),dryRun:values["dry-run"],resume:values.resume,retry:values.retry,cancel:values.cancel,humanReview:values["human-review"] as HumanReviewStatus|undefined,testsStatus:values["tests-status"] as GateStatus|undefined,triggeringStatus:values["triggering-status"] as GateStatus|undefined,triggeringReason:values["triggering-reason"],minPassRate:Number(values["min-pass-rate"]),minDelta:Number(values["min-delta"])});console.log(JSON.stringify(result,null,2));process.exit(result.exit_code);}catch(error){console.error("full_eval: "+(error as Error).message);process.exit(2);}}
+async function main(){try{const {positionals,values}=parseArgs({args:process.argv.slice(2),allowPositionals:true,options:{workspace:{type:"string"},"eval-set":{type:"string"},baseline:{type:"string",default:"without_skill"},"baseline-skill":{type:"string"},execute:{type:"boolean",default:false},runner:{type:"string"},model:{type:"string"},grader:{type:"string",multiple:true},"grader-command":{type:"string"},"max-grader-calls":{type:"string",default:"100"},"run-profile":{type:"string",default:"fast"},"dry-run":{type:"boolean",default:false},resume:{type:"boolean",default:false},retry:{type:"boolean",default:false},cancel:{type:"boolean",default:false},"human-review":{type:"string"},"tests-status":{type:"string"},"triggering-status":{type:"string"},"triggering-reason":{type:"string"},"min-pass-rate":{type:"string",default:"0.8"},"min-delta":{type:"string",default:"0"}}});if(!positionals[0])throw new TypeError("skill directory is required");if(values.baseline!=="old_skill"&&values.baseline!=="without_skill")throw new TypeError("--baseline must be old_skill or without_skill");const graderValues=(values.grader as string[]|undefined)??[];const graders=graderValues.map((value,index)=>{const split=value.indexOf("=");return split<0?{id:`grader-${index+1}`,model:value}:{id:value.slice(0,split),model:value.slice(split+1)}});if(graders.some(item=>!item.id||!item.model)||new Set(graders.map(item=>item.id)).size!==graders.length)throw new TypeError("--grader requires unique non-empty id=model values");const maxGraderCalls=Number(values["max-grader-calls"]);if(!Number.isInteger(maxGraderCalls)||maxGraderCalls<0)throw new TypeError("--max-grader-calls must be a non-negative integer");const result=await fullEval({skillPath:positionals[0],workspace:values.workspace,evalSet:values["eval-set"],baseline:values.baseline,baselineSkillPath:values["baseline-skill"],execute:values.execute,runner:values.runner,model:values.model,graders:graders.length?graders:undefined,graderCommand:values["grader-command"],maxGraderCalls,runProfile:parseRunProfile(values["run-profile"]),dryRun:values["dry-run"],resume:values.resume,retry:values.retry,cancel:values.cancel,humanReview:values["human-review"] as HumanReviewStatus|undefined,testsStatus:values["tests-status"] as GateStatus|undefined,triggeringStatus:values["triggering-status"] as GateStatus|undefined,triggeringReason:values["triggering-reason"],minPassRate:Number(values["min-pass-rate"]),minDelta:Number(values["min-delta"])});console.log(JSON.stringify(result,null,2));process.exit(result.exit_code);}catch(error){console.error("full_eval: "+(error as Error).message);process.exit(2);}}
 const invoked=process.argv[1]?resolve(process.argv[1]):null;if(invoked&&fileURLToPath(import.meta.url)===invoked)main();

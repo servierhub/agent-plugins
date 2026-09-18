@@ -1,339 +1,95 @@
 #!/usr/bin/env node
-/**
- * Aggregate individual run results into benchmark summary statistics.
- *
- * Reads grading.json files from run directories and produces:
- * - run_summary with mean, stddev, min, max for each metric
- * - delta between with_agent and without_agent configurations
- *
- * Usage:
- *   node aggregate_benchmark.js <benchmark_dir>
- *
- * The script supports two directory layouts:
- *
- *   Workspace layout (from agent-creator iterations):
- *   <benchmark_dir>/
- *   └── eval-N/
- *       ├── with_agent/
- *       │   ├── run-1/grading.json
- *       │   └── run-2/grading.json
- *       └── without_agent/
- *           ├── run-1/grading.json
- *           └── run-2/grading.json
- *
- *   Legacy layout (with runs/ subdirectory):
- *   <benchmark_dir>/
- *   └── runs/
- *       └── eval-N/
- *           ├── with_agent/
- *           │   └── run-1/grading.json
- *           └── without_agent/
- *               └── run-1/grading.json
- */
+/** Aggregate benchmark results without inventing unavailable resource telemetry. */
 import { existsSync, readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-function round(value, digits) {
-    const factor = 10 ** digits;
-    return Math.round(value * factor) / factor;
+import { normalizeResourceTelemetry } from "./resource_telemetry.js";
+import { summarizePairedAgentRuns } from "./repeated_agent_runs.js";
+const round = (x, d = 4) => Math.round(x * 10 ** d) / 10 ** d;
+function percentile(xs, q) { const sorted = [...xs].sort((a, b) => a - b), index = (sorted.length - 1) * q, lower = Math.floor(index), upper = Math.ceil(index); return round(sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower)); }
+function stats(values) { const xs = values.filter((x) => x !== null); if (!xs.length)
+    return { mean: null, stddev: null, min: null, max: null, p50: null, p95: null, sample_count: 0 }; const mean = xs.reduce((a, b) => a + b, 0) / xs.length, stddev = xs.length > 1 ? Math.sqrt(xs.reduce((a, x) => a + (x - mean) ** 2, 0) / (xs.length - 1)) : 0; return { mean: round(mean), stddev: round(stddev), min: round(Math.min(...xs)), max: round(Math.max(...xs)), p50: percentile(xs, .5), p95: percentile(xs, .95), sample_count: xs.length }; }
+const dir = (p) => { try {
+    return statSync(p).isDirectory();
 }
-function calculateStats(values) {
-    if (!values.length)
-        return { mean: 0, stddev: 0, min: 0, max: 0 };
-    const n = values.length;
-    const mean = values.reduce((a, b) => a + b, 0) / n;
-    let stddev = 0;
-    if (n > 1) {
-        const variance = values.reduce((acc, x) => acc + (x - mean) ** 2, 0) / (n - 1);
-        stddev = Math.sqrt(variance);
-    }
-    return {
-        mean: round(mean, 4),
-        stddev: round(stddev, 4),
-        min: round(Math.min(...values), 4),
-        max: round(Math.max(...values), 4),
-    };
-}
-function isDir(path) {
+catch {
+    return false;
+} };
+const sub = (p, prefix) => dir(p) ? readdirSync(p).filter(x => x.startsWith(prefix) && dir(join(p, x))).sort() : [];
+const finite = (x, fallback = 0) => typeof x === "number" && Number.isFinite(x) && x >= 0 ? x : fallback;
+function load(root) { const search = dir(join(root, "runs")) ? join(root, "runs") : root, out = {}; for (const [eidx, en] of sub(search, "eval-").entries()) {
+    const ep = join(search, en), mp = join(ep, "eval_metadata.json");
+    let eid = eidx;
     try {
-        return statSync(path).isDirectory();
+        eid = JSON.parse(readFileSync(mp, "utf8")).eval_id ?? eidx;
     }
     catch {
-        return false;
+        const n = Number(en.split("-")[1]);
+        eid = Number.isFinite(n) ? n : eidx;
     }
-}
-function listSubdirs(dir, prefix) {
-    if (!isDir(dir))
-        return [];
-    return readdirSync(dir)
-        .filter((name) => name.startsWith(prefix) && isDir(join(dir, name)))
-        .sort();
-}
-function loadRunResults(benchmarkDir) {
-    const runsDir = join(benchmarkDir, "runs");
-    let searchDir;
-    if (isDir(runsDir)) {
-        searchDir = runsDir;
-    }
-    else if (listSubdirs(benchmarkDir, "eval-").length) {
-        searchDir = benchmarkDir;
-    }
-    else {
-        console.log(`No eval directories found in ${benchmarkDir} or ${runsDir}`);
-        return {};
-    }
-    const results = {};
-    const evalDirs = listSubdirs(searchDir, "eval-");
-    evalDirs.forEach((evalName, evalIdx) => {
-        const evalDir = join(searchDir, evalName);
-        const metadataPath = join(evalDir, "eval_metadata.json");
-        let evalId = evalIdx;
-        if (existsSync(metadataPath)) {
+    for (const config of readdirSync(ep).filter(x => dir(join(ep, x))).sort()) {
+        const cp = join(ep, config), runs = sub(cp, "run-");
+        if (!runs.length && existsSync(join(cp, "grading.json")))
+            runs.push(".");
+        for (const [ridx, rn] of runs.entries()) {
+            const rp = rn === "." ? cp : join(cp, rn), gp = join(rp, "grading.json");
+            if (!existsSync(gp))
+                continue;
+            let grading;
             try {
-                const parsed = JSON.parse(readFileSync(metadataPath, "utf-8"));
-                evalId = parsed.eval_id ?? evalIdx;
+                grading = JSON.parse(readFileSync(gp, "utf8"));
             }
             catch {
-                evalId = evalIdx;
-            }
-        }
-        else {
-            const parts = evalName.split("-");
-            const parsedNum = Number(parts[1]);
-            evalId = Number.isFinite(parsedNum) ? parsedNum : evalIdx;
-        }
-        const configDirs = readdirSync(evalDir)
-            .filter((name) => isDir(join(evalDir, name)))
-            .sort();
-        for (const config of configDirs) {
-            const configDir = join(evalDir, config);
-            let runDirs = listSubdirs(configDir, "run-");
-            if (!runDirs.length && existsSync(join(configDir, "grading.json"))) {
-                runDirs = ["."];
-            }
-            if (!runDirs.length)
+                console.log(`Warning: Invalid JSON in ${gp}`);
                 continue;
-            results[config] = results[config] ?? [];
-            runDirs.forEach((runName, runIndex) => {
-                const runDir = runName === "." ? configDir : join(configDir, runName);
-                const runNumber = runName.startsWith("run-")
-                    ? Number(runName.split("-")[1])
-                    : runIndex + 1;
-                const gradingFile = join(runDir, "grading.json");
-                if (!existsSync(gradingFile)) {
-                    console.log(`Warning: grading.json not found in ${runDir}`);
-                    return;
-                }
-                let grading;
+            }
+            let timing = {};
+            const tp = join(rp, "timing.json");
+            if (existsSync(tp))
                 try {
-                    grading = JSON.parse(readFileSync(gradingFile, "utf-8"));
+                    timing = JSON.parse(readFileSync(tp, "utf8"));
                 }
-                catch (error) {
-                    console.log(`Warning: Invalid JSON in ${gradingFile}: ${error.message}`);
-                    return;
+                catch {
+                    timing = { total_duration_seconds: "malformed" };
                 }
-                const summary = grading.summary ?? {};
-                const result = {
-                    eval_id: evalId,
-                    run_number: runNumber,
-                    pass_rate: summary.pass_rate ?? 0.0,
-                    passed: summary.passed ?? 0,
-                    failed: summary.failed ?? 0,
-                    total: summary.total ?? 0,
-                    time_seconds: 0,
-                    expectations: grading.expectations ?? [],
-                    notes: [],
-                };
-                const timing = grading.timing ?? {};
-                result.time_seconds = timing.total_duration_seconds ?? 0.0;
-                const timingFile = join(runDir, "timing.json");
-                if (existsSync(timingFile)) {
-                    try {
-                        const timingData = JSON.parse(readFileSync(timingFile, "utf-8"));
-                        if (result.time_seconds === 0.0) {
-                            result.time_seconds = timingData.total_duration_seconds ?? 0.0;
-                        }
-                        result.tokens = timingData.total_tokens ?? 0;
-                    }
-                    catch {
-                        // ignore malformed timing.json
-                    }
-                }
-                const metrics = grading.execution_metrics ?? {};
-                result.tool_calls = metrics.total_tool_calls ?? 0;
-                if (!result.tokens) {
-                    result.tokens = metrics.output_chars ?? 0;
-                }
-                result.errors = metrics.errors_encountered ?? 0;
-                const rawExpectations = grading.expectations ?? [];
-                for (const exp of rawExpectations) {
-                    if (!("text" in exp) || !("passed" in exp)) {
-                        console.log(`Warning: expectation in ${gradingFile} missing required fields (text, passed, evidence): ${JSON.stringify(exp)}`);
-                    }
-                }
-                result.expectations = rawExpectations;
-                const notesSummary = grading.user_notes_summary ?? {};
-                const notes = [
-                    ...(notesSummary.uncertainties ?? []),
-                    ...(notesSummary.needs_review ?? []),
-                    ...(notesSummary.workarounds ?? []),
-                ];
-                result.notes = notes;
-                results[config].push(result);
-            });
-        }
-    });
-    return results;
-}
-function aggregateResults(results) {
-    const runSummary = {};
-    const configs = Object.keys(results);
-    for (const config of configs) {
-        const runs = results[config] ?? [];
-        if (!runs.length) {
-            runSummary[config] = {
-                pass_rate: { mean: 0, stddev: 0, min: 0, max: 0 },
-                time_seconds: { mean: 0, stddev: 0, min: 0, max: 0 },
-                tokens: { mean: 0, stddev: 0, min: 0, max: 0 },
-            };
-            continue;
-        }
-        const passRates = runs.map((r) => r.pass_rate);
-        const times = runs.map((r) => r.time_seconds);
-        const tokens = runs.map((r) => r.tokens ?? 0);
-        runSummary[config] = {
-            pass_rate: calculateStats(passRates),
-            time_seconds: calculateStats(times),
-            tokens: calculateStats(tokens),
-        };
-    }
-    const primary = configs.length >= 1 ? runSummary[configs[0]] ?? {} : {};
-    const baseline = configs.length >= 2 ? runSummary[configs[1]] ?? {} : {};
-    const deltaPassRate = (primary.pass_rate?.mean ?? 0) - (baseline.pass_rate?.mean ?? 0);
-    const deltaTime = (primary.time_seconds?.mean ?? 0) - (baseline.time_seconds?.mean ?? 0);
-    const deltaTokens = (primary.tokens?.mean ?? 0) - (baseline.tokens?.mean ?? 0);
-    runSummary.delta = {
-        pass_rate: `${deltaPassRate >= 0 ? "+" : ""}${deltaPassRate.toFixed(2)}`,
-        time_seconds: `${deltaTime >= 0 ? "+" : ""}${deltaTime.toFixed(1)}`,
-        tokens: `${deltaTokens >= 0 ? "+" : ""}${deltaTokens.toFixed(0)}`,
-    };
-    return runSummary;
-}
-function generateBenchmark(benchmarkDir, agentName, agentPath) {
-    const results = loadRunResults(benchmarkDir);
-    const runSummary = aggregateResults(results);
-    const runs = [];
-    for (const config of Object.keys(results)) {
-        for (const result of results[config]) {
-            runs.push({
-                eval_id: result.eval_id,
-                configuration: config,
-                run_number: result.run_number,
-                result: {
-                    pass_rate: result.pass_rate,
-                    passed: result.passed,
-                    failed: result.failed,
-                    total: result.total,
-                    time_seconds: result.time_seconds,
-                    tokens: result.tokens ?? 0,
-                    tool_calls: result.tool_calls ?? 0,
-                    errors: result.errors ?? 0,
-                },
-                expectations: result.expectations,
-                notes: result.notes,
-            });
+            const summary = grading.summary ?? {}, metrics = grading.execution_metrics ?? {};
+            const result = { eval_id: eid, run_number: rn.startsWith("run-") ? Number(rn.split("-")[1]) : ridx + 1, pass_rate: finite(summary.pass_rate), passed: finite(summary.passed), failed: finite(summary.failed), total: finite(summary.total), telemetry: normalizeResourceTelemetry(timing, grading.timing), tool_calls: finite(metrics.total_tool_calls), errors: finite(metrics.errors_encountered), expectations: grading.expectations ?? [], notes: [...(grading.user_notes_summary?.uncertainties ?? []), ...(grading.user_notes_summary?.needs_review ?? []), ...(grading.user_notes_summary?.workarounds ?? [])] };
+            (out[config] ??= []).push(result);
         }
     }
-    const evalIds = Array.from(new Set(Object.values(results).flat().map((r) => r.eval_id))).sort((a, b) => String(a).localeCompare(String(b)));
-    return {
-        metadata: {
-            skill_name: agentName || "<agent-name>",
-            skill_path: agentPath || "<path/to/agent>",
-            executor_model: "<model-name>",
-            analyzer_model: "<model-name>",
-            timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
-            evals_run: evalIds,
-            runs_per_configuration: 3,
-        },
-        runs,
-        run_summary: runSummary,
-        notes: [],
-    };
-}
-function generateMarkdown(benchmark) {
-    const metadata = benchmark.metadata;
-    const runSummary = benchmark.run_summary;
-    const configs = Object.keys(runSummary).filter((k) => k !== "delta");
-    const configA = configs[0] ?? "config_a";
-    const configB = configs[1] ?? "config_b";
-    const titleCase = (s) => s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    const lines = [
-        `# Agent Benchmark: ${metadata.skill_name}`,
-        "",
-        `**Model**: ${metadata.executor_model}`,
-        `**Date**: ${metadata.timestamp}`,
-        `**Evals**: ${metadata.evals_run.join(", ")} (${metadata.runs_per_configuration} runs each per configuration)`,
-        "",
-        "## Summary",
-        "",
-        `| Metric | ${titleCase(configA)} | ${titleCase(configB)} | Delta |`,
-        "|--------|------------|---------------|-------|",
-    ];
-    const aSummary = runSummary[configA] ?? {};
-    const bSummary = runSummary[configB] ?? {};
-    const delta = runSummary.delta ?? {};
-    const aPr = aSummary.pass_rate ?? {};
-    const bPr = bSummary.pass_rate ?? {};
-    lines.push(`| Pass Rate | ${((aPr.mean ?? 0) * 100).toFixed(0)}% ± ${((aPr.stddev ?? 0) * 100).toFixed(0)}% | ${((bPr.mean ?? 0) * 100).toFixed(0)}% ± ${((bPr.stddev ?? 0) * 100).toFixed(0)}% | ${delta.pass_rate ?? "—"} |`);
-    const aTime = aSummary.time_seconds ?? {};
-    const bTime = bSummary.time_seconds ?? {};
-    lines.push(`| Time | ${(aTime.mean ?? 0).toFixed(1)}s ± ${(aTime.stddev ?? 0).toFixed(1)}s | ${(bTime.mean ?? 0).toFixed(1)}s ± ${(bTime.stddev ?? 0).toFixed(1)}s | ${delta.time_seconds ?? "—"}s |`);
-    const aTokens = aSummary.tokens ?? {};
-    const bTokens = bSummary.tokens ?? {};
-    lines.push(`| Tokens | ${(aTokens.mean ?? 0).toFixed(0)} ± ${(aTokens.stddev ?? 0).toFixed(0)} | ${(bTokens.mean ?? 0).toFixed(0)} ± ${(bTokens.stddev ?? 0).toFixed(0)} | ${delta.tokens ?? "—"} |`);
-    if (benchmark.notes?.length) {
-        lines.push("", "## Notes", "");
-        for (const note of benchmark.notes)
-            lines.push(`- ${note}`);
+} return out; }
+function coverage(runs, pick) { const available = runs.filter(r => pick(r).value !== null).length, reasons = {}; for (const r of runs) {
+    const m = pick(r);
+    if (m.value === null)
+        reasons[m.availability_reason ?? "not-exposed"] = (reasons[m.availability_reason ?? "not-exposed"] ?? 0) + 1;
+} return { available, total: runs.length, rate: runs.length ? available / runs.length : null, reasons }; }
+const selections = { time_seconds: (r) => r.telemetry.duration_seconds, tokens: (r) => r.telemetry.tokens, turns: (r) => r.telemetry.turns, cost_usd: (r) => r.telemetry.cost_usd };
+function aggregate(results, threshold) { const result = {}; for (const [c, runs] of Object.entries(results)) {
+    result[c] = { pass_rate: stats(runs.map(r => r.pass_rate)), telemetry_coverage: {} };
+    for (const [k, pick] of Object.entries(selections)) {
+        result[c][k] = stats(runs.map(r => pick(r).value));
+        result[c].telemetry_coverage[k] = coverage(runs, pick);
     }
-    return lines.join("\n");
-}
-function main() {
-    const { positionals, values } = parseArgs({
-        args: process.argv.slice(2),
-        allowPositionals: true,
-        options: {
-            "agent-name": { type: "string", default: "" },
-            "agent-path": { type: "string", default: "" },
-            output: { type: "string", short: "o" },
-        },
-    });
-    const [benchmarkDirArg] = positionals;
-    if (!benchmarkDirArg) {
-        console.error("usage: aggregate_benchmark.js <benchmark_dir> [--agent-name <name>] [--agent-path <path>] [-o <output.json>]");
-        process.exit(2);
+} const cs = Object.keys(results), a = result[cs[0]] ?? {}, b = result[cs[1]] ?? {}; const delta = { pass_rate: a.pass_rate && b.pass_rate ? round(a.pass_rate.mean - b.pass_rate.mean, 4) : null }; for (const k of Object.keys(selections)) {
+    const ca = a.telemetry_coverage?.[k]?.rate ?? 0, cb = b.telemetry_coverage?.[k]?.rate ?? 0, eligible = cs.length >= 2 && ca >= threshold && cb >= threshold && a[k]?.mean !== null && b[k]?.mean !== null;
+    delta[k] = eligible ? round(a[k].mean - b[k].mean, 4) : null;
+} const blocked = Object.keys(selections).filter(k => delta[k] === null); result.delta = delta; result.efficiency_conclusions = { status: blocked.length ? "blocked" : "eligible", minimum_coverage: threshold, blocked_metrics: blocked, reason: blocked.length ? "telemetry-coverage-below-threshold" : null }; return result; }
+function generate(root, name, path, threshold) { const results = load(root), summary = aggregate(results, threshold), runs = []; for (const [c, rs] of Object.entries(results))
+    for (const r of rs)
+        runs.push({ eval_id: r.eval_id, configuration: c, run_number: r.run_number, result: { pass_rate: r.pass_rate, passed: r.passed, failed: r.failed, total: r.total, time_seconds: r.telemetry.duration_seconds.value, tokens: r.telemetry.tokens.value, turns: r.telemetry.turns.value, cost_usd: r.telemetry.cost_usd.value, tool_calls: r.tool_calls, errors: r.errors }, telemetry: r.telemetry, expectations: r.expectations, notes: r.notes }); const current = runs.filter(x => x.configuration === "with_agent").map(x => ({ eval_id: x.eval_id, pair_index: x.run_number, configuration: x.configuration, quality: x.result.pass_rate, latency_seconds: x.result.time_seconds, actual_turns: x.result.turns, tokens: x.result.tokens, cost_usd: x.result.cost_usd })), baseline = runs.filter(x => x.configuration !== "with_agent").map(x => ({ eval_id: x.eval_id, pair_index: x.run_number, configuration: x.configuration, quality: x.result.pass_rate, latency_seconds: x.result.time_seconds, actual_turns: x.result.turns, tokens: x.result.tokens, cost_usd: x.result.cost_usd })); let expectedPairs = 0; for (const en of sub(root, "eval-")) {
+    try {
+        expectedPairs += Number(JSON.parse(readFileSync(join(root, en, "eval_metadata.json"), "utf8")).requested_pairs ?? 0);
     }
-    if (!existsSync(benchmarkDirArg)) {
-        console.log(`Directory not found: ${benchmarkDirArg}`);
-        process.exit(1);
-    }
-    const benchmark = generateBenchmark(benchmarkDirArg, values["agent-name"], values["agent-path"]);
-    const outputJson = values.output || join(benchmarkDirArg, "benchmark.json");
-    const outputMd = outputJson.replace(/\.json$/, ".md");
-    writeFileSync(outputJson, JSON.stringify(benchmark, null, 2));
-    console.log(`Generated: ${outputJson}`);
-    const markdown = generateMarkdown(benchmark);
-    writeFileSync(outputMd, markdown);
-    console.log(`Generated: ${outputMd}`);
-    const runSummary = benchmark.run_summary;
-    const configs = Object.keys(runSummary).filter((k) => k !== "delta");
-    const delta = runSummary.delta ?? {};
-    console.log("\nSummary:");
-    for (const config of configs) {
-        const pr = runSummary[config].pass_rate.mean;
-        const label = config.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-        console.log(`  ${label}: ${(pr * 100).toFixed(1)}% pass rate`);
-    }
-    console.log(`  Delta:         ${delta.pass_rate ?? "—"}`);
-}
+    catch { }
+} if (!expectedPairs)
+    expectedPairs = Math.max(current.length, baseline.length); summary.paired = summarizePairedAgentRuns(current, baseline, expectedPairs); return { schema_version: "2.0", metadata: { skill_name: name || "<agent-name>", skill_path: path || "<path/to/agent>", timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), evals_run: [...new Set(Object.values(results).flat().map(x => x.eval_id))].sort((a, b) => String(a).localeCompare(String(b))), sample_count: runs.length, minimum_telemetry_coverage: threshold }, runs, run_summary: summary, notes: [] }; }
+const fmt = (x, d, suffix = "") => x?.mean === null || x?.mean === undefined ? "unavailable" : `${x.mean.toFixed(d)}${suffix} ± ${x.stddev.toFixed(d)}${suffix} (n=${x.sample_count})`;
+function markdown(b) { const cs = Object.keys(b.run_summary).filter(k => !["delta", "efficiency_conclusions"].includes(k)), a = b.run_summary[cs[0]] ?? {}, z = b.run_summary[cs[1]] ?? {}, d = b.run_summary.delta ?? {}; const row = (label, k, n, s = "") => `| ${label} | ${fmt(a[k], n, s)} | ${fmt(z[k], n, s)} | ${d[k] ?? "blocked"} |`; return [`# Agent Benchmark: ${b.metadata.skill_name}`, "", `**Samples**: ${b.metadata.sample_count}`, `**Minimum telemetry coverage**: ${b.metadata.minimum_telemetry_coverage}`, "", "## Summary", "", `| Metric | ${cs[0] ?? "A"} | ${cs[1] ?? "B"} | Delta |`, "|---|---|---|---|", row("Pass Rate", "pass_rate", 2), row("Time", "time_seconds", 1, "s"), row("Tokens", "tokens", 0), row("Turns", "turns", 0), row("Cost USD", "cost_usd", 4), "", `**Efficiency conclusions**: ${b.run_summary.efficiency_conclusions.status}${b.run_summary.efficiency_conclusions.reason ? ` (${b.run_summary.efficiency_conclusions.reason})` : ""}`].join("\n"); }
+function main() { const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { "agent-name": { type: "string", default: "" }, "agent-path": { type: "string", default: "" }, "minimum-coverage": { type: "string", default: "0.8" }, output: { type: "string", short: "o" } } }), root = positionals[0], threshold = Number(values["minimum-coverage"]); if (!root || !existsSync(root)) {
+    console.error("usage: aggregate_benchmark.js <benchmark_dir> [--minimum-coverage 0..1]");
+    process.exit(2);
+} if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
+    console.error("--minimum-coverage must be between 0 and 1");
+    process.exit(2);
+} const b = generate(root, values["agent-name"], values["agent-path"], threshold), out = values.output || join(root, "benchmark.json"); writeFileSync(out, JSON.stringify(b, null, 2)); writeFileSync(out.replace(/\.json$/, ".md"), markdown(b)); console.log(`Generated: ${out}`); }
 main();

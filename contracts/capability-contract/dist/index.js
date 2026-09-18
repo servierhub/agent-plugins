@@ -27,3 +27,5 @@ export * from "./outcome-metrics-types.js";
 export * from "./outcome-metrics.js";
 export * from "./feedback-annotation-types.js";
 export * from "./feedback-annotation.js";
+export * from "./usage-cost-types.js";
+export * from "./usage-cost.js";

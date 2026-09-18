@@ -83,7 +83,16 @@
     "./feedback-annotation-schema/1.0.0": "./schema/feedback-annotation/1.0.0/feedback-annotation.schema.json",
     "./feedback-proposal-schema/1.0.0": "./schema/feedback-annotation/1.0.0/feedback-proposal.schema.json",
     "./feedback-decision-schema/1.0.0": "./schema/feedback-annotation/1.0.0/feedback-decision.schema.json",
-    "./feedback-decision-result-schema/1.0.0": "./schema/feedback-annotation/1.0.0/feedback-decision-result.schema.json"
+    "./feedback-decision-result-schema/1.0.0": "./schema/feedback-annotation/1.0.0/feedback-decision-result.schema.json",
+    "./usage-cost": {
+      "types": "./dist/usage-cost.d.ts",
+      "default": "./dist/usage-cost.js"
+    },
+    "./usage-cost-types": {
+      "types": "./dist/usage-cost-types.d.ts",
+      "default": "./dist/usage-cost-types.js"
+    },
+    "./usage-cost-schema/1.0.0": "./schema/usage-cost/1.0.0/goose-usage-cost-evidence.schema.json"
   },
   "files": [
     "dist",
@@ -112,7 +121,9 @@
     "OUTCOME_METRICS_SPECIFICATION.md",
     "fixtures/outcome-metrics",
     "FEEDBACK_ANNOTATION_SPECIFICATION.md",
-    "fixtures/feedback-annotation"
+    "fixtures/feedback-annotation",
+    "USAGE_COST_EVIDENCE_SPECIFICATION.md",
+    "fixtures/usage-cost"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

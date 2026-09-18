@@ -36,6 +36,9 @@ import { parseArgs } from "node:util";
 
 interface Stats {
   mean: number | null;
+  p50: number | null;
+  p95: number | null;
+  sample_count: number;
   stddev: number | null;
   confidence_interval_95: { lower: number; upper: number } | null;
   statistically_valid: boolean;
@@ -64,8 +67,16 @@ function round(value: number, digits: number): number {
   return Math.round(value * factor) / factor;
 }
 
+function percentile(values: number[], quantile: number): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = (sorted.length - 1) * quantile;
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  return round(sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower), 4);
+}
+
 function calculateStats(values: number[]): Stats {
-  if (!values.length) return { mean: null, stddev: null, confidence_interval_95: null, statistically_valid: false, min: null, max: null, count: 0 };
+  if (!values.length) return { mean: null, p50: null, p95: null, sample_count: 0, stddev: null, confidence_interval_95: null, statistically_valid: false, min: null, max: null, count: 0 };
   const n = values.length;
   const mean = values.reduce((a, b) => a + b, 0) / n;
   let stddev: number | null = null;
@@ -81,6 +92,9 @@ function calculateStats(values: number[]): Stats {
   const margin=stddev===null?null:t95*stddev/Math.sqrt(n);
   return {
     mean: round(mean, 4),
+    p50: percentile(values, 0.5),
+    p95: percentile(values, 0.95),
+    sample_count: n,
     stddev: stddev===null?null:round(stddev, 4),
     confidence_interval_95: margin===null?null:{lower:round(mean-margin,4),upper:round(mean+margin,4)},
     statistically_valid: n>1,

@@ -91,7 +91,7 @@ node dist/scripts/run_eval.js \
   --verbose
 ```
 
-The eval set is a JSON array of objects with `query` and `should_trigger` fields.
+The eval set is a JSON array of objects with `query` and `should_trigger` fields. Output preserves the legacy result fields and additively includes versioned per-run outcomes, infrastructure-failure counts, confusion metrics, latency distributions, usage/cost availability, and telemetry coverage. See [the trigger evaluation reference](references/trigger-evaluation.md).
 
 ## Optimize a description
 
