@@ -8,12 +8,13 @@ import { validateAgentPluginSchema } from "./validate_agent_plugin_schema.js";
 import { fullEval } from "./full_eval.js";
 import { runCiEval } from "./ci_eval.js";
 import { inspectGoldenEvidence, listGoldenJourneys, runGoldenJourney } from "./golden_journeys.js";
+import { analyzeDecisionResearchFile } from "./decision_comprehension.js";
 import { renderCiProgress, renderHistoricalReview, renderMachineJsonl, renderTerminalProgress } from "./progress_projections.js";
 import { replayExecutionEvents } from "./execution_event_stream.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval|ci-eval|independent-review|golden-e2e> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--approval FILE --approval-trust-policy FILE --test-evidence FILE] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--production] [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nindependent-review options:\n  --config FILE --host COMMAND [--host-arg ARG ...]  Run isolated review branches\n\nci-eval options:\n  --config FILE        Provider-neutral, non-interactive CI configuration\n\ngolden-e2e options:\n  --list | --journey ID --workspace DIR [--profile novice|expert]\n  [--override key=value ...] [--resume] [--cancel] [--inspect] [--stale-after-ms MS]\n\nCI exit codes: 0 success, 1 evaluation failure, 2 invalid config, 3 blocked capability/evidence, 4 pending approval.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval|ci-eval|independent-review|golden-e2e|decision-research> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--approval FILE --approval-trust-policy FILE --test-evidence FILE] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--production] [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nindependent-review options:\n  --config FILE --host COMMAND [--host-arg ARG ...]  Run isolated review branches\n\nci-eval options:\n  --config FILE        Provider-neutral, non-interactive CI configuration\n\ngolden-e2e options:\n  --list | --journey ID --workspace DIR [--profile novice|expert]\n  [--override key=value ...] [--resume] [--cancel] [--inspect] [--stale-after-ms MS]\n\ndecision-research options:\n  --input FILE        Analyze anonymous research sessions offline\n\nCI exit codes: 0 success, 1 evaluation failure, 2 invalid config, 3 blocked capability/evidence, 4 pending approval.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -166,11 +167,24 @@ async function runFullEval(o) {
 export async function runCli(argv) { const [command, ...raw] = argv; if (!command || command === "--help" || command === "-h") {
     console.log(HELP);
     return 0;
-} if (!["init", "validate", "migrate", "verify", "package", "full-eval", "ci-eval", "independent-review", "golden-e2e"].includes(command))
+} if (!["init", "validate", "migrate", "verify", "package", "full-eval", "ci-eval", "independent-review", "golden-e2e", "decision-research"].includes(command))
     return usage("Unknown command: " + command); const o = parseCommon(raw); if (typeof o === "string")
     return usage(o); if (o.help) {
     console.log(HELP);
     return 0;
+} if (command === "decision-research") {
+    const i = o.args.indexOf("--input"), input = i >= 0 ? o.args[i + 1] : undefined;
+    if (!input || o.args.length !== 2)
+        return usage("decision-research requires --input FILE");
+    try {
+        const result = analyzeDecisionResearchFile(input);
+        emit(result, "Decision research: " + result.status, o);
+        return result.status === "pass" ? EXIT_SUCCESS : EXIT_BLOCKED;
+    }
+    catch (error) {
+        console.error(error.message);
+        return EXIT_USAGE;
+    }
 } if (command === "golden-e2e") {
     try {
         if (o.args.includes("--list")) {

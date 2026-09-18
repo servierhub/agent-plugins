@@ -40,6 +40,6 @@ test("host reasons stdout stderr and errors are redacted from output",()=>{
 });
 
 test("copied shipped dist and vendor run offline without npm install or build",()=>{
- const x=setup(),copy=join(x.dir,"distribution"),source=ROOT;mkdirSync(copy);for(const name of ["dist","vendor"]){cpSync(join(source,name),join(copy,name),{recursive:true})}const cli=join(copy,"dist/scripts/cli.js"),r=spawnSync(process.execPath,[cli,"--help"],{encoding:"utf8",cwd:x.dir,env:{PATH:"",HOME:x.dir}});assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/ci-eval/)
+ const x=setup(),copy=join(x.dir,"distribution"),source=ROOT;mkdirSync(copy);for(const name of ["dist","vendor"]){cpSync(join(source,name),join(copy,name),{recursive:true})}cpSync(join(source,"assets/decision-comprehension"),join(copy,"assets/decision-comprehension"),{recursive:true});const cli=join(copy,"dist/scripts/cli.js"),r=spawnSync(process.execPath,[cli,"--help"],{encoding:"utf8",cwd:x.dir,env:{PATH:"",HOME:x.dir}});assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/ci-eval/)
 });
 

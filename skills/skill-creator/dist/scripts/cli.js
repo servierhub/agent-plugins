@@ -18,6 +18,7 @@ const commands = {
     verify: { entry: "verify_skill_gates.js", usage: "verify <skill-directory> [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
     package: { entry: "package_skill.js", usage: "package <skill-directory> [output-directory]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
     "usability-study": { entry: "usability_study.js", usage: "usability-study [--validate] <session.json|sessions-directory|sessions.json> [-o report.json]", required: (a) => a.some((value) => !value.startsWith("-")) },
+    "screen-reader-acceptance": { entry: "screen_reader_acceptance.js", usage: "screen-reader-acceptance <records> [--attestations <receipts>] | --create-attestation-request <record> --issued-at <UTC> --expires-at <UTC> | --verify-attestation <receipt> --record <record> | --create-policy-signing-request <proposed-policy>", required: (a) => a.some((value) => !value.startsWith("-")) },
 };
 function hasValue(args, option) {
     const index = args.indexOf(option);
@@ -48,6 +49,7 @@ Commands:
   verify        Verify release gates
   package       Build a distributable .skill archive
   usability-study Validate or analyze governed anonymous study sessions
+  screen-reader-acceptance Validate or analyze manual screen-reader records
 
 Run "skill-creator <command> --help" for command usage.`;
 }

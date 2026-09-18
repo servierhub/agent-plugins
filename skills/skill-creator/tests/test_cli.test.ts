@@ -36,7 +36,7 @@ test("quiet suppresses successful text output", () => {
 });
 
 test("every unified subcommand exposes help", () => {
-  for (const command of ["candidate", "validate", "audit", "design-evals", "freeze-evals", "analyze", "evidence-loop", "full-eval", "trigger-eval", "aggregate", "review", "verify", "package", "usability-study"]) assert.equal(invoke([command, "--help"]).status, 0, command);
+  for (const command of ["candidate", "validate", "audit", "design-evals", "freeze-evals", "analyze", "evidence-loop", "full-eval", "trigger-eval", "aggregate", "review", "verify", "package", "usability-study", "screen-reader-acceptance"]) assert.equal(invoke([command, "--help"]).status, 0, command);
 });
 
 test("verify maps an incomplete release pipeline to blocked", () => {
@@ -55,4 +55,17 @@ test("audit exposes stable authoring findings and pattern decisions", () => {
   assert.equal(body.command, "audit");
   assert.equal(body.output.artifact, "skill-authoring-audit");
   assert.ok(Array.isArray(body.output.pattern_review));
+});
+
+
+test("screen-reader command fails closed on trust-policy injection and unknown options", () => {
+  for (const args of [
+    ["screen-reader-acceptance", "--trust-policy", "attacker.json", "records.json"],
+    ["screen-reader-acceptance", "--trust-policy=attacker.json", "records.json"],
+    ["screen-reader-acceptance", "records.json", "--unknown-option"],
+  ]) {
+    const result = invoke(args);
+    assert.notEqual(result.status, 0, args.join(" "));
+    assert.match(result.stderr, /(?:trust-policy.*forbidden|unknown option)/i);
+  }
 });

@@ -133,9 +133,13 @@ A deliverable is ready only when the 1.0.0 manifest is valid; portable component
 
 For offline factory acceptance from a natural-language idea, run `dist/scripts/cli.js golden-e2e`. Prefer novice defaults unless bounded expert overrides are requested. The deterministic adapter executes local generation, shipped validators, and fixture assertions (`executed: true`) but explicitly records that no LLM ran (`llm_executed: false`). Verify archive provenance and record-derived metrics. Passing thresholds still leaves production approval pending and must never activate an artifact. See [Golden end-to-end journeys](references/golden-e2e-journeys.md).
 
+## Decision-comprehension research
+
+When testing whether developers and nonexperts understand validation, evaluation, blocked, and approval-required reports, use the offline `decision-research` analyzer. Enforce anonymous consented sessions, neutral facilitation, retention limits, both cohorts, all three tasks, and the blocking thresholds. Never treat synthetic fixtures as evidence. See [Decision-comprehension research kit](references/decision-comprehension-research.md).
+
 ## Utilities
 
-- `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, `package`, `full-eval`, and `independent-review` interface.
+- `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, `package`, `full-eval`, `independent-review`, and `decision-research` interface.
 - `references/goose-plugin-format.md`: layouts, schemas, Goose namespace, and migrations.
 - `references/portable-conformance.md`: load, authoring, and release semantics.
 - `references/goose-hooks.md`: recorded Goose hook behavior.

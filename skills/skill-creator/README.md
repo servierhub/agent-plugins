@@ -38,6 +38,8 @@ node dist/scripts/cli.js review /path/to/iteration-workspace --static review.htm
 node dist/scripts/cli.js evidence-loop /path/to/iteration-workspace --skill-path /path/to/skill --loop /path/to/separate-ledger
 node dist/scripts/cli.js usability-study --validate /path/to/session.json --format json
 node dist/scripts/cli.js usability-study /path/to/anonymous-sessions --format json
+node dist/scripts/cli.js screen-reader-acceptance --validate /path/to/anonymous-record.json --format json
+node dist/scripts/cli.js screen-reader-acceptance /path/to/anonymous-records --attestations /path/to/receipts --format json
 node dist/scripts/cli.js verify /path/to/skill --evaluation benchmark.json --human-review feedback.json
 node dist/scripts/cli.js package /path/to/skill ./dist-out
 ```
@@ -118,6 +120,10 @@ Only the skill directory and `SKILL.md` contract are covered by the Agent Skills
 ## Governed usability study kit
 
 `references/usability-study-kit.md` provides the consent script, facilitator protocol, cohort tasks, retention rules, and metric definitions. Session records are strict, anonymous, consent-required JSON validated against `assets/usability-study/session.schema.json`. Checked-in fixtures are explicitly synthetic validator data, never participant evidence. The deterministic analyzer requires at least five sessions and both developer and nonexpert cohorts before evaluating the 80% completion-without-correction threshold. It classifies findings and prints suggested P0/P1 `bd create` commands without executing them.
+
+## Manual screen-reader acceptance kit
+
+`references/screen-reader-acceptance-kit.md` defines the required NVDA/Windows and VoiceOver/Safari combinations and seven static/live tasks. Records bind the canonical protocol version and SHA-256, exact mode/task expectations, a shared report-build SHA-256, concrete semver-like AT/browser/OS versions, reviewer pseudocode, bounded structured evidence, privacy review, at-most-90-day retention, and severity-ranked findings. Unavailable combinations are documented but never pass. A separate qualified-reviewer trust policy allowlists Ed25519 public keys and actions; DSSE-like receipts bind the exact complete record and expire. The CLI creates unsigned signing requests and verifies receipts, but never handles private keys. The deterministic analyzer returns `PASS` only for complete non-synthetic manual evidence with current trusted signatures with all tasks passing and no P0/P1 findings; checked-in fixtures are explicitly non-evidence.
 
 ## Attribution and license
 
