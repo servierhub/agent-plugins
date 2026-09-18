@@ -1180,6 +1180,46 @@
         "diagnostic": null,
         "validatorId": "artifact:component-evidence-receipt"
       }
+    },
+    {
+      "id": "agent.eval-metadata.v2",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/agent.eval-metadata.v2.json",
+        "diagnostic": null,
+        "validatorId": "artifact:agent-eval-metadata-v2"
+      }
+    },
+    {
+      "id": "agent.semantic-grading.v2",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/agent.semantic-grading.v2.json",
+        "diagnostic": null,
+        "validatorId": "artifact:semantic-grading"
+      }
+    },
+    {
+      "id": "plugin.independent-review.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/plugin.independent-review.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:independent-review"
+      }
+    },
+    {
+      "id": "hook.evaluation-run-manifest.v1",
+      "expectedOutcome": {
+        "mode": "read-supported",
+        "format": "json",
+        "fixture": "cases/hook.evaluation-run-manifest.v1.json",
+        "diagnostic": null,
+        "validatorId": "artifact:evaluation-run-manifest"
+      }
     }
   ]
 }

@@ -4,6 +4,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileS
 import { createHash } from "node:crypto";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
+import { assertionHashFromManifest, normalizeAssertions } from "./assertion_grading.js";
 export const JOB_SCHEMA = "agent-creator.evidence-job/v1";
 export const RUN_SCHEMA = "agent-creator.evidence-run/v1";
 export const TRUST_LEVELS = ["unverified", "human-reviewed", "independently-verified"];
@@ -179,8 +180,18 @@ function metadata(evalCase) {
     };
 }
 /** Render the canonical workspace shape consumed by grading and aggregation. */
-function workspaceMetadata(evalCase) {
+function workspaceMetadata(evalCase, job) {
+    // External variants are pinned to the checksummed job manifest. The importing runner
+    // cannot silently substitute a configuration without changing this source identity.
+    const variantSources = Object.fromEntries(job.configurations.map(configuration => [configuration, {
+            source_sha256: sha256(canonicalJson({ job_id: job.job_id, configuration, agent_sha256: job.agent.sha256 })),
+        }]));
+    const assertions = normalizeAssertions(evalCase.assertions);
     return {
+        schema_version: 2,
+        assertion_hash: assertionHashFromManifest(assertions, variantSources),
+        variants: [...job.configurations].sort(),
+        variant_sources: variantSources,
         eval_id: evalCase.id,
         eval_name: evalCase.name,
         prompt: evalCase.prompt,
@@ -191,7 +202,7 @@ function workspaceMetadata(evalCase) {
         files: evalCase.files,
         capabilities: evalCase.capabilities,
         coverage_tags: evalCase.coverage_tags,
-        assertions: evalCase.assertions,
+        assertions,
     };
 }
 function validateEvalCases(document) {
@@ -208,9 +219,17 @@ function validateEvalCases(document) {
         ids.add(String(item.id));
         if (typeof item.prompt !== "string" || !item.prompt.trim())
             throw new EvidenceDiagnostic("INVALID_EVAL_SET", `Eval ${item.id} requires a prompt`);
-        for (const field of ["preconditions", "files", "coverage_tags", "assertions"])
+        for (const field of ["preconditions", "files", "coverage_tags"])
             if (item[field] !== undefined && (!Array.isArray(item[field]) || !item[field].every((v) => typeof v === "string")))
                 throw new EvidenceDiagnostic("INVALID_EVAL_SET", `Eval ${item.id} ${field} must be strings`);
+        if (item.assertions !== undefined && !Array.isArray(item.assertions))
+            throw new EvidenceDiagnostic("INVALID_EVAL_SET", `Eval ${item.id} assertions must be a list`);
+        try {
+            normalizeAssertions(item.assertions ?? []);
+        }
+        catch (error) {
+            throw new EvidenceDiagnostic("INVALID_EVAL_SET", `Eval ${item.id} assertions are invalid: ${error.message}`);
+        }
     }
     return document.evals;
 }
@@ -340,15 +359,17 @@ export function importEvidenceRun(options) {
     const evalDir = join(workspace, evalDirectoryName(run.eval_id));
     assertInside(workspace, evalDir);
     const metadataPath = join(evalDir, "eval_metadata.json");
+    const expectedMetadata = workspaceMetadata(evalCase, job);
     if (existsSync(metadataPath)) {
         const existingMetadata = readJson(metadataPath);
-        const actual = metadata(existingMetadata);
-        const digest = sha256(canonicalJson(actual));
-        if (digest !== evalCase.metadata_sha256 || existingMetadata.eval_id !== evalCase.id)
+        if (canonicalJson(existingMetadata) !== canonicalJson(expectedMetadata))
             throw new EvidenceDiagnostic("STALE_EVAL", `Workspace metadata for eval ${run.eval_id} does not match job ${job.job_id}`);
     }
     const destination = join(evalDir, run.configuration);
     assertInside(workspace, destination);
+    const assertionMarker = join(destination, "assertion_hash.txt");
+    if (existsSync(assertionMarker) && readFileSync(assertionMarker, "utf-8").trim() !== expectedMetadata.assertion_hash)
+        throw new EvidenceDiagnostic("STALE_EVAL", `Assertion/variant marker for eval ${run.eval_id}/${run.configuration} does not match job ${job.job_id}`);
     const evidencePath = join(destination, "evidence.json");
     const evidenceText = `${canonicalJson(run)}\n`, evidenceHash = sha256(evidenceText);
     if (existsSync(evidencePath)) {
@@ -360,9 +381,10 @@ export function importEvidenceRun(options) {
     if (!existsSync(marker))
         writeFileSync(marker, `${JSON.stringify({ schema_version: JOB_SCHEMA, job_id: job.job_id }, null, 2)}\n`);
     if (!existsSync(metadataPath))
-        writeFileSync(metadataPath, `${JSON.stringify(workspaceMetadata(evalCase), null, 2)}\n`);
+        writeFileSync(metadataPath, `${JSON.stringify(expectedMetadata, null, 2)}\n`);
     writeFileSync(join(destination, "outputs", "response.md"), `${run.response.text.replace(/\n?$/, "\n")}`);
     writeFileSync(join(destination, "timing.json"), `${JSON.stringify(run.timing, null, 2)}\n`);
+    writeFileSync(assertionMarker, `${expectedMetadata.assertion_hash}\n`);
     writeFileSync(join(destination, "transcript.json"), `${JSON.stringify({
         schema_version: RUN_SCHEMA, imported: true, messages: [{ role: "assistant", content: [{ type: "text", text: run.response.text }] }],
         provenance: run.provenance, trust: run.trust,

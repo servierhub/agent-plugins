@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validate } from "./validate_goose_plugin.js";
@@ -11,7 +12,7 @@ import { replayExecutionEvents } from "./execution_event_stream.js";
 import { loadPortablePlugin } from "./portable_loader.js";
 export const EXIT_SUCCESS = 0, EXIT_FAILURE = 1, EXIT_USAGE = 2, EXIT_BLOCKED = 3;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval|ci-eval> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nci-eval options:\n  --config FILE        Provider-neutral, non-interactive CI configuration\n\nCI exit codes: 0 success, 1 evaluation failure, 2 invalid config, 3 blocked capability/evidence, 4 pending approval.";
+const HELP = "Usage: plugin-creator <init|validate|migrate|verify|package|full-eval|ci-eval|independent-review> [options]\n\nCommon options:\n  --format text|json|jsonl|ci|review  Output format (default: text)\n  --mode portable-load|strict-authoring  Validation mode\n  --quiet             Suppress normal output\n  --help              Show help\n\nfull-eval options:\n  <plugin-dir> [--workspace DIR] [--component-receipt FILE ...]\n  [--integration DIR] [--archive ZIP] [--tests-status STATUS]\n  [--human-review pass|pending|na] [--total-budget-ms MS] [--heartbeat-ms MS] [--stale-after-ms MS] [--lease-ms MS] [--cancellation-grace-ms MS]\n  [--dry-run] [--resume] [--cancel] [--progress quiet|normal|verbose]\n\nindependent-review options:\n  --config FILE --host COMMAND [--host-arg ARG ...]  Run isolated review branches\n\nci-eval options:\n  --config FILE        Provider-neutral, non-interactive CI configuration\n\nCI exit codes: 0 success, 1 evaluation failure, 2 invalid config, 3 blocked capability/evidence, 4 pending approval.";
 function parseCommon(args) { let format = "text", mode = "strict-authoring", quiet = false, help = false; const rest = []; for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--quiet" || a === "-q")
@@ -156,11 +157,30 @@ async function runFullEval(o) {
 export async function runCli(argv) { const [command, ...raw] = argv; if (!command || command === "--help" || command === "-h") {
     console.log(HELP);
     return 0;
-} if (!["init", "validate", "migrate", "verify", "package", "full-eval", "ci-eval"].includes(command))
+} if (!["init", "validate", "migrate", "verify", "package", "full-eval", "ci-eval", "independent-review"].includes(command))
     return usage("Unknown command: " + command); const o = parseCommon(raw); if (typeof o === "string")
     return usage(o); if (o.help) {
     console.log(HELP);
     return 0;
+} if (command === "independent-review") {
+    const ci = o.args.indexOf("--config"), hi = o.args.indexOf("--host"), configPath = ci >= 0 ? o.args[ci + 1] : undefined, host = hi >= 0 ? o.args[hi + 1] : undefined, hostArgs = [];
+    for (let i = 0; i < o.args.length; i++)
+        if (o.args[i] === "--host-arg") {
+            if (!o.args[i + 1])
+                return usage("--host-arg requires a value");
+            hostArgs.push(o.args[++i]);
+        }
+    if (!configPath || !host)
+        return usage("independent-review requires --config FILE --host COMMAND");
+    try {
+        const { runIndependentReview, commandBranchHost } = await import("./independent_review.js"), config = JSON.parse(readFileSync(resolve(configPath), "utf8")), result = await runIndependentReview(config, commandBranchHost(host, hostArgs));
+        emit(result, "Independent review: " + result.runId + " (" + result.branches.filter(x => x.status === "succeeded").length + "/" + result.branches.length + " branches succeeded)", o);
+        return result.branches.some(x => x.status !== "succeeded") ? EXIT_FAILURE : EXIT_SUCCESS;
+    }
+    catch (error) {
+        console.error(error.message);
+        return EXIT_USAGE;
+    }
 } if (command === "ci-eval") {
     const i = o.args.indexOf("--config"), path = i >= 0 ? o.args[i + 1] : undefined;
     if (!path || o.args.length !== 2)

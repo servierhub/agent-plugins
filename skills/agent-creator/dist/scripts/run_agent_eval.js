@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { parseArgs } from "node:util";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { normalizeAssertions, assertionHash, variantManifest } from "./assertion_grading.js";
 import { parseAgent, renderAgent } from "./agent_format.js";
 import { createExecutionHeartbeat } from "./execution_heartbeat.js";
 const execFileAsync = promisify(execFile);
@@ -108,6 +109,8 @@ async function runCase(evalCase, configuration, agentPath, workspace, gooseComma
         total_duration_seconds: Math.round(duration * 1000) / 1000,
     };
     writeFileSync(join(runDir, "timing.json"), `${JSON.stringify(timing, null, 2)}\n`, "utf-8");
+    const evalMetadata = JSON.parse(readFileSync(join(workspace, `eval-${evalId}`, "eval_metadata.json"), "utf-8"));
+    writeFileSync(join(runDir, "assertion_hash.txt"), `${evalMetadata.assertion_hash}\n`, "utf-8");
     return { eval_id: evalId, configuration, ...timing };
 }
 export function validateEvalSet(document) {
@@ -138,9 +141,9 @@ export function validateEvalSet(document) {
         if (!Array.isArray(evalCase.files) || !evalCase.files.every(item => typeof item === "string"))
             throw new Error(`Eval ${evalCase.id} files must be a list of strings`);
         const assertions = evalCase.assertions ?? [];
-        if (!Array.isArray(assertions) || !assertions.every((item) => typeof item === "string")) {
-            throw new Error(`Eval ${evalCase.id} assertions must be a list of strings`);
-        }
+        if (!Array.isArray(assertions))
+            throw new Error(`Eval ${evalCase.id} assertions must be a list`);
+        normalizeAssertions(assertions);
     }
     return cases;
 }
@@ -185,23 +188,6 @@ async function main() {
     const cases = validateEvalSet(JSON.parse(readFileSync(evalSetPath, "utf-8")));
     const workspace = resolve(values.workspace);
     mkdirSync(workspace, { recursive: true });
-    for (const evalCase of cases) {
-        const evalDir = join(workspace, `eval-${evalCase.id}`);
-        mkdirSync(evalDir, { recursive: true });
-        writeFileSync(join(evalDir, "eval_metadata.json"), `${JSON.stringify({
-            eval_id: evalCase.id,
-            eval_name: evalCase.name ?? String(evalCase.id),
-            prompt: evalCase.prompt,
-            subject: evalCase.subject ?? "",
-            language: evalCase.language ?? "",
-            target: evalCase.target ?? {},
-            preconditions: evalCase.preconditions ?? [],
-            files: evalCase.files ?? [],
-            capabilities: evalCase.capabilities ?? {},
-            coverage_tags: evalCase.coverage_tags ?? [],
-            assertions: evalCase.assertions ?? [],
-        }, null, 2)}\n`);
-    }
     const temporary = mkdtempSync(join(tmpdir(), "agent-baseline-"));
     let baselineConfiguration;
     let baselinePath;
@@ -216,6 +202,32 @@ async function main() {
             baselinePath = join(temporary, `${baselineName}.md`);
             writeFileSync(baselinePath, baselineAgent(agent, baselineName), "utf-8");
             baselineConfiguration = "without_agent_instructions";
+        }
+        const variantDocuments = {
+            with_agent: readFileSync(agentPath, "utf-8"),
+            [baselineConfiguration]: readFileSync(baselinePath, "utf-8"),
+        };
+        for (const evalCase of cases) {
+            const assertions = normalizeAssertions(evalCase.assertions ?? []);
+            const evalDir = join(workspace, `eval-${evalCase.id}`);
+            mkdirSync(evalDir, { recursive: true });
+            writeFileSync(join(evalDir, "eval_metadata.json"), JSON.stringify({
+                schema_version: 2,
+                eval_id: evalCase.id,
+                eval_name: evalCase.name ?? String(evalCase.id),
+                prompt: evalCase.prompt,
+                subject: evalCase.subject ?? "",
+                language: evalCase.language ?? "",
+                target: evalCase.target ?? {},
+                preconditions: evalCase.preconditions ?? [],
+                files: evalCase.files ?? [],
+                capabilities: evalCase.capabilities ?? {},
+                coverage_tags: evalCase.coverage_tags ?? [],
+                assertions,
+                variants: Object.keys(variantDocuments).sort(),
+                variant_sources: variantManifest(variantDocuments),
+                assertion_hash: assertionHash(assertions, variantDocuments),
+            }, null, 2) + "\n");
         }
         const jobs = [];
         for (const evalCase of cases) {

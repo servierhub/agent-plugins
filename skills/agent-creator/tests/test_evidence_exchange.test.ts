@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   EvidenceDiagnostic, JOB_SCHEMA, RUN_SCHEMA, canonicalJson, exportEvidenceJob, importEvidenceRun, sha256, validateEvidenceRun,
 } from "../dist/scripts/evidence_exchange.js";
+import { assertionHashFromManifest, normalizeAssertions } from "../dist/scripts/assertion_grading.js";
 
 function setup() {
   const root = mkdtempSync(join(tmpdir(), "evidence-exchange-"));
@@ -53,8 +54,14 @@ test("imports canonical evidence into evaluation layout and duplicate import is 
     const second = importEvidenceRun({ jobPath: join(state.bundle, "job.json"), runPath, workspace });
     assert.equal(first.status, "imported");
     assert.equal(second.status, "duplicate");
-    assert.equal(readFileSync(join(workspace, "eval-risk", "with_agent", "outputs", "response.md"), "utf-8"), "Risk found.\n");
-    assert.equal(JSON.parse(readFileSync(join(workspace, "eval-risk", "with_agent", "evidence.json"), "utf-8")).provenance.source, "manual");
+    const evalDir = join(workspace, "eval-risk"), metadata = JSON.parse(readFileSync(join(evalDir, "eval_metadata.json"), "utf-8"));
+    const independentlyComputed = assertionHashFromManifest(normalizeAssertions(metadata.assertions), metadata.variant_sources);
+    assert.equal(metadata.schema_version, 2);
+    assert.deepEqual(metadata.variants, ["with_agent", "without_agent_instructions"]);
+    assert.equal(metadata.assertion_hash, independentlyComputed);
+    assert.equal(readFileSync(join(evalDir, "with_agent", "assertion_hash.txt"), "utf-8"), independentlyComputed + "\n");
+    assert.equal(readFileSync(join(evalDir, "with_agent", "outputs", "response.md"), "utf-8"), "Risk found.\n");
+    assert.equal(JSON.parse(readFileSync(join(evalDir, "with_agent", "evidence.json"), "utf-8")).provenance.source, "manual");
   } finally { rmSync(state.root, { recursive: true, force: true }); }
 });
 
@@ -106,6 +113,45 @@ test("reports wrong-job, stale workspace, conflicting duplicates, and stale bund
     assert.throws(() => importEvidenceRun({ jobPath, runPath, workspace }), (e: any) => e.code === "DUPLICATE_CONFLICT");
     writeFileSync(join(state.bundle, "fixtures", "fixtures", "change.txt"), "tampered\n");
     assert.throws(() => importEvidenceRun({ jobPath, runPath, workspace: join(state.root, "other") }), (e: any) => e.code === "STALE_BUNDLE");
+  } finally { rmSync(state.root, { recursive: true, force: true }); }
+});
+
+test("rejects tampered canonical import metadata and run markers with typed stale-eval diagnostics", () => {
+  for (const tamper of [
+    (workspace: string) => {
+      const path = join(workspace, "eval-risk", "eval_metadata.json"), document = JSON.parse(readFileSync(path, "utf-8"));
+      document.assertions[0].criterion = "tampered while retaining copied hash";
+      writeFileSync(path, JSON.stringify(document));
+    },
+    (workspace: string) => writeFileSync(join(workspace, "eval-risk", "with_agent", "assertion_hash.txt"), "0".repeat(64) + "\n"),
+  ]) {
+    const state = setup();
+    try {
+      const workspace = join(state.root, "workspace"), runPath = join(state.root, "run.json"), jobPath = join(state.bundle, "job.json");
+      writeFileSync(runPath, JSON.stringify(runFor(state.job)));
+      importEvidenceRun({ jobPath, runPath, workspace });
+      tamper(workspace);
+      assert.throws(() => importEvidenceRun({ jobPath, runPath, workspace }),
+        (error: any) => error instanceof EvidenceDiagnostic && error.code === "STALE_EVAL");
+    } finally { rmSync(state.root, { recursive: true, force: true }); }
+  }
+});
+
+test("exports object assertions and reports malformed assertions as typed eval-set diagnostics", () => {
+  const state = setup();
+  try {
+    const evalSetPath = join(state.root, "sources", "evals.json"), document = JSON.parse(readFileSync(evalSetPath, "utf-8"));
+    document.evals[0].assertions = [{ id: "risk-found", version: 2, classification: "deterministic", criterion: "Names risk", checker: { kind: "contains", value: "risk" } }];
+    writeFileSync(evalSetPath, JSON.stringify(document));
+    const job = exportEvidenceJob({ agentPath: join(state.root, "sources", "reviewer.md"), evalSetPath,
+      outputDir: join(state.root, "object-bundle"), fixtureRoot: join(state.root, "sources") });
+    assert.equal((job.evals[0].assertions[0] as any).id, "risk-found");
+
+    document.evals[0].assertions[0].version = 0;
+    writeFileSync(evalSetPath, JSON.stringify(document));
+    assert.throws(() => exportEvidenceJob({ agentPath: join(state.root, "sources", "reviewer.md"), evalSetPath,
+      outputDir: join(state.root, "invalid-bundle"), fixtureRoot: join(state.root, "sources") }),
+      (error: any) => error instanceof EvidenceDiagnostic && error.code === "INVALID_EVAL_SET" && /positive integer version/.test(error.message));
   } finally { rmSync(state.root, { recursive: true, force: true }); }
 });
 

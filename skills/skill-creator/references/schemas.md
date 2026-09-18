@@ -76,6 +76,7 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
 - `evals[].target`: Structured target identity such as current/baseline Skill paths, a workspace, or a new output name; its `execution` is one of `explain`, `dry-run`, `execute`, or `resume`
 - `evals[].preconditions`: Fixture immutability, baseline, capability, and workspace assumptions
 - `evals[].budget`: Positive `max_turns` and `timeout_seconds` for executable agent scenarios, sized to the artifacts explicitly required; the Goose paired adapter defaults omitted `max_turns` to 40
+- `aggregate_budget`: Root execution cap with positive integer `max_runs`, `max_turns`, and `timeout_seconds`; required for `standard` (3 pairs) and `release` (5 pairs), and validated against every scenario/configuration repetition.
 - `evals[].model`: Optional host model identifier enforced for that scenario; the full-eval `--model` override applies to every paired run
 - `evals[].expected_output`: Human-readable description of success
 - `evals[].files`: Optional list of input file paths (relative to skill root)

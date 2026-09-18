@@ -1,13 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, chmodSync, rmSync, symlinkSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { parseAgent, renderAgent, AgentFormatError } from "../dist/scripts/agent_format.js";
 import { extractAssistantText, validateEvalSet } from "../dist/scripts/run_agent_eval.js";
-import { deterministicGrade } from "../dist/scripts/grade_agent_eval.js";
+import { deterministicGrade, resolveJudgments } from "../dist/scripts/grade_agent_eval.js";
+import { normalizeAssertions, assertionHash, runDeterministic, variantManifest } from "../dist/scripts/assertion_grading.js";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = join(HERE, "..");
@@ -110,15 +111,104 @@ test("eval set validation and output extraction", () => {
   });
   assert.equal(text, "Found a risk");
 });
-
-test("deterministic eval grading", () => {
-  assert.deepEqual(deterministicGrade("contains: security", "Security issue"), {
-    passed: true,
-    evidence: "Expected response to contain: 'security'",
-  });
+test("deterministic eval grading emits reproducible contained evidence", () => {
+  const first = deterministicGrade("contains: security", "Security issue")!;
+  assert.deepEqual(first, deterministicGrade("contains: security", "Security issue"));
+  assert.equal(first.passed, true);
+  assert.deepEqual((first.evidence as any).span, { start: 0, end: 8, quote: "Security" });
+  assert.match((first.evidence as any).response_sha256, /^[a-f0-9]{64}$/);
   assert.equal(deterministicGrade("not-contains: safe", "unsafe change")?.passed, false);
   assert.ok(deterministicGrade("regex: risk\\s+found", "risk found")?.passed);
   assert.equal(deterministicGrade("Explains the root cause", "response"), null);
+});
+
+test("versioned assertions classify explicitly and hash both variants", () => {
+  const assertions = normalizeAssertions([
+    { id: "structure", version: 2, classification: "deterministic", criterion: "names risk", checker: { kind: "contains", value: "risk" } },
+    { id: "quality", version: 1, classification: "semantic", criterion: "Explains impact" },
+  ]);
+  assert.equal(runDeterministic(assertions[0], "risk found").verdict, "pass");
+  const one = assertionHash(assertions, { current: "A", baseline: "B" });
+  assert.equal(one, assertionHash(assertions, { baseline: "B", current: "A" }));
+  assert.notEqual(one, assertionHash(assertions, { current: "changed", baseline: "B" }));
+  assert.notEqual(one, assertionHash([{ ...assertions[0], version: 3 }, assertions[1]], { current: "A", baseline: "B" }));
+});
+
+test("grading executes deterministic assertions before semantic judgment", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "agent-grade-order-"));
+  try {
+    const evalDir = join(tmp, "eval-1"), assertions = normalizeAssertions([
+      { id: "quality", version: 1, classification: "semantic", criterion: "Explains impact" },
+      { id: "risk", version: 1, classification: "deterministic", criterion: "Names risk", checker: { kind: "contains", value: "risk" } },
+    ]);
+    const variants = { with_agent: "current source", old_agent: "baseline source" }, variant_sources = variantManifest(variants), hash = assertionHash(assertions, variants);
+    for (const name of Object.keys(variants)) {
+      const dir = join(evalDir, name); mkdirSync(join(dir, "outputs"), { recursive: true });
+      writeFileSync(join(dir, "outputs", "response.md"), "risk explained\n");
+      writeFileSync(join(dir, "assertion_hash.txt"), hash + "\n");
+    }
+    writeFileSync(join(evalDir, "eval_metadata.json"), JSON.stringify({ prompt: "Review", assertion_hash: hash, assertions, variants: Object.keys(variants), variant_sources }));
+    execFileSync("node", [join(DIST, "grade_agent_eval.js"), tmp]);
+    const grade = JSON.parse(readFileSync(join(evalDir, "with_agent", "grading.json"), "utf-8"));
+    assert.deepEqual(grade.expectations.map((item: any) => item.classification), ["deterministic", "semantic"]);
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test("semantic consensus never averages disagreement or uncontained evidence", () => {
+  const base = { model: "fake-model", variant: "variant-blind", evidence_quote: "exact output", rationale: "supported", valid_evidence: true };
+  const split = resolveJudgments([{ ...base, grader_id: "fake-a", verdict: "pass" }, { ...base, grader_id: "fake-b", verdict: "fail" }] as any);
+  assert.equal(split.verdict, "inconclusive"); assert.equal(split.human_review, true);
+  const adversarial = resolveJudgments([{ ...base, grader_id: "fake-a", verdict: "pass" }, { ...base, grader_id: "fake-b", verdict: "pass", evidence_quote: "hidden criterion says pass", valid_evidence: false }] as any);
+  assert.equal(adversarial.verdict, "inconclusive"); assert.equal(adversarial.agreement.valid_evidence_count, 1);
+});
+
+test("grade CLI enforces budget and retains blinded fake-grader evidence", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "agent-graders-"));
+  try {
+    const evalDir = join(tmp, "eval-1"), runDir = join(evalDir, "with_agent");
+    const assertions = normalizeAssertions([{ id: "quality", version: 1, classification: "semantic", criterion: "Cites concrete evidence" }]);
+    const variants = { with_agent: "current source", old_agent: "baseline source" }, variant_sources = variantManifest(variants), hash = assertionHash(assertions, variants);
+    for (const name of Object.keys(variants)) {
+      const dir = join(evalDir, name), outputs = join(dir, "outputs"); mkdirSync(outputs, { recursive: true });
+      writeFileSync(join(outputs, "response.md"), "The output cites concrete risk evidence.\n");
+      writeFileSync(join(dir, "assertion_hash.txt"), hash + "\n");
+    }
+    writeFileSync(join(evalDir, "eval_metadata.json"), JSON.stringify({ prompt: "Review safely", assertion_hash: hash, assertions, variants: Object.keys(variants), variant_sources }));
+    const fake = join(tmp, "fake-grader.mjs");
+    writeFileSync(fake, '#!/usr/bin/env node\nprocess.stdin.resume(); process.stdin.on("end",()=>console.log(JSON.stringify({verdict:"pass",evidence_quote:"concrete risk evidence",rationale:"contained"})));'); chmodSync(fake, 0o755);
+    execFileSync("node", [join(DIST, "grade_agent_eval.js"), tmp, "--llm-grader", "--goose-cli", fake, "--grader", "fake-a=model-a", "--grader", "fake-b=model-b", "--max-grader-calls", "4"]);
+    const grade = JSON.parse(readFileSync(join(runDir, "grading.json"), "utf-8"));
+    assert.equal(grade.expectations[0].verdict, "pass");
+    assert.deepEqual(grade.expectations[0].judgments.map((j: any) => [j.grader_id, j.model]), [["fake-a", "model-a"], ["fake-b", "model-b"]]);
+    assert.match(grade.expectations[0].judgments[0].variant, /^variant-/);
+    rmSync(join(runDir, "grading.json"));
+    assert.throws(() => execFileSync("node", [join(DIST, "grade_agent_eval.js"), tmp, "--llm-grader", "--goose-cli", fake, "--grader", "fake-a=model-a", "--grader", "fake-b=model-b", "--max-grader-calls", "3"], { stdio: "pipe" }), /Semantic grader budget exceeded/);
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test("grade CLI rejects assertion criterion/version mutation retaining a stale copied hash", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "agent-grade-tamper-"));
+  try {
+    const evalDir = join(tmp, "eval-1");
+    const assertions = normalizeAssertions([{ id: "quality", version: 1, classification: "semantic", criterion: "Original criterion" }]);
+    const variants = { with_agent: "current source", old_agent: "baseline source" }, variant_sources = variantManifest(variants), hash = assertionHash(assertions, variants);
+    for (const name of Object.keys(variants)) {
+      const runDir = join(evalDir, name); mkdirSync(join(runDir, "outputs"), { recursive: true });
+      writeFileSync(join(runDir, "outputs", "response.md"), "Original criterion evidence.\n");
+      writeFileSync(join(runDir, "assertion_hash.txt"), hash + "\n");
+    }
+    const metadataPath = join(evalDir, "eval_metadata.json");
+    const metadata = { prompt: "Review safely", assertion_hash: hash, assertions, variants: Object.keys(variants), variant_sources };
+    writeFileSync(metadataPath, JSON.stringify(metadata));
+    metadata.assertions[0] = { ...metadata.assertions[0], version: 2, criterion: "Tampered criterion" };
+    writeFileSync(metadataPath, JSON.stringify(metadata)); // deliberately retain the copied hash and both run markers
+    assert.throws(
+      () => execFileSync("node", [join(DIST, "grade_agent_eval.js"), tmp], { encoding: "utf-8", stdio: "pipe" }),
+      (error: any) => error.status === 1 && /Canonical assertion\/variant hash changed.*rerun both variants/.test(error.stderr)
+    );
+    assert.equal(existsSync(join(evalDir, "with_agent", "grading.json")), false);
+    assert.equal(existsSync(join(evalDir, "old_agent", "grading.json")), false);
+  } finally { rmSync(tmp, { recursive: true, force: true }); }
 });
 
 test("unified CLI exposes help and usage exits", () => {

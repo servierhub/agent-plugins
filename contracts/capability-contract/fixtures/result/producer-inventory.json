@@ -55,7 +55,7 @@
         "classification": "current",
         "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
         "sourceEvidence": [
-          "passed: boolean"
+          "passed:r.verdict===\"pass\""
         ]
       }
     },
@@ -72,8 +72,8 @@
         "classification": "current",
         "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
         "sourceEvidence": [
-          "ok: false",
-          "ok: true"
+          "ok:false",
+          "ok:true"
         ]
       }
     },
@@ -90,7 +90,7 @@
         "classification": "current",
         "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
         "sourceEvidence": [
-          "usage: boolean"
+          "usage:boolean"
         ]
       }
     },
@@ -109,7 +109,7 @@
         "extractionExpectation": "Every exact sourceEvidence snippet exists in the named producer; tokens are the audited finite field domain.",
         "sourceEvidence": [
           "return 0",
-          "return usage ? 2 : 1"
+          "return usage?2:1"
         ]
       }
     },

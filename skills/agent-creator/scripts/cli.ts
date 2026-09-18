@@ -9,7 +9,7 @@ const COMMANDS = {
   init: { script: "init_agent.js", usage: "init <name> [--path <dir>] [--description <text>] [--model <name>] [--role <text>]" },
   validate: { script: "validate_agent.js", usage: "validate <agent-file> [--require-filename-match]" },
   evaluate: { script: "run_agent_eval.js", usage: "evaluate --agent <file> --eval-set <file> --workspace <dir> [options]" },
-  grade: { script: "grade_agent_eval.js", usage: "grade <workspace> [--llm-grader] [--goose-cli <cmd>] [--model <name>]" },
+  grade: { script: "grade_agent_eval.js", usage: "grade <workspace> [--llm-grader --grader <id=model> --grader <id=model> --max-grader-calls <n>]" },
   aggregate: { script: "aggregate_benchmark.js", usage: "aggregate <workspace> [--agent-name <name>] [--agent-path <path>] [-o <output.json>]" },
   install: { script: "install_agent.js", usage: "install <agent-file> (--project <dir> | --global) [--force]" },
 } as const;

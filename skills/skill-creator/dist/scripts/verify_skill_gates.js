@@ -216,6 +216,19 @@ export function verifySkill(options) {
             behavior = "fail";
             behaviorReason = evidence?.errors.join("; ") || "benchmark execution evidence hash does not match current evidence";
         }
+        else if (profile === "release") {
+            const paired = benchmark?.run_summary?.delta?.paired?.pass_rate, n = paired?.count, ci = paired?.confidence_interval_95;
+            const validN = Number.isFinite(n) && Number.isInteger(n) && n >= 2;
+            const validCi = ci && typeof ci === "object" && Number.isFinite(ci.lower) && Number.isFinite(ci.upper) && ci.lower <= ci.upper;
+            if (!validN || paired?.statistically_valid !== true || !validCi) {
+                behavior = "fail";
+                behaviorReason = "release requires finite integer paired sample count >= 2, statistically_valid true, and a finite ordered 95% confidence interval";
+            }
+            else {
+                behavior = summary.current >= minimum && delta >= minDelta ? "pass" : "fail";
+                behaviorReason = `pass rate ${summary.current.toFixed(4)} (minimum ${minimum}); delta ${delta.toFixed(4)} (minimum ${minDelta})`;
+            }
+        }
         else {
             behavior = summary.current >= minimum && delta >= minDelta ? "pass" : "fail";
             behaviorReason =

@@ -124,3 +124,11 @@ A complete receipt is not necessarily a passing gate. Report `pass`, `fail`, `bl
 After human review, read `feedback.json`, improve the Skill, rerun all paired cases in a new iteration, and compare against the previous workspace. Stop when the user accepts the result, feedback is empty, or further iterations produce no meaningful improvement.
 
 For rigorous A/B comparison, read `../agents/comparator.md` and keep variant identity hidden from the judge.
+
+### Repeated counterbalanced pairs
+
+`full-eval --run-profile fast|standard|release` requests exactly 1, 3, or 5 paired repetitions per scenario. Standard and release plans must declare a validated root `aggregate_budget` with positive `max_runs`, `max_turns`, and `timeout_seconds` large enough for every current/baseline run. An insufficient budget fails before run scaffolding; an interrupted or failed schedule returns typed `incomplete-paired-runs` data rather than silently aggregating a prefix.
+
+Each scenario receives deterministic per-pair seeds and alternating current-first/baseline-first order. Both members retain pair index, seed, order, order position, model, ordered tools, fixture snapshot hash, timeout, turns, and source provenance. Change any evaluation input or profile to invalidate and regenerate the schedule.
+
+Aggregation reports sample count and mean for available observations. Sample standard deviation and a 95% Student-t confidence interval are emitted only for two or more observations; a single observation uses null inferential fields. Stable improvement requires the paired-difference confidence interval to be wholly above zero. Release evidence must never describe one stochastic pair as stable improvement.

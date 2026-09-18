@@ -36,6 +36,48 @@ export function artifactHash(path) {
         return sha256(readFileSync(path));
     return compositeHash(filesBelow(path).sort().flatMap(file => [relative(path, file).replaceAll("\\", "/"), readFileSync(file)]));
 }
+export class ExecutionPlanError extends Error {
+    code;
+    constructor(code, message) { super(message); this.name = "ExecutionPlanError"; this.code = code; }
+}
+export function expectedRunDirs(workspace) {
+    const absolute = resolve(workspace);
+    if (!isDirectory(absolute))
+        return [];
+    const result = [], ids = new Set();
+    for (const evalName of readdirSync(absolute).filter(name => name.startsWith("eval-")).sort()) {
+        const evalDir = join(absolute, evalName);
+        if (!isDirectory(evalDir))
+            continue;
+        const metadata = loadJson(join(evalDir, "eval_metadata.json"));
+        if (!metadata || !["fast", "standard", "release"].includes(metadata.run_profile))
+            throw new ExecutionPlanError("invalid-evaluation-plan", evalName + " has invalid or missing run_profile");
+        const profilePairs = { fast: 1, standard: 3, release: 5 };
+        if (!Number.isInteger(metadata.requested_pairs) || metadata.requested_pairs !== profilePairs[metadata.run_profile])
+            throw new ExecutionPlanError("invalid-evaluation-plan", evalName + " requested_pairs must exactly match run_profile");
+        const id = String(metadata.eval_id ?? "");
+        if (!id || ids.has(id))
+            throw new ExecutionPlanError("invalid-evaluation-plan", evalName + " has missing or duplicate eval_id " + id);
+        ids.add(id);
+        const schedules = metadata.execution_schedule;
+        if (!Array.isArray(schedules) || schedules.length !== metadata.requested_pairs)
+            throw new ExecutionPlanError("invalid-evaluation-plan", evalName + " execution_schedule must contain exactly requested_pairs entries");
+        const binding = metadata.execution_binding;
+        if (!binding || typeof binding !== "object")
+            throw new ExecutionPlanError("invalid-evaluation-plan", evalName + " execution_binding is missing");
+        const expectedConfigs = ["with_skill", metadata.baseline_configuration ?? (isDirectory(join(evalDir, "old_skill")) ? "old_skill" : "without_skill")];
+        for (let index = 1; index <= metadata.requested_pairs; index++) {
+            const scheduled = schedules[index - 1];
+            const expectedSeed = Number.parseInt(compositeHash([String(binding.skill_source_sha256), String(binding.eval_plan_sha256), String(binding.scenario_sha256), String(index)]).slice(0, 8), 16) >>> 0;
+            const expectedOrder = index % 2 ? ["with_skill", "baseline"] : ["baseline", "with_skill"];
+            if (!scheduled || scheduled.pair_index !== index || scheduled.seed !== expectedSeed || JSON.stringify(scheduled.order) !== JSON.stringify(expectedOrder))
+                throw new ExecutionPlanError("invalid-evaluation-plan", evalName + " execution_schedule is not a strict total deterministic schedule at pair " + index);
+            for (const config of expectedConfigs)
+                result.push(join(evalDir, config, "run-" + index));
+        }
+    }
+    return result;
+}
 export function listRunDirs(workspace) {
     const result = [];
     const absolute = resolve(workspace);
@@ -93,13 +135,27 @@ export function expectedExecutionBinding(runDir) {
         eval_plan_sha256: String(context.eval_plan_sha256 ?? ""),
         scenario_sha256: String(context.scenario_sha256 ?? ""),
         ...coordinates,
+        ...(Array.isArray(metadata?.execution_schedule) ? (() => { const scheduled = metadata.execution_schedule.find((item) => item.pair_index === coordinates.run_index); if (!scheduled)
+            return {}; const baseline = coordinates.configuration.includes("old_skill") || coordinates.configuration.includes("without_skill"); const role = baseline ? "baseline" : "with_skill"; return { pair_index: scheduled.pair_index, seed: scheduled.seed, order: scheduled.order, order_position: scheduled.order.indexOf(role) + 1 }; })() : {}),
     };
 }
 export function validateExecutionEvidence(workspace, expected) {
     const errors = [];
     const bindings = [];
     const digestParts = [];
-    for (const runDir of listRunDirs(workspace)) {
+    let planned;
+    try {
+        planned = expectedRunDirs(workspace);
+    }
+    catch (error) {
+        errors.push(error.message);
+        return { status: "blocked", errors, evidence_sha256: compositeHash([]), bindings };
+    }
+    for (const runDir of planned) {
+        if (!isDirectory(runDir)) {
+            errors.push(relative(workspace, runDir).replaceAll("\\", "/") + " missing planned run directory");
+            continue;
+        }
         const label = relative(workspace, runDir).replaceAll("\\", "/");
         const manifestPath = join(runDir, "execution-evidence.json");
         const manifest = loadJson(manifestPath);
@@ -112,9 +168,9 @@ export function validateExecutionEvidence(workspace, expected) {
             errors.push(`${label} generated eval metadata has no execution binding`);
             continue;
         }
-        const fields = ["skill_source_sha256", "eval_plan_sha256", "scenario_sha256", "configuration", "run_index"];
+        const fields = ["skill_source_sha256", "eval_plan_sha256", "scenario_sha256", "configuration", "run_index", "pair_index", "seed", "order", "order_position"];
         for (const field of fields)
-            if (manifest[field] !== wanted[field])
+            if (JSON.stringify(manifest[field]) !== JSON.stringify(wanted[field]))
                 errors.push(`${label} execution evidence ${field} does not match the current plan`);
         if (manifest.schema_version !== "1.0")
             errors.push(`${label} execution evidence schema_version must be 1.0`);
@@ -138,6 +194,23 @@ export function validateExecutionEvidence(workspace, expected) {
         digestParts.push(label, readFileSync(manifestPath));
         for (const [name, hash] of Object.entries(actual).sort(([a], [b]) => a.localeCompare(b)))
             digestParts.push(`${label}/${name}`, hash);
+    }
+    const byPair = new Map();
+    for (const binding of bindings) {
+        const key = String(binding.scenario_sha256) + ":" + String(binding.pair_index);
+        const group = byPair.get(key) ?? [];
+        group.push(binding);
+        byPair.set(key, group);
+    }
+    for (const [key, pair] of byPair) {
+        if (pair.length !== 2) {
+            errors.push(key + " expected exactly two paired executions");
+            continue;
+        }
+        const [a, b] = pair, ae = a.pair_equivalence, be = b.pair_equivalence;
+        for (const field of ["model", "tools", "fixture_sha256", "timeout_seconds", "max_turns"])
+            if (JSON.stringify(ae?.[field]) !== JSON.stringify(be?.[field]))
+                errors.push(key + " pair equivalence mismatch for " + field);
     }
     return { status: errors.length ? "blocked" : "complete", errors, evidence_sha256: compositeHash(digestParts), bindings };
 }

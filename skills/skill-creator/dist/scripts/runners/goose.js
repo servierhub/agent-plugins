@@ -128,7 +128,8 @@ export class GooseRunner {
             throw new PairedExecutionError("invalid-cwd", `Execution cwd is not a directory: ${plan.cwd}`, "invalid-cwd", null, evidence("invalid-cwd", null));
         }
         const context = plan.configuration === "without_skill" ? "Complete the task without loading the evaluated Skill." : `The ${plan.skillName ?? "evaluated"} Skill is installed in this isolated workspace. Load and use it for the task.`;
-        const instruction = `${context}\n\n${plan.prompt}\n\nReturn JSON with an output string and expectations array. Grade each assertion using exactly {text, passed, evidence}. Assertions:\n${plan.assertions.map(a => `- ${a}`).join("\n")}`;
+        const reproducibility = plan.seed === undefined ? "" : `Evaluation seed: ${plan.seed}; paired repetition: ${plan.pairIndex}; order position: ${plan.orderPosition}.\n`;
+        const instruction = `${reproducibility}${context}\n\n${plan.prompt}\n\nReturn JSON with an output string and expectations array. Grade each assertion using exactly {text, passed, evidence}. Assertions:\n${plan.assertions.map(a => `- ${a}`).join("\n")}`;
         return await new Promise((resolve, reject) => {
             const [bin, ...args] = command;
             let settled = false, timer, timedOut = false;

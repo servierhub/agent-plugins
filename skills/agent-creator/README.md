@@ -118,7 +118,10 @@ node dist/scripts/run_agent_eval.js \
 
 node dist/scripts/grade_agent_eval.js \
   /tmp/code-reviewer-workspace/iteration-1 \
-  --llm-grader
+  --llm-grader \
+  --grader reviewer-a=model-a \
+  --grader reviewer-b=model-b \
+  --max-grader-calls 24
 
 node dist/scripts/aggregate_benchmark.js \
   /tmp/code-reviewer-workspace/iteration-1 \
@@ -135,6 +138,8 @@ For an existing agent, use `--baseline-agent old-agent.md` to compare the new
 instructions against the previous version. The evaluation preserves the custom
 agent model: tasks run through isolated delegation rather than by converting the
 agent into a skill or recipe.
+
+Assertions may be legacy strings, but new suites should use versioned objects with `id`, `version`, `classification`, `criterion`, and (for deterministic assertions) a `checker` (`contains`, `not-contains`, or `regex`). Deterministic results record the response SHA-256 and exact match span. Semantic grading requires at least two independently identified graders, blinds variant identity, withholds other grades and any unpublished criteria, validates every evidence quote against the candidate output, and retains every judgment. Only unanimous, evidence-valid semantic verdicts resolve; disagreement or missing evidence is `inconclusive` and requires human review. The assertion hash binds the assertion versions and both agent variants; changing either invalidates existing grades and requires both variants to rerun. `--max-grader-calls` enforces the semantic grading budget.
 
 ## Manual or external evidence
 

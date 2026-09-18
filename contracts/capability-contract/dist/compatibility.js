@@ -897,7 +897,7 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "creator": "hook-creator",
         "sourceFile": "skills/hook-creator/scripts/cli.ts",
         "sourceFieldOrLayout": "hook.cli.envelope.unversioned",
-        "sourceEvidence": "JSON.stringify({ ok: false, error: error.message, usage })",
+        "sourceEvidence": "JSON.stringify({ok:false,error:error.message,usage})",
         "kind": "envelope",
         "readVersionsOrRanges": [
             "unversioned"
@@ -1330,7 +1330,7 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "creator": "agent-creator",
         "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
         "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/grading.json",
-        "sourceEvidence": "writeFileSync(join(runDir, \"grading.json\")",
+        "sourceEvidence": "grading.json",
         "kind": "evaluation-artifact",
         "readVersionsOrRanges": [
             "unversioned"
@@ -1708,7 +1708,7 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "creator": "skill-creator",
         "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
         "sourceFieldOrLayout": "workspace.skill-eval.current.v1",
-        "sourceEvidence": "for(const config of [\"with_skill\",baseline])mkdirSync(join(ed,config,\"run-1\",\"outputs\"),{recursive:true});",
+        "sourceEvidence": "for(const config of [\"with_skill\",baseline]){const configDir=join(ed,config);mkdirSync(configDir,{recursive:true});",
         "kind": "workspace-layout",
         "readVersionsOrRanges": [
             "1.0"
@@ -2071,7 +2071,7 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "creator": "hook-creator",
         "sourceFile": "skills/hook-creator/scripts/cli.ts",
         "sourceFieldOrLayout": "result.exit-family.hook",
-        "sourceEvidence": "return usage ? 2 : 1",
+        "sourceEvidence": "return usage?2:1",
         "kind": "status-exit-family",
         "readVersionsOrRanges": [
             "1.0.0"
@@ -2254,6 +2254,78 @@ export const COMPATIBILITY_REGISTRY = Object.freeze([
         "deprecation": null,
         "migrationId": null,
         "validatorId": "artifact:component-evidence-receipt"
+    },
+    {
+        "id": "agent.eval-metadata.v2",
+        "creator": "agent-creator",
+        "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+        "sourceFieldOrLayout": "eval-<id>/eval_metadata.json",
+        "sourceEvidence": "schema_version: 2,",
+        "kind": "evaluation-artifact",
+        "readVersionsOrRanges": [
+            "2"
+        ],
+        "emittedVersion": "2",
+        "versionField": "/schema_version",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:agent-eval-metadata-v2"
+    },
+    {
+        "id": "agent.semantic-grading.v2",
+        "creator": "agent-creator",
+        "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+        "sourceFieldOrLayout": "eval-<id>/<configuration>/grading.json",
+        "sourceEvidence": "schema_version:2,assertion_hash:meta.assertion_hash",
+        "kind": "evaluation-artifact",
+        "readVersionsOrRanges": [
+            "2"
+        ],
+        "emittedVersion": "2",
+        "versionField": "/schema_version",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:semantic-grading"
+    },
+    {
+        "id": "plugin.independent-review.v1",
+        "creator": "plugin-creator",
+        "sourceFile": "skills/plugin-creator/scripts/independent_review.ts",
+        "sourceFieldOrLayout": "runIndependentReview result / CLI JSON output",
+        "sourceEvidence": "return{schemaVersion:1,runId:config.runId",
+        "kind": "review-artifact",
+        "readVersionsOrRanges": [
+            "1"
+        ],
+        "emittedVersion": "1",
+        "versionField": "/schemaVersion",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:independent-review"
+    },
+    {
+        "id": "hook.evaluation-run-manifest.v1",
+        "creator": "hook-creator",
+        "sourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
+        "sourceFieldOrLayout": "eval-manifest create <spec.json> <manifest.json>",
+        "sourceEvidence": "MANIFEST_VERSION=\"hook-evaluation-run-manifest/v1\"",
+        "kind": "evaluation-artifact",
+        "readVersionsOrRanges": [
+            "hook-evaluation-run-manifest/v1"
+        ],
+        "emittedVersion": "hook-evaluation-run-manifest/v1",
+        "versionField": "/schema_version",
+        "supportState": "supported",
+        "deprecation": null,
+        "migrationId": null,
+        "artifactFormat": "json",
+        "validatorId": "artifact:evaluation-run-manifest"
     }
 ].map(E));
 export const RESULT_CONTRACT_REFERENCE = Object.freeze({ version: RESULT_CONTRACT_VERSION, schemaId: RESULT_CONTRACT_SCHEMA_ID, mappingExport: "LEGACY_STATUS_MAPPINGS", classifierExport: "classifyResultExit" });

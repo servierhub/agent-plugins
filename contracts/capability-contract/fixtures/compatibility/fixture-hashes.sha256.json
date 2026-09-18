@@ -5,6 +5,7 @@
     "cases/agent.benchmark.unversioned.json": "dd312dd9b4b8a9ce63676f2ea6f7eb4b0f4153976f179e27d668a1de5e6a4635",
     "cases/agent.cli.envelope.unversioned.json": "0f421a9b9a25af141dfdf4e695d07be6d2513387752ba8be9bb0d78bffbb5eae",
     "cases/agent.eval-metadata.unversioned.json": "0afdedb13aaad545e12e2be6ce1ab30212c87caba12f2c73f8bac0cfa2ea2165",
+    "cases/agent.eval-metadata.v2.json": "bb664f92aeb3d2fb799e2c0b8eeaaee3b8c6864cdf6da3998b30e69a25a58a6b",
     "cases/agent.evals-form.unversioned.json": "f6fa94dbe4d6dc78f60ad7c8698cf37cb7e627f6acdac1b0aed5d4c8787e79f7",
     "cases/agent.evidence-job.v1.json": "d0eacf527d24ef902dfbb1989ee203b4934a3018ded822a3a056753035a8fd32",
     "cases/agent.evidence-run.v1.json": "790de2e6db3dc1ad9d4b66f0974746c6898e9cf4f0db1fd28468878860c836c2",
@@ -13,6 +14,7 @@
     "cases/agent.response-markdown.unversioned.md": "0599c19d9cf70cb10da5e3f69d4406f9bd1f444d1bf66098e538578adf5b9013",
     "cases/agent.review-html.unversioned.html": "eff97314a32b87ec3cd8b93556a29bc6ba8a819913cbcb8a60c1806ffd17894a",
     "cases/agent.run-summary.unversioned.json": "3dc7e9da7787f787e745be7b3d04b6431714512a417010d15681f5a8ce90b9a5",
+    "cases/agent.semantic-grading.v2.json": "42bf3dd1c3eff7a456bba0b2f48504d8e080bb7f1521676dba328fdb0cc09da9",
     "cases/agent.timing.unversioned.json": "12b1eeca41510f59acb697722e9cbce16bb7e802687ab609c6c9f6854ce2bd17",
     "cases/agent.transcript.unversioned.json": "bf8b7e839430cc79081c5f0fcad3ddbb64c7463a3bef2e0f53ae9dc351f1c7ed",
     "cases/agent.viewer-html.unversioned.html": "c591eb0613dbec96b679bf7d79135c6750ef032e61261db2c56173d61feeea60",
@@ -63,6 +65,7 @@
     "cases/hook.cli.envelope.unversioned.json": "093f2541c4add422eac6c6d51e1fe90a939cf049f6a5f873c926c021aa40f3f0",
     "cases/hook.document.current.unversioned.json": "78922a784ee78e9e50587e93628cd3b9d4dfbe49087adc4514e6781cea38cbb9",
     "cases/hook.evals-form.unversioned.json": "60f5e937d99257f6041483dacf0b572f7bc96a9888538628de149787dda51a80",
+    "cases/hook.evaluation-run-manifest.v1.json": "3656a74bd38463fb5f3377d552a8e023894551def15bf494e52fd9c81011e0d0",
     "cases/hook.extension-envelope.v1.json": "76a0f53e6db225b48dec2c283ebbcf7a819c4eaab7fbca72fea222858b0d345e",
     "cases/hook.layout.current.v1.json": "ae91e95681feba680d9064205d5d95df061e7f8c096ca34a52782612c18bd47b",
     "cases/hook.layout.historical-namespace.v0.json": "c67711e4d4fbb157089232dcd147ba3912ba2fe66a1f0f6f769dd85598abc9d0",
@@ -75,6 +78,7 @@
     "cases/plugin.evals-form.unversioned.json": "400b26d1636b4b286261af76bfe90d005a1520a21b737d026442fef521d6e3fb",
     "cases/plugin.full-eval-state.v1.json": "9f338bc2d7e50b029e443812b57021bfcbaa15eb6f57bfae13194379faf37b34",
     "cases/plugin.full-eval.v1.json": "606c50e533f3df34be8ba2a6517fdd84cb4fa0e13e0fa47ccadf39b74290b27f",
+    "cases/plugin.independent-review.v1.json": "5334aa176b1ade6dae29f387d107b8f07c7d69183afcc1f8ec2d41fc74e7457d",
     "cases/plugin.manifest.draft-v1.1.json": "0a140fecd6c8098c5c9d852591dc6f4e806a834422ad6218f6bfb57ed417a69d",
     "cases/plugin.manifest.v1.json": "936fb58279280e5dffafa93e4cf139904420a5cd76cb0c2349f97f60ffeaea67",
     "cases/plugin.mcp.draft-v1.1.json": "63d44e7242b961f0694d977e461e45307e9bef45bdaadff53e4b195bd240f0bc",
@@ -119,7 +123,7 @@
     "cases/workspace.plugin-eval.unversioned.json": "4adb016c0805e8664588095e9384891b0de5db47c70b3eae512fc72e09b408b6",
     "cases/workspace.skill-eval.current.v1.json": "000c803c9b99c66cc4eac6bb1077c39b0a602e60ed911e146dcca41db0f9863b",
     "cases/workspace.skill-eval.legacy-runs.v0.json": "6da09102d5ab94f880c71161a5703b66c524fb78de537eb2043eba787bf541a6",
-    "expected-public-surfaces.json": "6d91814f0cec3971f1465442fc5e8a5604c33e8b30193e044f511a1f1e148895",
+    "expected-public-surfaces.json": "730b79f81806dbd487352e5c78a9caec21e9be19227c0b3795b4f8c5f107fe6f",
     "golden/agent-cli.json": "0f421a9b9a25af141dfdf4e695d07be6d2513387752ba8be9bb0d78bffbb5eae",
     "golden/ambiguous-unversioned.json": "ed43fe0bfcc37a9959f724cd7d2119b4446c9ffbe20340e6a2a710458667e0b8",
     "golden/evaluation-receipt.json": "741737e992932a818f50f7b2a06276b0fb362164c2d10e7515c968818b15d3e1",
@@ -141,6 +145,6 @@
     "migration/legacy-workspace/runs/eval-1/with_skill/run-1/grading.json": "440d8f48e61a25876a6cb4d90287a73fe3d0b9edaf948e7a7fd76ef09046cfde",
     "migration/legacy-workspace/runs/eval-1/with_skill/run-1/outputs/response.md": "147edb9b994ca947e40c4d819a2fad43c554fa72ba879c49b776bc69c83dd310",
     "migration/legacy-workspace/runs/eval-1/with_skill/run-1/timing.json": "da1aab93bf45bfee07536fe97d1c5a202048ecba54fd14a4b64b94b120e0f6b7",
-    "producer-discovery.json": "5a736e05bee9c98f2a81b488086dd7bfda056f115617637382e9f5ee7882c95d"
+    "producer-discovery.json": "7db24652205c114c0d7fbcadc9b85b5be2b31d5f81b6602f77fe898528c62fa9"
   }
 }

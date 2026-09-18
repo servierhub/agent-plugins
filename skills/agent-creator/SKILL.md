@@ -175,12 +175,15 @@ Evaluate the custom agent as a reusable role, not as a skill trigger. The key qu
 
    When improving an existing agent, pass `--baseline-agent <old-agent.md>` to compare against the old instructions instead.
 
-4. Grade objective assertions first. Prefix simple assertions with `contains:`, `not-contains:`, or `regex:` for deterministic grading. Use the LLM grader only for substantive semantic criteria:
+4. Classify and version every assertion before running. Prefer objects with `id`, positive `version`, `classification` (`deterministic` or `semantic`), and `criterion`; deterministic assertions also declare a reproducible `checker` (`contains`, `not-contains`, or `regex`). Legacy prefixed strings remain supported. Semantic criteria require multiple independently identified blinded graders, contained output quotations, and a bounded call budget. Graders receive the published criterion and an opaque variant alias, never hidden criteria, true variant identity, or other grades. Disagreement or invalid/missing evidence remains inconclusive for human review; never average it into pass/fail:
 
    ```bash
    node <agent-creator>/dist/scripts/grade_agent_eval.js \
      <workspace>/iteration-1 \
-     --llm-grader
+     --llm-grader \
+     --grader reviewer-a=model-a \
+     --grader reviewer-b=model-b \
+     --max-grader-calls 24
    ```
 
 5. Aggregate results:

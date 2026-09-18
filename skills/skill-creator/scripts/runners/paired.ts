@@ -11,7 +11,8 @@ export type PairedFailureCode =
   | "invalid-cwd"
   | "capability-mismatch"
   | "host-exit"
-  | "invalid-response";
+  | "invalid-response"
+  | "incomplete";
 
 export interface PairedExecutionEvidence {
   transcript: string;
@@ -56,6 +57,10 @@ export interface PairedExecutionPlan {
   configuration?: string;
   skillName?: string;
   signal?: AbortSignal;
+  seed?: number;
+  pairIndex?: number;
+  orderPosition?: number;
+  fixtureSha256?: string;
 }
 
 export interface PairedExecutionResult extends PairedExecutionEvidence {

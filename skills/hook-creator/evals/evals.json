@@ -181,7 +181,7 @@
       "name": "whole-plugin-package-handoff",
       "subject": "scope-routing",
       "language": "fr",
-      "prompt": "Le hook de assets/evaluation-fixtures/exact-rm-guard est déjà validé. L’utilisateur demande maintenant de valider, packager et publier le plugin complet. Explique le handoff requis, les preuves que hook-creator doit transmettre et les gates qui restent sous la responsabilité de plugin-creator. Ne package ni ne publie rien dans ce scénario explicatif.",
+      "prompt": "Le hook de assets/evaluation-fixtures/exact-rm-guard est d\u00e9j\u00e0 valid\u00e9. L\u2019utilisateur demande maintenant de valider, packager et publier le plugin complet. Explique le handoff requis, les preuves que hook-creator doit transmettre et les gates qui restent sous la responsabilit\u00e9 de plugin-creator. Ne package ni ne publie rien dans ce sc\u00e9nario explicatif.",
       "target": {
         "kind": "plugin-handoff",
         "execution": "explain",
@@ -226,5 +226,10 @@
         "timeout_seconds": 180
       }
     }
-  ]
+  ],
+  "run_manifest": {
+    "schema": "schemas/evaluation-run-manifest.schema.json",
+    "version": "hook-evaluation-run-manifest/v1",
+    "required_for_execution": true
+  }
 }

@@ -12,7 +12,8 @@ import { designEvals } from "./design_evals.js";
 import { analyzeEvaluation } from "./analyze_evaluation.js";
 import { executePairedRuns } from "./paired_execution.js";
 import { configuredGooseArgv } from "./runners/goose.js";
-import { artifactHash, compositeHash, listRunDirs, validateExecutionEvidence, } from "./evaluation_provenance.js";
+import { parseRunProfile, RUN_PROFILE_COUNTS, schedulePairs, validateAggregateBudget } from "./repeated_runs.js";
+import { artifactHash, compositeHash, expectedRunDirs, listRunDirs, validateExecutionEvidence, } from "./evaluation_provenance.js";
 const SCHEMA_VERSION = "2.0";
 const STATE_FILE = ".full-eval-job.json";
 const PHASES = [
@@ -73,7 +74,7 @@ function reconcileScenarioDirs(workspace, evals, evalPlanHash) {
 }
 function missingRuns(workspace) {
     const missing = { outputs: [], gradings: [], timings: [] };
-    for (const dir of listRunDirs(workspace)) {
+    for (const dir of expectedRunDirs(workspace)) {
         const outputs = join(dir, "outputs");
         if (!isDir(outputs) || !readdirSync(outputs).some(n => n !== ".keep"))
             missing.outputs.push(rel(workspace, outputs));
@@ -105,7 +106,7 @@ function publicStatus(status) { return status === "succeeded" ? "complete" : sta
 function publicPhases(job, dryRun = false) { return job.phases.map(p => ({ name: p.name, status: dryRun ? (p.status === "succeeded" ? "complete" : "planned") : publicStatus(p.status), artifacts: p.artifacts, ...(p.detail ? { detail: p.detail } : {}), ...(p.error && !p.detail ? { detail: p.error } : {}) })); }
 function shellQuote(value) { return value ? `'${value.replaceAll("'", `'"'"'`)}'` : "''"; }
 function action(order, id, description, argv) { return { order, id, description, argv, command: argv.map(shellQuote).join(" ") }; }
-function resumeArgv(job, options, extra = []) { const argv = ["skill-creator", "full-eval", job.skill, "--workspace", job.workspace, "--eval-set", job.eval_set, "--baseline", job.baseline, "--resume"]; if (options.execute)
+function resumeArgv(job, options, extra = []) { const argv = ["skill-creator", "full-eval", job.skill, "--workspace", job.workspace, "--eval-set", job.eval_set, "--baseline", job.baseline, "--run-profile", options.runProfile ?? "fast", "--resume"]; if (options.execute)
     argv.push("--execute"); if (options.runner)
     argv.push("--runner", options.runner); if (options.model)
     argv.push("--model", options.model); if (options.baselineSkillPath)
@@ -132,10 +133,10 @@ function phaseInput(name, job, options) {
         case "validate":
         case "authoring-audit": return digest([name, source]);
         case "evaluation-design": return digest([name, source, evalHash]);
-        case "scaffold": return digest([name, source, evalHash, job.baseline]);
+        case "scaffold": return digest([name, source, evalHash, job.baseline, String(options.runProfile ?? "fast")]);
         case "paired-runs-and-grading": {
             const baselinePath = options.baselineSkillPath ? resolve(options.baselineSkillPath) : "";
-            return digest([name, source, evalHash, job.baseline, prior("scaffold"), String(options.execute), String(options.runner ?? "goose"), String(options.model ?? "plan-default"), baselinePath, baselinePath ? artifactHash(baselinePath) : ""]);
+            return digest([name, source, evalHash, job.baseline, String(options.runProfile ?? "fast"), prior("scaffold"), String(options.execute), String(options.runner ?? "goose"), String(options.model ?? "plan-default"), baselinePath, baselinePath ? artifactHash(baselinePath) : ""]);
         }
         case "aggregate": {
             const evidence = validateExecutionEvidence(job.workspace, { skill_source_sha256: source, eval_plan_sha256: evalHash });
@@ -148,6 +149,7 @@ function phaseInput(name, job, options) {
     }
 }
 export async function fullEval(options) {
+    const runProfile = parseRunProfile(options.runProfile), requestedPairs = RUN_PROFILE_COUNTS[runProfile];
     const skill = resolve(options.skillPath), evalSet = resolve(options.evalSet ?? join(skill, "evals", "evals.json")), workspace = resolve(options.workspace ?? join(dirname(skill), basename(skill) + "-workspace", "iteration-1")), baseline = options.baseline ?? "without_skill";
     const identity = { skill, workspace, eval_set: evalSet, baseline };
     const statePath = join(workspace, STATE_FILE);
@@ -188,6 +190,27 @@ export async function fullEval(options) {
         document = null;
     }
     const evals = Array.isArray(document) ? document : document?.evals;
+    let aggregateBudget;
+    try {
+        if (Array.isArray(evals)) {
+            const ids = new Set();
+            for (const [index, item] of evals.entries()) {
+                const id = String(item?.id ?? index + 1);
+                if (ids.has(id))
+                    throw new Error("duplicate eval id: " + id);
+                ids.add(id);
+            }
+            aggregateBudget = validateAggregateBudget(document, runProfile, evals);
+        }
+    }
+    catch (error) {
+        const phase = job.phases.find(p => p.name === "evaluation-design");
+        phase.status = "failed";
+        phase.error = error.message;
+        job.status = "failed";
+        checkpoint(job);
+        return envelope(options, job, "failure", ["Declare a validated aggregate_budget large enough for the requested repeated-run profile."], { incomplete: { code: "invalid-aggregate-budget", requested_pairs: requestedPairs, completed_pairs: 0 } });
+    }
     const next = [];
     let receipt;
     let verification;
@@ -240,11 +263,25 @@ export async function fullEval(options) {
                 for (let i = 0; i < evals.length; i++) {
                     const item = evals[i] ?? {}, id = item.id ?? i + 1, ed = join(workspace, "eval-" + id), metadata = join(ed, "eval_metadata.json");
                     const scenario = { eval_id: id, eval_name: item.name ?? slug(item.prompt), subject: item.subject ?? "", language: item.language ?? "", target: item.target ?? {}, preconditions: item.preconditions ?? [], budget: item.budget ?? {}, model: item.model ?? null, prompt: item.prompt ?? item.query ?? "", expected_output: item.expected_output ?? "", assertions: item.assertions ?? [], files: item.files ?? [], capabilities: item.capabilities ?? { filesystem: true, agent_runner: true, browser: false, network: false, tools: [] }, coverage_tags: item.coverage_tags ?? [], navigation_expectations: item.navigation_expectations ?? { must_read: [], read_when_relevant: [], must_not_read: [] } };
-                    const normalized = { ...scenario, execution_binding: { skill_source_sha256: source, eval_plan_sha256: evalPlan, scenario_sha256: digest([JSON.stringify(scenario)]) } };
+                    const executionBinding = { skill_source_sha256: source, eval_plan_sha256: evalPlan, scenario_sha256: digest([JSON.stringify(scenario)]) };
+                    const executionSchedule = schedulePairs(executionBinding, requestedPairs);
+                    const normalized = { ...scenario, run_profile: runProfile, requested_pairs: requestedPairs, baseline_configuration: baseline, aggregate_budget: aggregateBudget, execution_schedule: executionSchedule, execution_binding: executionBinding };
                     artifacts.push(metadata);
                     atomicJson(metadata, normalized);
-                    for (const config of ["with_skill", baseline])
-                        mkdirSync(join(ed, config, "run-1", "outputs"), { recursive: true });
+                    for (const config of ["with_skill", baseline]) {
+                        const configDir = join(ed, config);
+                        mkdirSync(configDir, { recursive: true });
+                        for (const name of readdirSync(configDir).filter(n => /^run-\d+$/.test(n))) {
+                            const runIndex = Number(name.slice(4));
+                            if (runIndex > requestedPairs) {
+                                const archive = join(workspace, ".full-eval-archive", evalPlan);
+                                mkdirSync(archive, { recursive: true });
+                                renameSync(join(configDir, name), join(archive, "surplus-" + id + "-" + config + "-" + name));
+                            }
+                        }
+                        for (let run = 1; run <= requestedPairs; run++)
+                            mkdirSync(join(configDir, "run-" + run, "outputs"), { recursive: true });
+                    }
                 }
                 phase.artifacts = artifacts;
                 phase.detail = archived.length ? `archived ${archived.length} scenario workspace(s) not present in the current eval plan` : undefined;
@@ -258,11 +295,11 @@ export async function fullEval(options) {
                         phase.error = execution.failures.map(f => `${rel(workspace, f.run)} [${f.code}]: ${f.message}`).join("; ");
                         job.status = execution.status === "blocked" ? "blocked" : "failed";
                         checkpoint(job);
-                        return envelope(options, job, execution.status === "blocked" ? "blocked" : "failure", execution.failures.map(f => `Paired run ${rel(workspace, f.run)} failed (${f.code}, ${f.exit_reason}): ${f.message}. Manual evidence remains supported; preserve or replace artifacts and rerun --resume.`), { execution });
+                        return envelope(options, job, execution.status === "blocked" ? "blocked" : "failure", execution.failures.map(f => `Paired run ${rel(workspace, f.run)} failed (${f.code}, ${f.exit_reason}): ${f.message}. Manual evidence remains supported; preserve or replace artifacts and rerun --resume.`), { execution, incomplete: { code: "incomplete-paired-runs", requested_pairs: requestedPairs, completed_runs: execution.completed.length, required_runs: (Array.isArray(evals) ? evals.length : 0) * requestedPairs * 2 } });
                     }
                 }
                 const missing = missingRuns(workspace), { source, evalPlan } = planHashes(job);
-                phase.artifacts = listRunDirs(workspace);
+                phase.artifacts = expectedRunDirs(workspace);
                 const binding = validateExecutionEvidence(workspace, { skill_source_sha256: source, eval_plan_sha256: evalPlan });
                 if (missing.outputs.length || missing.gradings.length || missing.timings.length || binding.status !== "complete") {
                     phase.status = "blocked";
@@ -279,7 +316,7 @@ export async function fullEval(options) {
                     next.push("Rerun full-eval with --resume after preserving those artifacts.");
                     job.status = "blocked";
                     checkpoint(job);
-                    return envelope(options, job, "blocked", next);
+                    return envelope(options, job, "blocked", next, { incomplete: { code: "incomplete-paired-runs", requested_pairs: requestedPairs, completed_runs: expectedRunDirs(workspace).length - missing.outputs.length - missing.gradings.length - missing.timings.length, required_runs: expectedRunDirs(workspace).length } });
                 }
             }
             else if (phase.name === "aggregate") {
@@ -325,7 +362,7 @@ export async function fullEval(options) {
                 }
             }
             else if (phase.name === "verify") {
-                verification = verifySkill({ skillPath: skill, profile: "evaluation", evaluation: workspace, humanReview: options.humanReview, testsStatus: options.testsStatus, triggeringStatus: options.triggeringStatus, triggeringReason: options.triggeringReason, minPassRate: options.minPassRate, minDelta: options.minDelta });
+                verification = verifySkill({ skillPath: skill, profile: runProfile === "release" ? "release" : "evaluation", evaluation: workspace, humanReview: options.humanReview, testsStatus: options.testsStatus, triggeringStatus: options.triggeringStatus, triggeringReason: options.triggeringReason, minPassRate: options.minPassRate, minDelta: options.minDelta });
                 const path = join(workspace, "receipt.json");
                 atomicJson(path, verification);
                 phase.artifacts = [join(workspace, "benchmark.json"), join(workspace, "review.html"), path];
@@ -362,12 +399,12 @@ export async function fullEval(options) {
     return envelope(options, job, "success", [], { receipt, verification });
 }
 async function main() { try {
-    const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { workspace: { type: "string" }, "eval-set": { type: "string" }, baseline: { type: "string", default: "without_skill" }, "baseline-skill": { type: "string" }, execute: { type: "boolean", default: false }, runner: { type: "string" }, model: { type: "string" }, "dry-run": { type: "boolean", default: false }, resume: { type: "boolean", default: false }, retry: { type: "boolean", default: false }, cancel: { type: "boolean", default: false }, "human-review": { type: "string" }, "tests-status": { type: "string" }, "triggering-status": { type: "string" }, "triggering-reason": { type: "string" }, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" } } });
+    const { positionals, values } = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { workspace: { type: "string" }, "eval-set": { type: "string" }, baseline: { type: "string", default: "without_skill" }, "baseline-skill": { type: "string" }, execute: { type: "boolean", default: false }, runner: { type: "string" }, model: { type: "string" }, "run-profile": { type: "string", default: "fast" }, "dry-run": { type: "boolean", default: false }, resume: { type: "boolean", default: false }, retry: { type: "boolean", default: false }, cancel: { type: "boolean", default: false }, "human-review": { type: "string" }, "tests-status": { type: "string" }, "triggering-status": { type: "string" }, "triggering-reason": { type: "string" }, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" } } });
     if (!positionals[0])
         throw new TypeError("skill directory is required");
     if (values.baseline !== "old_skill" && values.baseline !== "without_skill")
         throw new TypeError("--baseline must be old_skill or without_skill");
-    const result = await fullEval({ skillPath: positionals[0], workspace: values.workspace, evalSet: values["eval-set"], baseline: values.baseline, baselineSkillPath: values["baseline-skill"], execute: values.execute, runner: values.runner, model: values.model, dryRun: values["dry-run"], resume: values.resume, retry: values.retry, cancel: values.cancel, humanReview: values["human-review"], testsStatus: values["tests-status"], triggeringStatus: values["triggering-status"], triggeringReason: values["triggering-reason"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]) });
+    const result = await fullEval({ skillPath: positionals[0], workspace: values.workspace, evalSet: values["eval-set"], baseline: values.baseline, baselineSkillPath: values["baseline-skill"], execute: values.execute, runner: values.runner, model: values.model, runProfile: parseRunProfile(values["run-profile"]), dryRun: values["dry-run"], resume: values.resume, retry: values.retry, cancel: values.cancel, humanReview: values["human-review"], testsStatus: values["tests-status"], triggeringStatus: values["triggering-status"], triggeringReason: values["triggering-reason"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]) });
     console.log(JSON.stringify(result, null, 2));
     process.exit(result.exit_code);
 }

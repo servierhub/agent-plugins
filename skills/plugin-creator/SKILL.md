@@ -121,13 +121,17 @@ node dist/scripts/cli.js full-eval <plugin-directory> --workspace <plugin-direct
 
 For unattended clean-checkout runs, use the config-driven `ci-eval` contract in [non-interactive CI evaluation](references/ci-evaluation.md). Follow returned commands and receipt paths, then rerun with `--resume`. Before a release claim, run `node dist/scripts/cli.js verify ...` with workflow-provided arguments. Ordered `next_actions` in a blocked result are authoritative. Non-dry runs append a sanitized durable history to `full-eval-events.jsonl`. Use `--progress quiet|normal|verbose` for terminal detail, or `--format jsonl|ci|review` for pure machine records, CI groups, or accessible historical replay; see [the event stream contract](references/execution-event-stream.md) and [execution reliability contract](references/execution-reliability.md).
 
+## Independent challenge review
+
+For independent builder/challenger review, use the local matrix runner documented in [independent-review.md](references/independent-review.md). Freeze approved context and criteria, expose only public branch output to the verifier, preserve raw provenance, and do not auto-resolve convergence findings.
+
 ## Quality bar
 
 A deliverable is ready only when the 1.0.0 manifest is valid; portable components use fixed locations; Skills are useful and valid; referenced files exist and remain contained; Goose behavior is namespaced and host-validated; legacy conflicts are resolved; prerequisites are documented; no secrets are packaged; strict validation succeeds; and requested evaluation, packaging, and release gates pass.
 
 ## Utilities
 
-- `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, `package`, and `full-eval` interface.
+- `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, `package`, `full-eval`, and `independent-review` interface.
 - `references/goose-plugin-format.md`: layouts, schemas, Goose namespace, and migrations.
 - `references/portable-conformance.md`: load, authoring, and release semantics.
 - `references/goose-hooks.md`: recorded Goose hook behavior.

@@ -39,17 +39,25 @@ function round(value, digits) {
 }
 function calculateStats(values) {
     if (!values.length)
-        return { mean: null, stddev: null, min: null, max: null, count: 0 };
+        return { mean: null, stddev: null, confidence_interval_95: null, statistically_valid: false, min: null, max: null, count: 0 };
     const n = values.length;
     const mean = values.reduce((a, b) => a + b, 0) / n;
-    let stddev = 0;
+    let stddev = null;
     if (n > 1) {
         const variance = values.reduce((acc, x) => acc + (x - mean) ** 2, 0) / (n - 1);
         stddev = Math.sqrt(variance);
     }
+    // Two-sided 95% Student t critical values indexed by degrees of freedom.
+    const t95ByDf = [0, 12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160, 2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056, 2.052, 2.048, 2.045, 2.042];
+    const df = n - 1;
+    // For df > 30, 2.042 is a documented conservative approximation (never narrower than the exact t interval).
+    const t95 = df <= 30 ? t95ByDf[df] : 2.042;
+    const margin = stddev === null ? null : t95 * stddev / Math.sqrt(n);
     return {
         mean: round(mean, 4),
-        stddev: round(stddev, 4),
+        stddev: stddev === null ? null : round(stddev, 4),
+        confidence_interval_95: margin === null ? null : { lower: round(mean - margin, 4), upper: round(mean + margin, 4) },
+        statistically_valid: n > 1,
         min: round(Math.min(...values), 4),
         max: round(Math.max(...values), 4),
         count: values.length,
@@ -214,10 +222,25 @@ function aggregateResults(results) {
     const deltaPassRate = (primary.pass_rate?.mean ?? 0) - (baseline.pass_rate?.mean ?? 0);
     const deltaTime = primary.time_seconds?.mean !== null && baseline.time_seconds?.mean !== null ? primary.time_seconds.mean - baseline.time_seconds.mean : null;
     const deltaTokens = primary.tokens?.mean !== null && baseline.tokens?.mean !== null ? primary.tokens.mean - baseline.tokens.mean : null;
+    const primaryRuns = results[configs[0]] ?? [], baselineRuns = results[configs[1]] ?? [];
+    const uniqueByPair = (runs, configuration) => { const map = new Map(); for (const run of runs) {
+        const key = String(run.eval_id) + ":" + run.run_number;
+        if (map.has(key))
+            throw new Error(`duplicate pair key ${key} in ${configuration}`);
+        map.set(key, run);
+    } return map; };
+    const primaryByPair = uniqueByPair(primaryRuns, configs[0] ?? "primary"), baselineByPair = uniqueByPair(baselineRuns, configs[1] ?? "baseline");
+    const paired = [...primaryByPair].map(([key, run]) => [run, baselineByPair.get(key)]).filter((pair) => Boolean(pair[1]));
+    const pairedPass = calculateStats(paired.map(([a, b]) => a.pass_rate - b.pass_rate));
+    const pairedTime = calculateStats(paired.flatMap(([a, b]) => a.time_seconds === null || b.time_seconds === null ? [] : [a.time_seconds - b.time_seconds]));
+    const pairedTokens = calculateStats(paired.flatMap(([a, b]) => a.tokens == null || b.tokens == null ? [] : [a.tokens - b.tokens]));
     runSummary.delta = {
         pass_rate: `${deltaPassRate >= 0 ? "+" : ""}${deltaPassRate.toFixed(2)}`,
         time_seconds: deltaTime === null ? null : `${deltaTime >= 0 ? "+" : ""}${deltaTime.toFixed(1)}`,
         tokens: deltaTokens === null ? null : `${deltaTokens >= 0 ? "+" : ""}${deltaTokens.toFixed(0)}`,
+        paired: { pass_rate: pairedPass, time_seconds: pairedTime, tokens: pairedTokens },
+        stable_improvement: pairedPass.statistically_valid && pairedPass.confidence_interval_95 !== null && pairedPass.confidence_interval_95.lower > 0,
+        stable_improvement_reason: pairedPass.statistically_valid ? "95% paired confidence interval must be wholly above zero" : "at least two paired samples are required; one stochastic run cannot establish stable improvement",
     };
     return runSummary;
 }

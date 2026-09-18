@@ -57,6 +57,10 @@ node dist/init_hook.js /path/to/plugin PostToolUse record-tool \
 node dist/validate_hook.js /path/to/plugin
 ```
 
+## Reproducible evaluation manifests
+
+Hook evaluations use the canonical format in `references/evaluation-run-manifest.md` and `schemas/evaluation-run-manifest.schema.json`. The same schema applies locally and in CI; verification invalidates receipts after any bound input changes.
+
 ## Development
 
 ```bash

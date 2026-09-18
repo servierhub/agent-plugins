@@ -202,3 +202,25 @@ for (const legacy of [false, true]) {
     }
   });
 }
+
+
+test("release statistics fail closed when count, validity, or confidence interval is malformed", () => {
+  const { tmp, root, workspace } = fixture();
+  try {
+    const cases = [
+      { count: 1, statistically_valid: true, confidence_interval_95: { lower: 0.1, upper: 0.3 } },
+      { count: 2.5, statistically_valid: true, confidence_interval_95: { lower: 0.1, upper: 0.3 } },
+      { count: 2, statistically_valid: false, confidence_interval_95: { lower: 0.1, upper: 0.3 } },
+      { count: 2, statistically_valid: true, confidence_interval_95: { lower: 0.3, upper: 0.1 } },
+      { count: 2, statistically_valid: true, confidence_interval_95: null },
+    ];
+    for (const paired of cases) {
+      benchmark(workspace, sourceHash(root));
+      const path=join(workspace,"benchmark.json"), data=JSON.parse(readFileSync(path,"utf8"));
+      data.run_summary.delta={paired:{pass_rate:paired}}; writeFileSync(path,JSON.stringify(data));
+      const receipt=verifySkill({skillPath:root,profile:"release",evaluation:workspace,testsStatus:"pass",triggeringStatus:"pass",humanReview:"pass"});
+      assert.equal(receipt.gates.behavior.status,"fail");
+      assert.match(receipt.gates.behavior.reason??"",/finite integer paired sample count/);
+    }
+  } finally { rmSync(tmp,{recursive:true,force:true}); }
+});
