@@ -168,7 +168,7 @@ Each guide identifies the request and the evidence of success. Exact supporting 
 From a source checkout of this repository, build the app first, then invoke its generated entrypoint directly:
 
 ```bash
-(cd apps/plugin-creator-cli && npm install && npm run build)
+(cd apps/plugin-creator-cli && bun install --no-save && bun run build)
 node apps/plugin-creator-cli/dist/scripts/cli.js validate <plugin-directory> --mode portable-load --format json
 node apps/plugin-creator-cli/dist/scripts/cli.js validate <plugin-directory> --mode strict-authoring --format json
 ```
@@ -276,31 +276,31 @@ See [portable conformance](skills/plugin-creator/references/portable-conformance
 
 ### Root developer commands
 
-Run `make help` for the facade over canonical npm scripts. `make clean` (canonical: `npm run clean`) removes only the generated root paths `bin/`, `dist/`, `release-staging/`, `release-assets/`, and `.agents/plugins/`; it preserves `.agents/skills/` and all other `.agents/` content, and never follows symlinks. `make test` runs all checks; `make bundle` stages the current OS/architecture runtime plugin under `release-staging/`; `make release OUTPUT=/path` builds all targets pinned in `bun-release.json`, validates each stage, then emits archives and `SHA256SUMS`. Release requires the pinned Bun plus `tar`, `gzip`, `zip`, and `sha256sum`.
+Run `make help` for the Bun facade over canonical package scripts. `make clean` (canonical: `bun run clean`) removes only the generated root paths `bin/`, `dist/`, `release-staging/`, `release-assets/`, and `.agents/plugins/`; it preserves `.agents/skills/` and all other `.agents/` content, and never follows symlinks. `make test` runs all checks; `make bundle` stages the current OS/architecture runtime plugin under `release-staging/`; `make release OUTPUT=/path` builds all targets pinned in `bun-release.json`, validates each stage, then emits archives and `SHA256SUMS`. Release requires the pinned Bun plus `tar`, `gzip`, `zip`, and `sha256sum`.
 
 `make install` installs only validated current-target staging and defaults safely to `.agents/plugins/agent-plugins` in this project. Override with `DEST=/explicit/path` or `SOURCE=/staged/path`; use `DRY_RUN=1` to inspect. Existing destinations are refused unless `FORCE=1`; symlinked destinations or ancestors are always refused.
 
 Contributor dependency installation is separate from end-user installation. Creator application source, tests, and build output live in `apps/<creator>-cli/`; the portable `skills/<name>/` trees must remain free of generated JavaScript, TypeScript source, and binaries. From the repository root, these copy/paste-safe subshell commands preserve the working directory:
 
 ```bash
-(cd contracts/capability-contract && npm install && npm run build && npm test) # capability, evaluation-plan, result-state, and host-adapter contracts
-for app in apps/*-creator-cli; do (cd "$app" && npm install && npm run build && npm test) || exit; done
+(cd contracts/capability-contract && bun install --no-save && bun run build && bun run test) # capability, evaluation-plan, result-state, and host-adapter contracts
+for app in apps/*-creator-cli; do (cd "$app" && bun install --no-save && bun run build && bun run test) || exit; done
 ```
 
-Release assembly is a separate root operation. It copies the configured portable entries, compiles the app entrypoints, and atomically publishes an immutable target tree under `release-staging/<os>-<arch>/`; do not edit that tree by hand. Bun must match the version pinned in `bun-release.json`.
+Release assembly is a separate root operation. It copies the configured portable entries, compiles the app entrypoints, and atomically publishes an immutable target tree under `release-staging/<os>-<arch>/`; do not edit that tree by hand. Bun must match version `1.3.12`, pinned in both `package.json` and `bun-release.json`. The package scripts intentionally retain their internal `node` and `node --test` runners; Bun is the package-script facade and release compiler, not a blanket runtime rewrite.
 
 ```bash
-npm run stage:release -- --target=bun-linux-x64-baseline
-npm run test:executables
-node scripts/package-bun-release-assets.mjs /path/to/matrix-artifacts /path/to/release-assets
+bun run stage:release -- --target=bun-linux-x64-baseline
+bun run test:executables
+bun run package:release -- /path/to/matrix-artifacts /path/to/release-assets
 ```
 
 Verify the complete offline distribution from the repository root:
 
 ```bash
-npm run prepare:offline
-npm test
-npm run test:offline
+bun run prepare:offline
+bun run test
+bun run test:offline
 ```
 
 ## Project information

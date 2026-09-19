@@ -10,7 +10,7 @@
     "build": "node \"$(dirname \"$npm_package_json\")/scripts/build.mjs\"",
     "test": "node \"$(dirname \"$npm_package_json\")/scripts/test.mjs\"",
     "build:native": "node \"$(dirname \"$npm_package_json\")/scripts/build-native.mjs\"",
-    "test:native": "npm run build:native && node --test tests/test_native_cli.test.ts"
+    "test:native": "bun run build:native && node --test \"$(dirname \"$npm_package_json\")/tests/test_native_cli.test.ts\""
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
