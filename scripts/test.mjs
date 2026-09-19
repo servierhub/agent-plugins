@@ -24,6 +24,9 @@ for (const name of creatorNames) {
 console.log("\n> Testing distribution");
 run(["--test", path.join(root, "tests", "test_distribution.test.ts")]);
 
+console.log("\n> Testing developer facade and installer safety");
+run(["--test", path.join(root, "tests", "test_developer_facade.test.ts")]);
+
 console.log("\n> Building and testing standalone Bun executables");
 run([path.join(root, "scripts", "build-bun-executables.mjs")]);
 run(["--test", path.join(root, "tests", "test_bun_executables.test.ts")]);

@@ -12,7 +12,11 @@
     "test:executables": "npm run build:executables && node --test tests/test_bun_executables.test.ts",
     "test:release": "bun test tests/test_bun_release_workflow.test.ts && node --test tests/test_release_packaging.test.ts",
     "stage:release": "node scripts/build-bun-executables.mjs",
-    "package:release": "node scripts/package-bun-release-assets.mjs"
+    "package:release": "node scripts/package-bun-release-assets.mjs",
+    "bundle": "node scripts/build-bun-executables.mjs",
+    "release": "node scripts/release-all.mjs",
+    "install:staged": "node scripts/install-staged-plugin.mjs",
+    "test:facade": "node --test tests/test_developer_facade.test.ts"
   },
   "packageManager": "bun@1.3.12",
   "engines": {
