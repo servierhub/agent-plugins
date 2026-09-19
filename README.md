@@ -276,7 +276,7 @@ See [portable conformance](skills/plugin-creator/references/portable-conformance
 
 ### Root developer commands
 
-Run `make help` for the facade over canonical npm scripts. `make test` runs all checks; `make bundle` stages the current OS/architecture runtime plugin under `release-staging/`; `make release OUTPUT=/path` builds all targets pinned in `bun-release.json`, validates each stage, then emits archives and `SHA256SUMS`. Release requires the pinned Bun plus `tar`, `gzip`, `zip`, and `sha256sum`.
+Run `make help` for the facade over canonical npm scripts. `make clean` (canonical: `npm run clean`) removes only the generated root paths `bin/`, `dist/`, `release-staging/`, `release-assets/`, and `.agents/plugins/`; it preserves `.agents/skills/` and all other `.agents/` content, and never follows symlinks. `make test` runs all checks; `make bundle` stages the current OS/architecture runtime plugin under `release-staging/`; `make release OUTPUT=/path` builds all targets pinned in `bun-release.json`, validates each stage, then emits archives and `SHA256SUMS`. Release requires the pinned Bun plus `tar`, `gzip`, `zip`, and `sha256sum`.
 
 `make install` installs only validated current-target staging and defaults safely to `.agents/plugins/agent-plugins` in this project. Override with `DEST=/explicit/path` or `SOURCE=/staged/path`; use `DRY_RUN=1` to inspect. Existing destinations are refused unless `FORCE=1`; symlinked destinations or ancestors are always refused.
 

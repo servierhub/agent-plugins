@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "clean": "node scripts/clean.mjs",
     "prepare:offline": "node scripts/prepare-offline-bundle.mjs",
     "test:offline": "node scripts/test-offline-bundle.mjs",
     "test:distribution": "node --test tests/test_distribution.test.ts",
@@ -16,7 +17,8 @@
     "bundle": "node scripts/build-bun-executables.mjs",
     "release": "node scripts/release-all.mjs",
     "install:staged": "node scripts/install-staged-plugin.mjs",
-    "test:facade": "node --test tests/test_developer_facade.test.ts"
+    "test:facade": "node --test tests/test_developer_facade.test.ts tests/test_clean.test.ts",
+    "test:clean": "node --test tests/test_clean.test.ts"
   },
   "packageManager": "bun@1.3.12",
   "engines": {
