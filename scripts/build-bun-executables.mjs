@@ -3,11 +3,15 @@ import { chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSyn
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { commandOutput } from "./command-output.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const config = JSON.parse(readFileSync(path.join(root, "bun-release.json"), "utf8"));
+let cli;
+try { cli = commandOutput(process.argv.slice(2), root); }
+catch (error) { console.error(`Failed: ${error.message}`); process.exit(1); }
 
-function fail(message) { console.error(`error: ${message}`); process.exit(1); }
+function fail(message) { cli.fail(message); }
 function option(name) {
   const args = process.argv.slice(2), prefix = `${name}=`;
   const inline = args.find((value) => value.startsWith(prefix));
@@ -15,6 +19,14 @@ function option(name) {
   const index = args.indexOf(name);
   return index < 0 ? undefined : args[index + 1];
 }
+const buildArgsInput = process.argv.slice(2);
+const known = new Set(["--target", "--output", "--format", "--progress", "--verbose", "--log", "--log-file"]);
+for (let i = 0; i < buildArgsInput.length; i++) {
+  const key = buildArgsInput[i].split("=")[0];
+  if (!known.has(key)) fail(`unknown option: ${buildArgsInput[i]}`);
+  if (["--target", "--output", "--format", "--progress", "--log", "--log-file"].includes(key) && !buildArgsInput[i].includes("=")) i += 1;
+}
+
 function walk(directory, base = directory) {
   const files = [];
   for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, "en"))) {
@@ -90,6 +102,8 @@ if (sourceSkills.some((directory) => outputRoot === directory || outputRoot.star
 }
 const finalStage = path.join(outputRoot, releaseKey);
 const temporaryStage = path.join(outputRoot, `.${releaseKey}.tmp-${process.pid}`);
+try { cli.prepareLog([{ path: outputRoot, label: "staging output" }, ...sourceSkills.map((source) => ({ path: source, label: "source" }))]); }
+catch (error) { console.error(`Failed: ${error.message}`); process.exit(1); }
 const sourceBefore = sourceSkills.map((directory) => ({ skill: path.basename(directory), inventory: inventory(directory) }));
 
 rmSync(temporaryStage, { recursive: true, force: true });
@@ -98,14 +112,23 @@ for (const entry of config.portablePluginEntries) copyTree(path.join(root, entry
 chmodSync(temporaryStage, 0o755);
 chmodSync(path.join(temporaryStage, "skills"), 0o755);
 try {
+  let creatorIndex = 0;
   for (const [name, relativeEntry] of Object.entries(config.executables)) {
+    creatorIndex += 1;
+    const progress = `  [${creatorIndex}/${Object.keys(config.executables).length}] ${name}`;
+    cli.write(progress);
+    if (cli.progress === "creators" || cli.progress === "auto") console.log(progress);
     const skillStage = path.join(temporaryStage, "skills", name);
     copyPortable(path.join(root, "skills", name), skillStage);
     const scripts = path.join(skillStage, "scripts"); mkdirSync(scripts, { recursive: true, mode: 0o755 }); chmodSync(scripts, 0o755);
     const output = path.join(scripts, name + (target.startsWith("bun-windows-") ? ".exe" : ""));
-    const result = spawnSync(bun, ["build", "--compile", `--target=${target}`, `--outfile=${output}`, path.join(root, relativeEntry)], { cwd: root, stdio: "inherit" });
+    const buildArgs = ["build", "--compile", `--target=${target}`, `--outfile=${output}`, path.join(root, relativeEntry)];
+    cli.write(`$ ${bun} ${buildArgs.join(" ")}`);
+    const result = spawnSync(bun, buildArgs, { cwd: root, encoding: "utf8" });
+    if (result.stdout) cli.detail(result.stdout, "stdout");
+    if (result.stderr) cli.detail(result.stderr, "stderr");
     if (result.error) fail(`failed to build ${name}: ${result.error.message}`);
-    if (result.status !== 0) process.exit(result.status ?? 1);
+    if (result.status !== 0) cli.fail(`failed to build ${name}`, result.status ?? 1);
     chmodSync(output, 0o755);
   }
   const sourceAfter = sourceSkills.map((directory) => ({ skill: path.basename(directory), inventory: inventory(directory) }));
@@ -117,5 +140,7 @@ try {
   const validatedInventory = inventory(temporaryStage);
   rmSync(finalStage, { recursive: true, force: true });
   renameSync(temporaryStage, finalStage);
-  console.log(JSON.stringify({ status: "staged", target, releaseKey, staging: finalStage, sourceSkillsSha256: digest(sourceBefore), inventorySha256: digest(validatedInventory), files: validatedInventory.length }));
+  const result = { status: "staged", target, releaseKey, staging: finalStage, sourceSkillsSha256: digest(sourceBefore), inventorySha256: digest(validatedInventory), files: validatedInventory.length };
+  cli.write(JSON.stringify(result));
+  cli.emit({ ...result, human: `Staged: ${cli.relative(finalStage)}` });
 } finally { rmSync(temporaryStage, { recursive: true, force: true }); }
