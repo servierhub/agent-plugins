@@ -1,0 +1,82 @@
+// Execute every scaffolded current/baseline run in a fresh isolated workspace.
+import { cpSync, existsSync, lstatSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { artifactHash, compositeHash, expectedExecutionBinding, expectedRunDirs, runCoordinates } from "./evaluation_provenance.js";
+import { createRunner } from "./runners/index.js";
+import { CommandGraderAdapter, gradeOutput, sha256 as gradingSha256 } from "./evaluator_grading.js";
+import { configuredGooseArgv } from "./runners/goose.js";
+import { PairedExecutionError } from "./runners/paired.js";
+function json(path) { return JSON.parse(readFileSync(path, "utf8")); }
+function atomic(path, value) { const temp = `${path}.tmp-${process.pid}`; writeFileSync(temp, JSON.stringify(value, null, 2) + "\n", { mode: 0o600 }); renameSync(temp, path); }
+function contained(root, path) { const rel = relative(realpathSync(root), realpathSync(path)); return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel)); }
+function fixtureSources(metadata, evalDir, skillPath) { const files = Array.isArray(metadata.files) ? metadata.files.map(String) : []; return files.map((file) => { if (isAbsolute(file))
+    throw new PairedExecutionError("invalid-plan", `Fixture path must be relative: ${file}`, "invalid-plan"); const roots = [skillPath, evalDir, dirname(evalDir)]; for (const root of roots) {
+    const path = resolve(root, file);
+    if (existsSync(path) && contained(root, path))
+        return { source: path, target: file };
+} throw new PairedExecutionError("invalid-plan", `Fixture is missing or escapes its scenario root: ${file}`, "invalid-plan"); }); }
+function assertNoSymlinks(path) { if (lstatSync(path).isSymbolicLink())
+    throw new PairedExecutionError("invalid-plan", `Fixture symlinks are not allowed: ${path}`, "invalid-plan"); if (lstatSync(path).isDirectory())
+    for (const name of readdirSync(path))
+        assertNoSymlinks(join(path, name)); }
+function fixtureHash(fixtures) { return compositeHash(fixtures.flatMap(item => [item.target, artifactHash(item.source)])); }
+function stage(source, skillName, fixtures) { const cwd = mkdtempSync(join(tmpdir(), "skill-paired-run-")); if (source) {
+    mkdirSync(join(cwd, ".agents", "skills"), { recursive: true });
+    cpSync(source, join(cwd, ".agents", "skills", skillName), { recursive: true, dereference: false });
+} for (const fixture of fixtures) {
+    assertNoSymlinks(fixture.source);
+    const target = resolve(cwd, fixture.target);
+    if (relative(cwd, target).startsWith(".."))
+        throw new PairedExecutionError("invalid-plan", `Fixture target escapes workspace: ${fixture.target}`, "invalid-plan");
+    mkdirSync(dirname(target), { recursive: true });
+    cpSync(fixture.source, target, { recursive: true, dereference: false });
+} mkdirSync(join(cwd, "outputs"), { recursive: true }); return cwd; }
+function persistOutcome(runDir, evidence, plan, status, failureCode, message) { mkdirSync(join(runDir, "outputs"), { recursive: true }); writeFileSync(join(runDir, "transcript.json"), evidence.transcript); atomic(join(runDir, "events.json"), evidence.events); atomic(join(runDir, "timing.json"), { total_duration_seconds: evidence.durationSeconds, tokens: null, total_tokens: null, token_availability_reason: "Execution did not complete", host_version: evidence.hostVersion, exit_reason: evidence.exitReason, exit_code: evidence.exitCode, max_turns: plan.maxTurns ?? 40, timeout_seconds: plan.timeoutSeconds, seed: plan.seed, pair_index: plan.pairIndex, order_position: plan.orderPosition, status, failure_code: failureCode, message }); atomic(join(runDir, "execution-outcome.json"), { schema_version: "1.0", status, failure_code: failureCode, message, host_version: evidence.hostVersion, exit_reason: evidence.exitReason, exit_code: evidence.exitCode, command: evidence.command, artifact_sha256: { "timing.json": artifactHash(join(runDir, "timing.json")), "transcript.json": artifactHash(join(runDir, "transcript.json")), "events.json": artifactHash(join(runDir, "events.json")) } }); }
+async function writeEvidence(runDir, result, plan, source, metadata, graders, adapter, budget) { mkdirSync(join(runDir, "outputs"), { recursive: true }); writeFileSync(join(runDir, "outputs", "result.txt"), result.output); writeFileSync(join(runDir, "transcript.json"), result.transcript); atomic(join(runDir, "events.json"), result.events); const variantSha256 = gradingSha256(JSON.stringify({ configuration: plan.configuration, source_sha256: source ? artifactHash(source) : null, fixture_sha256: plan.fixtureSha256 })); const graded = await gradeOutput({ prompt: plan.prompt, output: result.output, assertions: plan.assertions, variantSha256, graders, adapter, budget, signal: plan.signal }); atomic(join(runDir, "deterministic-evidence.json"), { schema_version: 1, variant_sha256: variantSha256, output_sha256: graded.grading.output_sha256, assertions: graded.deterministic }); const graderDir = join(runDir, "grader-evidence"); mkdirSync(graderDir, { recursive: true }); for (const [index, item] of graded.graderEvidence.entries())
+    atomic(join(graderDir, `${index + 1}-${item.grader_id}.json`), item); atomic(join(runDir, "grading.json"), graded.grading); atomic(join(runDir, "timing.json"), { total_duration_seconds: result.durationSeconds, tokens: result.tokens, total_tokens: result.tokens, token_availability_reason: result.tokenAvailabilityReason, host_version: result.hostVersion, exit_reason: result.exitReason, exit_code: result.exitCode, max_turns: plan.maxTurns ?? 40, timeout_seconds: plan.timeoutSeconds, seed: plan.seed, pair_index: plan.pairIndex, order_position: plan.orderPosition, grader_usage: graded.graderEvidence.map(item => ({ grader_id: item.grader_id, model: item.model, usage: item.usage })) }); const binding = expectedExecutionBinding(runDir); if (!binding)
+    throw new Error(`Missing execution binding for ${runDir}`); atomic(join(runDir, "execution-evidence.json"), { schema_version: "1.0", ...binding, pair_equivalence: { model: plan.model, tools: plan.tools, fixture_sha256: plan.fixtureSha256, timeout_seconds: plan.timeoutSeconds, max_turns: plan.maxTurns ?? 40 }, grading_binding: { authority: "evaluator", assertion_set_sha256: graded.grading.assertion_set_sha256, variant_sha256: variantSha256, output_sha256: graded.grading.output_sha256, grader_identities: graders }, executor: { adapter: "goose", host_version: result.hostVersion, exit_reason: result.exitReason, command: result.command, seed: plan.seed, pair_index: plan.pairIndex, order_position: plan.orderPosition, executed_skill_sha256: source ? artifactHash(source) : null }, artifact_sha256: { outputs: artifactHash(join(runDir, "outputs")), "grading.json": artifactHash(join(runDir, "grading.json")), "timing.json": artifactHash(join(runDir, "timing.json")), "transcript.json": artifactHash(join(runDir, "transcript.json")), "deterministic-evidence.json": artifactHash(join(runDir, "deterministic-evidence.json")), "grader-evidence": artifactHash(graderDir) } }); }
+function orderedRunDirs(workspace) { return expectedRunDirs(workspace).sort((a, b) => { const am = json(join(dirname(dirname(a)), "eval_metadata.json")), bm = json(join(dirname(dirname(b)), "eval_metadata.json")); const ac = runCoordinates(a), bc = runCoordinates(b), ae = String(am.eval_id), be = String(bm.eval_id); if (ae !== be)
+    return ae.localeCompare(be); if (ac.run_index !== bc.run_index)
+    return ac.run_index - bc.run_index; const order = am.execution_schedule?.find((x) => x.pair_index === ac.run_index)?.order ?? ["with_skill", "baseline"]; const role = (c) => c === "with_skill" ? "with_skill" : "baseline"; return order.indexOf(role(ac.configuration)) - order.indexOf(role(bc.configuration)); }); }
+function capabilities(value) { if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new PairedExecutionError("capability-mismatch", "Scenario capabilities must be an object", "capability-mismatch"); return { filesystem: value.filesystem, agent_runner: value.agent_runner, browser: value.browser, network: value.network, tools: value.tools }; }
+export async function executePairedRuns(options) { const runner = createRunner(options.runner); const graders = options.graders ?? [{ id: "grader-a", model: options.model ?? "default" }, { id: "grader-b", model: options.model ?? "default" }]; const adapter = options.graderAdapter ?? new CommandGraderAdapter(configuredGooseArgv(options.graderCommand ?? process.env.SKILL_CREATOR_GRADER_COMMAND)); const gradingBudget = { used: 0, limit: options.maxGraderCalls ?? 100 }; if (typeof runner.executePaired !== "function")
+    return { status: "blocked", completed: [], requested: 0, failures: [{ run: "*", code: "unsupported-runner", message: "Runner does not support paired execution", exit_reason: "unsupported-runner" }] }; const completed = [], failures = []; let runDirs; try {
+    runDirs = orderedRunDirs(resolve(options.workspace));
+}
+catch (error) {
+    return { status: "failed", completed, requested: 0, failures: [{ run: "*", code: "incomplete-paired-runs", message: error.message, exit_reason: "invalid-plan" }] };
+} const absent = runDirs.filter(path => !existsSync(path)); if (absent.length)
+    return { status: "failed", completed, requested: runDirs.length, failures: absent.map(run => ({ run, code: "incomplete-paired-runs", message: "Scheduled run directory is missing", exit_reason: "incomplete" })) }; const skillName = basename(resolve(options.skillPath)); for (const runDir of runDirs) {
+    const evalDir = dirname(dirname(runDir)), metadata = json(join(evalDir, "eval_metadata.json")), configuration = basename(dirname(runDir));
+    const source = configuration === "with_skill" ? resolve(options.skillPath) : options.baseline === "old_skill" ? (options.baselineSkillPath ? resolve(options.baselineSkillPath) : null) : null;
+    if (configuration === "old_skill" && (!source || !existsSync(source))) {
+        failures.push({ run: runDir, code: "invalid-plan", message: "old_skill execution requires an existing baselineSkillPath", exit_reason: "invalid-plan" });
+        continue;
+    }
+    let cwd = "", plan;
+    try {
+        const declared = capabilities(metadata.capabilities), tools = declared.tools;
+        const fixtures = fixtureSources(metadata, evalDir, resolve(options.skillPath));
+        cwd = stage(source, skillName, fixtures);
+        const budget = metadata.budget ?? {}, coordinates = runCoordinates(runDir), scheduled = metadata.execution_schedule?.find((item) => item.pair_index === coordinates.run_index);
+        if (metadata.execution_schedule && !scheduled)
+            throw new PairedExecutionError("incomplete", "No scheduled pair for run " + coordinates.run_index, "incomplete");
+        plan = { prompt: String(metadata.prompt ?? ""), assertions: Array.isArray(metadata.assertions) ? metadata.assertions : [], cwd, model: options.model ?? (metadata.model ? String(metadata.model) : null), tools, capabilities: declared, maxTurns: Number(budget.max_turns ?? 40), timeoutSeconds: Number(budget.timeout_seconds ?? 300), configuration, skillName, signal: options.signal, seed: scheduled?.seed, pairIndex: scheduled?.pair_index, orderPosition: scheduled ? scheduled.order.indexOf(configuration === "with_skill" ? "with_skill" : "baseline") + 1 : undefined, fixtureSha256: fixtureHash(fixtures) };
+        await writeEvidence(runDir, await runner.executePaired(plan), plan, source, metadata, graders, adapter, gradingBudget);
+        completed.push(runDir);
+    }
+    catch (error) {
+        const typed = error instanceof PairedExecutionError ? error : new PairedExecutionError("host-exit", error.message, "adapter-error");
+        failures.push({ run: runDir, code: typed.code, message: typed.message, exit_reason: typed.exitReason });
+        if (plan && typed.evidence)
+            persistOutcome(runDir, typed.evidence, plan, typed.code === "cancelled" ? "cancelled" : "failed", typed.code, typed.message);
+        if (typed.code === "cancelled")
+            break;
+    }
+    finally {
+        if (cwd)
+            rmSync(cwd, { recursive: true, force: true });
+    }
+} const cancelled = failures.some(x => x.code === "cancelled"), blocked = failures.some(x => ["command-not-found", "unsupported-runner", "model-unavailable", "tool-unavailable", "capability-mismatch"].includes(x.code)); return { status: cancelled ? "cancelled" : failures.length ? (blocked ? "blocked" : "failed") : "complete", completed, requested: runDirs.length, failures }; }

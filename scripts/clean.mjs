@@ -8,6 +8,10 @@ export const CLEAN_PATHS = Object.freeze([
   "release-staging",
   "release-assets",
   ".agents/plugins",
+  "skills/agent-creator/runtime",
+  "skills/hook-creator/runtime",
+  "skills/plugin-creator/runtime",
+  "skills/skill-creator/runtime",
 ]);
 
 function existingStat(target) {

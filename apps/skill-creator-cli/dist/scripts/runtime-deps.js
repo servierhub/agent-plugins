@@ -13,18 +13,19 @@ export function loadRuntimeDependency(name) {
     const embedded = globalThis.__creatorDependencies?.[name];
     if (embedded)
         return embedded;
+    const local = resolve(join(skillRoot, "node_modules", name));
+    const vendored = resolve(join(skillRoot, "vendor", "node_modules", name));
     try {
-        return requireFromHere(name);
+        return requireFromHere(local);
     }
-    catch (normalError) {
-        const vendored = resolve(join(skillRoot, "vendor", "node_modules", name));
+    catch (localError) {
         try {
             return requireFromHere(vendored);
         }
         catch (vendoredError) {
-            const error = new Error(`Could not load runtime dependency '${name}'. Expected the offline bundle at ${vendored}. ` +
+            const error = new Error(`Could not load runtime dependency '${name}'. Expected a contained package at ${local} or ${vendored}. ` +
                 "This is a packaging defect; do not run npm install in the consumer project.");
-            error.cause = vendoredError ?? normalError;
+            error.cause = vendoredError ?? localError;
             throw error;
         }
     }

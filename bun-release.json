@@ -8,7 +8,10 @@
     "darwin-arm64": "bun-darwin-arm64",
     "win32-x64": "bun-windows-x64-baseline"
   },
-  "portablePluginEntries": ["plugin.json", "LICENSE"],
+  "portablePluginEntries": [
+    "plugin.json",
+    "LICENSE"
+  ],
   "portableSkillEntries": [
     "AGENTS.md",
     "LICENSE.txt",
@@ -26,5 +29,25 @@
     "agent-creator": "apps/agent-creator-cli/scripts/bun-entry.ts",
     "hook-creator": "apps/hook-creator-cli/scripts/bun-entry.ts",
     "plugin-creator": "apps/plugin-creator-cli/scripts/bun-entry.ts"
+  },
+  "runtimeProfiles": {
+    "source": {
+      "mode": "node-bundled",
+      "launcherSuffix": ".mjs",
+      "requiredSkillEntries": [
+        "scripts",
+        "runtime"
+      ]
+    },
+    "native": {
+      "mode": "native-bun",
+      "excludedSkillEntries": [
+        "runtime",
+        "node_modules"
+      ],
+      "excludedScriptSuffixes": [
+        ".mjs"
+      ]
+    }
   }
 }

@@ -7,10 +7,7 @@ description: Creates, audits, and tests lifecycle hooks inside Open Plugins. Use
 
 ## Offline runtime
 
-Use the released `hook-creator` executable for user workflows. A source checkout needs Node.js 22+ to build, but tagged native archives do not require Node.js or installed dependencies. An incomplete archive is a packaging defect.
-
-
-Create trusted Goose lifecycle hooks as components of a plugin. A hook never lives independently under `.agents/hooks`; it belongs inside a plugin discovered from `.agents/plugins/`.
+Use `node scripts/hook-creator.mjs` for a copied source Skill; it requires Node.js 22+ and resolves only this Skill’s generated runtime. Tagged native archives use the released executable and do not require Node.js. Report a missing runtime or mapping as a packaging defect.
 
 ## Source of truth
 

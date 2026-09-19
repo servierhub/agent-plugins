@@ -16,7 +16,7 @@ function trackedSnapshot(destination:string){
  // Stage the app runtime plus the explicitly consumed portable Skill resources.
  copyFileSync(join(REPO_ROOT,"plugin.json"),join(destination,"plugin.json"));
  for(const relative of ["dist","vendor","templates"]){cpSync(join(APP_ROOT,relative),join(destination,PREFIX,relative),{recursive:true})}
- cpSync(join(REPO_ROOT,SKILL_PREFIX),join(destination,SKILL_PREFIX),{recursive:true,filter:(source)=>!/[\\/](?:dist|scripts|tests|node_modules|vendor)(?:[\\/]|$)|(?:package(?:-lock)?\.json|tsconfig\.json)$/.test(source)});
+ cpSync(join(REPO_ROOT,SKILL_PREFIX),join(destination,SKILL_PREFIX),{recursive:true});
  for(const [path,mode] of TEMPLATES){assert.ok(existsSync(join(destination,path)),path+" must be staged");chmodSync(join(destination,path),mode==="100755"?0o755:0o644)}
  assert.equal(existsSync(join(destination,SKILL_PREFIX,"dist")),false,"portable Skill must not contain app build output");
  assert.equal(existsSync(join(destination,SKILL_PREFIX,"node_modules")),false,"portable Skill must not contain dependencies");

@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "clean": "node scripts/clean.mjs",
+    "build:skill-runtimes": "node scripts/generate-skill-runtimes.mjs",
+    "check:skill-runtime-dist-drift": "node scripts/check-skill-runtime-dist-drift.mjs",
     "prepare:offline": "node scripts/prepare-offline-bundle.mjs",
     "test:offline": "node scripts/test-offline-bundle.mjs",
     "test:distribution": "node --test tests/test_distribution.test.ts",

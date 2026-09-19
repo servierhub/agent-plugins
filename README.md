@@ -12,7 +12,7 @@ This distribution provides four guided creators for [Agent Skills](https://agent
 | Portable plugin target | Agent Plugins `1.0.0` |
 | Portable skill target | Agent Skills |
 | Verified host integration | Goose `1.47.0` |
-| Creator runtime | Native Bun release executables; Node.js `22+` only for source development |
+| Creator runtime | Git/source: bundled Node.js `22+` runtime (`node-bundled`); release archives: native Bun executables (`native-bun`) |
 | License | [CeCILL-C](LICENSE) |
 
 ## What you can do
@@ -95,7 +95,7 @@ Use the unqualified names—such as `skill-creator`—when a creator is installe
 
 ### 1. Check the requirements
 
-Source development lives under `apps/<creator>-cli/` and requires Node.js 22 or later. The directories under `skills/<name>/` are portable Skill content: they do not contain the TypeScript application source or generated executables. Tagged release staging injects one native executable at `skills/<name>/scripts/<name>` (`<name>.exe` on Windows), so an installed release does not require Node.js or `npm install`. To load the Skills through an agent, use a host that implements the relevant Agent Skills or Agent Plugins specification.
+A Git/source checkout is directly runnable with Node.js 22 or later: each `skills/<name>/` contains `scripts/<name>.mjs` plus its generated, dependency-complete `runtime/`. The root `plugin.json` declares this `node-bundled` mode; no dependency install is required. TypeScript authoring remains under `apps/<creator>-cli/`. Tagged release staging explicitly excludes the source launcher, runtime, and any `node_modules`, then injects one native executable at `skills/<name>/scripts/<name>` (`<name>.exe` on Windows), so an installed release does not require Node.js or `npm install`. To load the Skills through an agent, use a host that implements the relevant Agent Skills or Agent Plugins specification.
 
 Host discovery and installation commands differ. This repository verifies the complete integration with Goose. Other hosts may load the portable outputs when they implement the corresponding specification, but this repository does not claim untested host compatibility.
 

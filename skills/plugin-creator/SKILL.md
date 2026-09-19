@@ -9,7 +9,7 @@ Create production-ready Agent Plugins for Goose. Own package architecture, root 
 
 ## Offline runtime
 
-Use the released `plugin-creator` executable for user workflows. A source checkout needs Node.js 22+ to build, but tagged native archives do not require Node.js or installed dependencies. Report an incomplete archive as a packaging defect.
+Use `node scripts/plugin-creator.mjs` for a copied source Skill; it requires Node.js 22+ and resolves only this Skill’s generated runtime. Tagged native archives use the released executable and do not require Node.js. Report a missing runtime or mapping as a packaging defect.
 
 ## Format baseline
 

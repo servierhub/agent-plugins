@@ -10,7 +10,7 @@ Each tagged GitHub release contains standalone creator executables built and smo
 | macOS | Apple silicon ARM64 | `agent-plugins-creators-darwin-arm64.tar.gz` |
 | Windows | x86-64 / AMD64 | `agent-plugins-creators-win32-x64.tar.gz` |
 
-Each archive expands to a same-named directory containing four complete portable Skill trees under `skills/`. Release assembly copies portable content from `skills/<name>/` and injects exactly one Bun executable at `skills/<name>/scripts/<name>` (`.exe` on Windows). TypeScript application source remains under `apps/<creator>-cli/` and is not part of the Skill tree. These executables are runtime-only; Node.js and installed package dependencies are not required.
+Each archive expands to a same-named directory containing four complete portable Skill trees under `skills/`. Release assembly uses the `native-bun` profile: it explicitly excludes the Git/source `scripts/<name>.mjs`, `runtime/`, and all `node_modules`, then injects exactly one Bun executable at `skills/<name>/scripts/<name>` (`.exe` on Windows). TypeScript application source remains under `apps/<creator>-cli/` and is not part of the Skill tree. Both `plugin.json` and `release-manifest.json` identify the archive as `native-bun`. Packaging rejects mixed Node/native trees. These executables are runtime-only; Node.js and installed package dependencies are not required.
 
 ## Verify before extracting
 

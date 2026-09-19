@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync } from "node:fs";
+import { chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,6 +7,8 @@ import { commandOutput } from "./command-output.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const config = JSON.parse(readFileSync(path.join(root, "bun-release.json"), "utf8"));
+const nativeProfile = config.runtimeProfiles?.native;
+if (nativeProfile?.mode !== "native-bun" || !Array.isArray(nativeProfile.excludedSkillEntries) || !nativeProfile.excludedSkillEntries.includes("runtime") || !nativeProfile.excludedSkillEntries.includes("node_modules") || !Array.isArray(nativeProfile.excludedScriptSuffixes) || !nativeProfile.excludedScriptSuffixes.includes(".mjs")) throw new Error("bun-release.json must define the native-bun exclusion profile");
 let cli;
 try { cli = commandOutput(process.argv.slice(2), root); }
 catch (error) { console.error(`Failed: ${error.message}`); process.exit(1); }
@@ -74,6 +76,7 @@ function copyTree(source, destination) {
   } else fail(`unsupported portable entry: ${path.relative(root, source)}`);
 }
 function copyPortable(source, destination) {
+  for (const entry of config.portableSkillEntries) if (nativeProfile.excludedSkillEntries.includes(entry) || entry === "scripts") fail("native-bun profile cannot copy source runtime entry: " + entry);
   mkdirSync(destination, { recursive: true, mode: 0o755 });
   chmodSync(destination, 0o755);
   for (const entry of config.portableSkillEntries) {
@@ -109,6 +112,11 @@ const sourceBefore = sourceSkills.map((directory) => ({ skill: path.basename(dir
 rmSync(temporaryStage, { recursive: true, force: true });
 mkdirSync(path.join(temporaryStage, "skills"), { recursive: true, mode: 0o755 });
 for (const entry of config.portablePluginEntries) copyTree(path.join(root, entry), path.join(temporaryStage, entry));
+const stagedPluginPath = path.join(temporaryStage, "plugin.json");
+const stagedPlugin = JSON.parse(readFileSync(stagedPluginPath, "utf8"));
+stagedPlugin.extensions ??= {};
+stagedPlugin.extensions["io.github.bioinfornatics.agent-plugins.runtime"] = { schemaVersion: 1, mode: nativeProfile.mode, executables: "skills/<name>/scripts/<name>[.exe]" };
+writeFileSync(stagedPluginPath, JSON.stringify(stagedPlugin, null, 2) + "\n", { mode: 0o644 });
 chmodSync(temporaryStage, 0o755);
 chmodSync(path.join(temporaryStage, "skills"), 0o755);
 try {
@@ -134,8 +142,7 @@ try {
   const sourceAfter = sourceSkills.map((directory) => ({ skill: path.basename(directory), inventory: inventory(directory) }));
   if (digest(sourceAfter) !== digest(sourceBefore)) fail("source skills changed while assembling release staging");
   const stageInventory = inventory(temporaryStage);
-  const manifest = { schemaVersion: 1, releaseKey, bunTarget: target, bunVersion: config.bunVersion, files: stageInventory.filter((entry) => !entry.path.endsWith("/")) };
-  const { writeFileSync } = await import("node:fs");
+  const manifest = { schemaVersion: 1, runtimeMode: nativeProfile.mode, releaseKey, bunTarget: target, bunVersion: config.bunVersion, files: stageInventory.filter((entry) => !entry.path.endsWith("/")) };
   writeFileSync(path.join(temporaryStage, "release-manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o644 });
   const validatedInventory = inventory(temporaryStage);
   rmSync(finalStage, { recursive: true, force: true });

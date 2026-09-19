@@ -7,10 +7,7 @@ description: Creates and manages Goose custom agent definitions for reusable rol
 
 ## Offline runtime
 
-Use the released `agent-creator` executable for user workflows. A source checkout needs Node.js 22+ to build, but tagged native archives do not require Node.js or installed dependencies. An incomplete archive is a packaging defect.
-
-
-Create focused Goose custom agents that define **who Goose should be** for a task. Keep generated files under `.agents/agents/` for project scope or `~/.agents/agents/` for user scope.
+Use `node scripts/agent-creator.mjs` for a copied source Skill; it requires Node.js 22+ and resolves only this Skill’s generated runtime. Tagged native archives use the released executable and do not require Node.js. Report a missing runtime or mapping as a packaging defect.
 
 ## Scope boundary
 

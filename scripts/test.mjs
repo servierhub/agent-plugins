@@ -21,8 +21,17 @@ for (const name of creatorNames) {
   run([path.join(creatorRoot, "scripts", "test.mjs")], creatorRoot);
 }
 
+console.log("\n> Testing tracked per-Skill runtime generation");
+run(["--test", path.join(root, "tests", "test_skill_runtime_generation.test.ts")]);
+
+console.log("\n> Checking tracked app dist drift");
+run([path.join(root, "scripts", "check-skill-runtime-dist-drift.mjs")]);
+
 console.log("\n> Testing distribution");
 run(["--test", path.join(root, "tests", "test_distribution.test.ts")]);
+
+console.log("\n> Testing isolated Goose 1.47 Git install and local update");
+run(["--test", path.join(root, "tests", "test_goose_git_install.test.ts")]);
 
 console.log("\n> Testing developer facade and installer safety");
 run(["--test", path.join(root, "tests", "test_developer_facade.test.ts")]);

@@ -14,6 +14,7 @@ const EXPECTED_SKILLS = new Set(["skill-creator", "agent-creator", "hook-creator
 test("open plugins manifest", () => {
   const manifest = JSON.parse(readFileSync(join(ROOT, "plugin.json"), "utf-8"));
   assert.equal(manifest.name, PLUGIN_NAME);
+  assert.equal(manifest.extensions?.["io.github.bioinfornatics.agent-plugins.runtime"]?.mode, "node-bundled");
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
   assert.ok(manifest.description.trim());
 });
@@ -112,7 +113,10 @@ test("creator implementation and build ownership is exclusively under apps", () 
     for (const relative of ["package.json", "package-lock.json", "tsconfig.json", "tests", "dist", "vendor"]) {
       assert.equal(existsSync(join(skill, relative)), false, `${name}: source Skill contains app artifact ${relative}`);
     }
-    const pending = [skill];
+    assert.ok(existsSync(join(skill, "runtime", "runtime-manifest.json")), `${name}: generated runtime`);
+    const pending = readdirSync(skill, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && entry.name !== "runtime")
+      .map((entry) => join(skill, entry.name));
     while (pending.length) {
       const directory = pending.pop()!;
       for (const entry of readdirSync(directory, { withFileTypes: true })) {

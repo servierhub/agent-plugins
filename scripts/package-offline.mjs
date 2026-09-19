@@ -9,5 +9,7 @@ if(!target){console.error("Unsupported native release target: "+releaseKey);proc
 const output=resolve(process.argv[2]??join(root,"dist","agent-plugins.zip")),stage=join(root,config.stagingRoot,releaseKey),binary=join(stage,"skills","plugin-creator","scripts","plugin-creator"+(process.platform==="win32"?".exe":""));
 function run(command,args){const result=spawnSync(command,args,{cwd:root,stdio:"inherit"});if(result.error){console.error(result.error.message);process.exit(1);}if(result.status!==0)process.exit(result.status??1);}
 run(process.execPath,[join(root,"scripts","build-bun-executables.mjs"),"--target="+target]);
-if(!existsSync(join(stage,"release-manifest.json"))||!existsSync(binary)){console.error("Validated staging is incomplete");process.exit(2);}
+const manifestPath=join(stage,"release-manifest.json");
+if(!existsSync(manifestPath)||!existsSync(binary)){console.error("Validated staging is incomplete");process.exit(2);}
+const manifest=JSON.parse(readFileSync(manifestPath,"utf8"));if(manifest.runtimeMode!=="native-bun"){console.error("Mixed or unsupported staging runtime mode: "+String(manifest.runtimeMode));process.exit(2);}
 mkdirSync(dirname(output),{recursive:true});run(binary,["package",stage,output,"--profile","authoring"]);if(!existsSync(output))process.exit(2);console.log(JSON.stringify({status:"packaged",releaseKey,staging:stage,output}));

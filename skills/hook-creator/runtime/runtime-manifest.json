@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "runtimeMode": "node-bundled",
+  "logicalName": "hook-creator",
+  "skill": "skills/hook-creator",
+  "app": "apps/hook-creator-cli",
+  "sourceEntry": "scripts/cli.ts",
+  "emittedEntry": "dist/cli.js",
+  "runtimeEntry": "dist/cli.js",
+  "node": ">=22.0.0",
+  "sourceLock": {
+    "path": "apps/hook-creator-cli/package-lock.json",
+    "sha256": "1efe042064e5074b4702d323248f3be685fdc35223ab403cc9270d013e3c812c",
+    "lockfileVersion": 3
+  },
+  "productionDependencies": [],
+  "resources": [],
+  "relatedCommands": {},
+  "notices": "THIRD_PARTY_NOTICES.md",
+  "files": [
+    {
+      "path": "dist/bun-entry.js",
+      "sha256": "6ead52bd45b32ec97d656dbae4484652f829e3e4fa79c54de7864651968f156d",
+      "size": 98
+    },
+    {
+      "path": "dist/cli.js",
+      "sha256": "580fedfc4fcbd91b602a2fb6a34a6d2eab80a0b6435b8667af7de10db53f9f97",
+      "size": 11027
+    },
+    {
+      "path": "dist/containment.js",
+      "sha256": "a6c746cb0380b076e3012375bff8ba26d448f5d949af0b5254491988ec766d92",
+      "size": 1669
+    },
+    {
+      "path": "dist/evaluation_run_manifest.js",
+      "sha256": "8179f6ce358db2146e2db62fa997ea09d79cf8c38d44a42a48731527ded59a7b",
+      "size": 13258
+    },
+    {
+      "path": "dist/evidence_attestation.js",
+      "sha256": "bdd172757ea97aab1287edb4001436eb9a86287ea8d2cb365a3ce634fc6e0c33",
+      "size": 12137
+    },
+    {
+      "path": "dist/hook_format.js",
+      "sha256": "1c393c9e33d23ce7f1b8dce7a4b41cfb467b913aa9f6fd06a3f906543cd6cf5d",
+      "size": 11035
+    },
+    {
+      "path": "dist/init_hook.js",
+      "sha256": "708bf60e95cb87cfdcee4fe8f978d7c307c197e65907dbb4cb0e94a5c17cbf29",
+      "size": 8774
+    },
+    {
+      "path": "dist/production_approval.js",
+      "sha256": "c8f08e337ed103e6dcc218938316dc448b919b93b94014e13eea2b9afd03d92b",
+      "size": 15283
+    },
+    {
+      "path": "dist/validate_hook.js",
+      "sha256": "34839a15cf090294262939597405c956ad194581a84a5815fd73d18afc825122",
+      "size": 1374
+    },
+    {
+      "path": "package.json",
+      "sha256": "1776fb5a4e29f5c8f6591a99ac8fcd4cc91b09b12a8469c5858afa2a8183b93e",
+      "size": 125
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "0598182b2141d8dcba3507b8339b07c87f097a1b18b03884d885fa320f51fbf0",
+      "size": 68
+    }
+  ]
+}
