@@ -40,7 +40,7 @@ Stream processing is bounded. Non-JSON, oversized, excessive, or structurally in
 Keep train and held-out test cases separate. Select the best description by held-out performance, not training accuracy. Do not expand descriptions into multilingual keyword lists or examples from the eval set.
 
 ```bash
-node dist/scripts/cli.js trigger-eval \
+skill-creator trigger-eval \
   --eval-set <trigger-eval.json> \
   --skill-path <skill-directory> \
   --runs-per-query 3

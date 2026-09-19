@@ -9,7 +9,7 @@ Create and improve portable Agent Skills for AI agents. Keep the entrypoint as a
 
 ## Offline runtime
 
-Released distributions include compiled scripts and production dependencies under `vendor/node_modules`. Run scripts from `dist/`; consumer machines need Node.js.
+Use the released `skill-creator` executable for user workflows. A source checkout needs Node.js 22+ to build, but tagged native archives do not require Node.js or installed dependencies.
 
 ## Scope
 
@@ -84,48 +84,48 @@ Choose the smallest structural correction. For rule-rich deterministic domains, 
 
 For an early idea, start with a plain-language, summary-first conversation. Ask no more than three questions in one turn, preview the full contract, freeze and confirm scenarios, then launch only inside the durable conversation workspace. Novices see no JSON or internal creator names; their final report always names assumptions and risks. Experts may inspect fields and use supported overrides; reject unsupported budgets rather than implying they took effect. The bundled fake adapter reports generation as simulated and validation/evaluation as not run. Every mutation remains isolated and production promotion is a separate decision. See [the detailed flow](references/idea-to-candidate.md).
 
-    node dist/scripts/cli.js candidate <conversation-workspace> --idea "plain-language idea"
-    node dist/scripts/cli.js candidate <conversation-workspace>  # resume later
+    skill-creator candidate <conversation-workspace> --idea "plain-language idea"
+    skill-creator candidate <conversation-workspace>  # resume later
 
 ## Commands
 
 ```bash
 # Agent Skills format conformance
-node dist/scripts/cli.js validate <skill-directory>
+skill-creator validate <skill-directory>
 
 # Authoring quality and pattern relevance
-node dist/scripts/cli.js audit <skill-directory> --format json
+skill-creator audit <skill-directory> --format json
 
 # Scenario quality and normalized eval set
-node dist/scripts/cli.js design-evals <evals.json> --skill-path <skill-directory> --format json
+skill-creator design-evals <evals.json> --skill-path <skill-directory> --format json
 
 # Derive elicitation shells, then freeze a provenance-bound scenario plan
-node dist/scripts/cli.js freeze-evals <elicitation.json> --draft -o <draft.json>
-node dist/scripts/cli.js freeze-evals <completed-draft.json> -o <frozen-plan.json>
+skill-creator freeze-evals <elicitation.json> --draft -o <draft.json>
+skill-creator freeze-evals <completed-draft.json> -o <frozen-plan.json>
 
 # Trigger-description evaluation
-node dist/scripts/cli.js trigger-eval --eval-set <trigger-eval.json> --skill-path <skill-directory>
+skill-creator trigger-eval --eval-set <trigger-eval.json> --skill-path <skill-directory>
 
 # Resumable paired behavioral evaluation
-node dist/scripts/cli.js full-eval <skill-directory> --workspace <iteration-directory> --format json
+skill-creator full-eval <skill-directory> --workspace <iteration-directory> --format json
 
 # Map evaluation failures to authoring patterns
-node dist/scripts/cli.js analyze <iteration-directory> --skill-path <skill-directory> --format json
+skill-creator analyze <iteration-directory> --skill-path <skill-directory> --format json
 
 # Govern evidence-linked, challenged, approval-gated isolated revisions
-node dist/scripts/cli.js evidence-loop <iteration-directory> --skill-path <skill-directory> --loop <separate-ledger> --format json
+skill-creator evidence-loop <iteration-directory> --skill-path <skill-directory> --loop <separate-ledger> --format json
 
 # Governed anonymous usability study validation and analysis
-node dist/scripts/cli.js usability-study --validate <session.json> --format json
-node dist/scripts/cli.js usability-study <sessions-directory> --format json
+skill-creator usability-study --validate <session.json> --format json
+skill-creator usability-study <sessions-directory> --format json
 
 # Manual screen-reader acceptance (protocol and real records; synthetic data is non-evidence)
-node dist/scripts/cli.js screen-reader-acceptance --validate <record.json> --format json
-node dist/scripts/cli.js screen-reader-acceptance <records-directory> --format json
+skill-creator screen-reader-acceptance --validate <record.json> --format json
+skill-creator screen-reader-acceptance <records-directory> --format json
 
 # Release gates and packaging
-node dist/scripts/cli.js verify <skill-directory> [options]
-node dist/scripts/cli.js package <skill-directory> [output-directory]
+skill-creator verify <skill-directory> [options]
+skill-creator package <skill-directory> [output-directory]
 ```
 
 Use `--help` for command details. JSON automation uses stable envelopes. Exit codes are 0 success, 1 failure, 2 invalid usage, and 3 blocked execution.
@@ -138,10 +138,12 @@ The current run must have filesystem access to references required by progressiv
 
 Before claiming completion:
 
+The resumable evaluation validates receipt completeness in its receipt phase; gate verification then binds that evaluation workspace to the Skill:
+
 ```bash
-node dist/scripts/validate_evaluation_receipt.js <iteration-workspace>
-node dist/scripts/cli.js analyze <iteration-workspace> --skill-path <skill-directory> --format json
-node dist/scripts/cli.js verify <skill-directory> --evaluation <iteration-workspace> [options]
+skill-creator full-eval <skill-directory> --workspace <iteration-workspace> --resume [options]
+skill-creator analyze <iteration-workspace> --skill-path <skill-directory> --format json
+skill-creator verify <skill-directory> --evaluation <iteration-workspace> [options]
 ```
 
 Report `pass`, `fail`, `blocked`, `complete`, and `na` without weakening them. Human review is never self-approved.

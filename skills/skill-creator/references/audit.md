@@ -13,8 +13,8 @@ Read this reference when reviewing an existing Skill without necessarily changin
 Run:
 
 ```bash
-node dist/scripts/cli.js validate <skill-directory>
-node dist/scripts/cli.js audit <skill-directory> --format json
+skill-creator validate <skill-directory>
+skill-creator audit <skill-directory> --format json
 ```
 
 ## Discovery metadata

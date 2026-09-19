@@ -52,7 +52,7 @@ Launch the current and baseline run for every case in the same turn. Keep inputs
 The Goose reference adapter can execute scaffolded pairs directly:
 
 ```bash
-node dist/scripts/cli.js full-eval <skill-directory> --workspace <workspace> \
+skill-creator full-eval <skill-directory> --workspace <workspace> \
   --execute --model <model> [--baseline old_skill --baseline-skill <snapshot>]
 ```
 
@@ -84,7 +84,7 @@ Read `../agents/grader.md`. Evaluate each assertion against the actual outputs a
 ### 6. Aggregate and analyze
 
 ```bash
-node dist/scripts/aggregate_benchmark.js <workspace>/iteration-N --skill-name <name>
+skill-creator aggregate <workspace>/iteration-N --skill-name <name>
 ```
 
 Read `../agents/analyzer.md` and identify weak assertions, variance, regressions, and time/token tradeoffs.
@@ -94,7 +94,7 @@ Read `../agents/analyzer.md` and identify weak assertions, variance, regressions
 Interactive:
 
 ```bash
-node dist/eval-viewer/generate_review.js <workspace>/iteration-N \
+skill-creator review <workspace>/iteration-N \
   --skill-name <name> \
   --benchmark <workspace>/iteration-N/benchmark.json
 ```
@@ -102,7 +102,7 @@ node dist/eval-viewer/generate_review.js <workspace>/iteration-N \
 Headless:
 
 ```bash
-node dist/eval-viewer/generate_review.js <workspace>/iteration-N \
+skill-creator review <workspace>/iteration-N \
   --skill-name <name> \
   --benchmark <workspace>/iteration-N/benchmark.json \
   --static <workspace>/iteration-N/review.html
@@ -113,8 +113,8 @@ For later iterations, add `--previous-workspace`. The static and live modes rend
 ### 8. Validate and verify
 
 ```bash
-node dist/scripts/validate_evaluation_receipt.js <workspace>/iteration-N
-node dist/scripts/cli.js verify <skill-directory> --evaluation <workspace>/iteration-N [options]
+skill-creator full-eval <skill-directory> --workspace <workspace>/iteration-N --resume [options]
+skill-creator verify <skill-directory> --evaluation <workspace>/iteration-N [options]
 ```
 
 A complete receipt is not necessarily a passing gate. Report `pass`, `fail`, `blocked`, and `na` exactly.

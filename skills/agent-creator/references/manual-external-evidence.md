@@ -6,13 +6,7 @@ layout. It does not execute Goose, grade results, or attest CI execution.
 
 ## Export a self-contained job
 
-```sh
-node dist/scripts/evidence_exchange.js export \
-  --agent ./reviewer.md \
-  --eval-set ./evaluation/evals.json \
-  --fixture-root ./evaluation \
-  --output /tmp/reviewer-job
-```
+The released `agent-creator` executable does not expose this source-only exchange API. Integrators that need it must use the TypeScript module from a source checkout; do not invoke compiled `dist/` files as a public CLI.
 
 The output contains `job.json`, snapshots of `agent.md` and `evals.json`, copied
 files under `fixtures/`, the canonical `run.schema.json`, and
@@ -42,15 +36,7 @@ attestation. The importer deliberately does not accept a `ci` provenance source.
 
 ## Import
 
-```sh
-node dist/scripts/evidence_exchange.js import \
-  --job /tmp/reviewer-job/job.json \
-  --run /tmp/external-result.json \
-  --workspace /tmp/reviewer-evaluation
-
-node dist/scripts/grade_agent_eval.js /tmp/reviewer-evaluation
-node dist/scripts/aggregate_benchmark.js /tmp/reviewer-evaluation
-```
+Import is likewise a source-only integration API rather than a released command. After an integrator imports the result, continue with `agent-creator grade /tmp/reviewer-evaluation` and `agent-creator aggregate /tmp/reviewer-evaluation`.
 
 Import validates bundle checksums, recomputes `job_id` from canonical manifest identity fields, applies the exported closed schema (including nested unknown-field rejection and strict RFC3339 timestamps), validates the response checksum, provenance, trust, eval ID, and configuration. Eval IDs are bounded printable strings or integers; their destination segment is percent-encoded and checked for workspace containment. It writes `response.md`, `timing.json`, a synthetic
 import transcript carrying provenance/trust, and canonical `evidence.json` in

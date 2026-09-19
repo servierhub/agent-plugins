@@ -3,7 +3,7 @@
 `independent-review` runs a builder, domain challenger, UX challenger, evaluation challenger, and verifier as isolated host calls. It is a local portable orchestration contract and has no sibling creator runtime dependency.
 
 ```bash
-node dist/scripts/cli.js independent-review --config review.json --host ./branch-host --format json
+plugin-creator independent-review --config review.json --host ./branch-host --format json
 ```
 
 The JSON config freezes `approvedContext` (`evidence`, `contracts`, and `scenarios`) and non-empty `criteria` before execution. Its matrix sets role counts, maximum concurrency, per-branch milliseconds, and a run-wide budget. Both deadlines are enforced by the orchestrator with `Promise.race`; correctness does not depend on host cancellation cooperation. A response settling after either deadline is quarantined and cannot alter branch records or convergence.

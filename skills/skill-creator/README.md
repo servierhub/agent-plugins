@@ -13,38 +13,38 @@ A vendor-neutral fork of Anthropic's `skill-creator`, adapted to the open [Agent
 
 ## Requirements
 
-- Node.js 22+ (scripts are TypeScript compiled to `dist/`, with runtime `node_modules` vendored — no network access needed once installed)
+- A tagged native `skill-creator` executable, or Node.js 22+ for source development
 - Goose on `PATH` for trigger evaluation and description optimization, unless another adapter is implemented
 
 ## Unified CLI
 
-Build once, then use the unified entrypoint for validation, evaluation, aggregation, review, gate verification, and packaging:
+Use the unified entrypoint for validation, evaluation, aggregation, review, gate verification, and packaging. In a tagged release it is injected at `scripts/skill-creator`; source development and builds belong in `apps/skill-creator-cli/`, not this portable Skill directory.
 
 ```bash
-npm install && npm run build
-node dist/scripts/cli.js candidate /path/to/conversation --idea "plain-language idea"
-node dist/scripts/cli.js validate /path/to/skill
-node dist/scripts/cli.js audit /path/to/skill --format json
-node dist/scripts/cli.js design-evals /path/to/skill/evals/evals.json --skill-path /path/to/skill --format json
-node dist/scripts/cli.js freeze-evals /path/to/elicitation.json --draft -o /path/to/draft.json
-node dist/scripts/cli.js freeze-evals /path/to/completed-draft.json -o /path/to/frozen-plan.json
-node dist/scripts/cli.js analyze /path/to/workspace --skill-path /path/to/skill --format json
-node dist/scripts/cli.js full-eval /path/to/skill --workspace /path/to/workspace --dry-run
-node dist/scripts/cli.js full-eval /path/to/skill --workspace /path/to/workspace --execute --model <model>
-node dist/scripts/cli.js full-eval /path/to/skill --workspace /path/to/workspace --resume --human-review pass --tests-status pass
-node dist/scripts/cli.js trigger-eval --eval-set /path/to/trigger-evals.json --skill-path /path/to/skill
-node dist/scripts/cli.js aggregate /path/to/iteration-workspace
-node dist/scripts/cli.js review /path/to/iteration-workspace --static review.html
-node dist/scripts/cli.js evidence-loop /path/to/iteration-workspace --skill-path /path/to/skill --loop /path/to/separate-ledger
-node dist/scripts/cli.js usability-study --validate /path/to/session.json --format json
-node dist/scripts/cli.js usability-study /path/to/anonymous-sessions --format json
-node dist/scripts/cli.js screen-reader-acceptance --validate /path/to/anonymous-record.json --format json
-node dist/scripts/cli.js screen-reader-acceptance /path/to/anonymous-records --attestations /path/to/receipts --format json
-node dist/scripts/cli.js verify /path/to/skill --evaluation benchmark.json --human-review feedback.json
-node dist/scripts/cli.js package /path/to/skill ./dist-out
+skill-creator --help
+skill-creator candidate /path/to/conversation --idea "plain-language idea"
+skill-creator validate /path/to/skill
+skill-creator audit /path/to/skill --format json
+skill-creator design-evals /path/to/skill/evals/evals.json --skill-path /path/to/skill --format json
+skill-creator freeze-evals /path/to/elicitation.json --draft -o /path/to/draft.json
+skill-creator freeze-evals /path/to/completed-draft.json -o /path/to/frozen-plan.json
+skill-creator analyze /path/to/workspace --skill-path /path/to/skill --format json
+skill-creator full-eval /path/to/skill --workspace /path/to/workspace --dry-run
+skill-creator full-eval /path/to/skill --workspace /path/to/workspace --execute --model <model>
+skill-creator full-eval /path/to/skill --workspace /path/to/workspace --resume --human-review pass --tests-status pass
+skill-creator trigger-eval --eval-set /path/to/trigger-evals.json --skill-path /path/to/skill
+skill-creator aggregate /path/to/iteration-workspace
+skill-creator review /path/to/iteration-workspace --static review.html
+skill-creator evidence-loop /path/to/iteration-workspace --skill-path /path/to/skill --loop /path/to/separate-ledger
+skill-creator usability-study --validate /path/to/session.json --format json
+skill-creator usability-study /path/to/anonymous-sessions --format json
+skill-creator screen-reader-acceptance --validate /path/to/anonymous-record.json --format json
+skill-creator screen-reader-acceptance /path/to/anonymous-records --attestations /path/to/receipts --format json
+skill-creator verify /path/to/skill --evaluation /path/to/iteration-workspace --tests-status pass --triggering-status pass --human-review pass
+skill-creator package /path/to/skill ./dist-out
 ```
 
-Every subcommand accepts `--help`, `--format text|json`, and `--quiet`. Exit codes are `0` for success, `1` for failure, `2` for invalid usage, and `3` when verification or execution is blocked. The former script entrypoints remain supported for compatibility.
+Every subcommand accepts `--help`, `--format text|json`, and `--quiet`. Exit codes are `0` for success, `1` for failure, `2` for invalid usage, and `3` when verification or execution is blocked. Use only the stable executable name in released workflows.
 
 `validate` checks Agent Skills format conformance. `audit` checks repository authoring policy. `design-evals` checks scenario realism, discrimination, capabilities, atomic assertions, fixtures, and navigation expectations. `freeze-evals` derives five elicitation shells per material capability and freezes completed scenarios, deterministic assertions, qualitative review questions, execution context, edits, provenance, and a canonical content hash. `analyze` separates completed, unavailable, and blocked evidence, then maps failed assertions and navigation results to authoring patterns. Packaging blocks error-level audit findings and reports warnings.
 
@@ -56,11 +56,11 @@ The `candidate` command provides a durable conversational checkpoint from a plai
 
 Only `--fake` execution is bundled. It writes beneath the realpath-contained conversation workspace, performs no production mutation, reports generation as `simulated`, and reports validation and evaluation as `not-run`. Use it to test the flow, not to approve a candidate.
 
-## Legacy validate and package entrypoints
+## Validate and package
 
 ```bash
-node dist/scripts/quick_validate.js "$(realpath /path/to/skill)"
-node dist/scripts/package_skill.js /path/to/skill ./dist-out
+skill-creator validate "$(realpath /path/to/skill)"
+skill-creator package /path/to/skill ./dist-out
 ```
 
 ## Behavioral evaluation
@@ -84,7 +84,7 @@ result is `evaluation: blocked`, with the missing capability and artifact named.
 ## Trigger evaluation
 
 ```bash
-node dist/scripts/run_eval.js \
+skill-creator trigger-eval \
   --eval-set /path/to/trigger-evals.json \
   --skill-path /path/to/skill \
   --model provider/model-id \
@@ -93,18 +93,16 @@ node dist/scripts/run_eval.js \
 
 The eval set is a JSON array of objects with `query` and `should_trigger` fields. Output preserves the legacy result fields and additively includes versioned per-run outcomes, infrastructure-failure counts, confusion metrics, latency distributions, usage/cost availability, and telemetry coverage. See [the trigger evaluation reference](references/trigger-evaluation.md).
 
-## Optimize a description
+## Improve from evaluation evidence
 
 ```bash
-node dist/scripts/run_loop.js \
-  --eval-set /path/to/trigger-evals.json \
+skill-creator evidence-loop /path/to/iteration-workspace \
   --skill-path /path/to/skill \
-  --model provider/model-id \
-  --max-iterations 5 \
-  --verbose
+  --loop /path/to/separate-ledger \
+  --max-iterations 5
 ```
 
-Use `--runner goose` or set `SKILL_CREATOR_RUNNER`. Additional hosts can be added as runner modules; unsupported runners fail explicitly.
+The separate ledger records proposed, challenged, approved, and measured revisions without mutating the source Skill implicitly. For trigger evaluation, use `--runner goose` or set `SKILL_CREATOR_RUNNER`; unsupported runner adapters fail explicitly.
 
 ## Portable paths and scope
 

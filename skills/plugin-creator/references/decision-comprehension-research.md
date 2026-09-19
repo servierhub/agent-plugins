@@ -12,6 +12,6 @@ Record completion, time to first candidate, interventions, selected decision, co
 
 ## Analyze and gates
 
-    node dist/scripts/cli.js decision-research --input ./sessions.json --format json
+    plugin-creator decision-research --input ./sessions.json --format json
 
 Invalid input exits 2, pass exits 0, and blocked exits 3. Gates require eight non-synthetic sessions, 80% unassisted completion, 90% decision accuracy, median highest-severity regression identification at most 120 seconds, both cohorts across every golden journey, all four decision categories, and no unresolved P0/P1. Time to first candidate is reported separately and is not the two-minute gate. For P0/P1, the report emits deterministic `bd create` suggestions but never executes them.

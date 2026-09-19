@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PLUGIN_NAME = "agent-plugins";
 const SKILLS = join(ROOT, "skills");
+const APPS = join(ROOT, "apps");
 const EXPECTED_SKILLS = new Set(["skill-creator", "agent-creator", "hook-creator", "plugin-creator"]);
 
 test("open plugins manifest", () => {
@@ -100,22 +101,47 @@ test("explicit plugin evaluation requests require behavioral skill and integrati
   ]) assert.ok(text.includes(required), required);
 });
 
-test("every creator ships a complete offline runtime bundle", () => {
+test("creator implementation and build ownership is exclusively under apps", () => {
+  assert.deepEqual(new Set(readdirSync(APPS).filter((entry) => entry.endsWith("-creator-cli"))), new Set([...EXPECTED_SKILLS].map((name) => `${name}-cli`)));
   for (const name of EXPECTED_SKILLS) {
-    const skill = join(ROOT, "skills", name);
-    const pkg = JSON.parse(readFileSync(join(skill, "package.json"), "utf-8"));
+    const skill = join(SKILLS, name);
+    const app = join(APPS, `${name}-cli`);
+    for (const required of ["package.json", "package-lock.json", "tsconfig.json", "scripts", "tests", "dist", "vendor"]) {
+      assert.ok(existsSync(join(app, required)), `${name}: app must own ${required}`);
+    }
+    for (const relative of ["package.json", "package-lock.json", "tsconfig.json", "tests", "dist", "vendor"]) {
+      assert.equal(existsSync(join(skill, relative)), false, `${name}: source Skill contains app artifact ${relative}`);
+    }
+    const pending = [skill];
+    while (pending.length) {
+      const directory = pending.pop()!;
+      for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        const absolute = join(directory, entry.name);
+        if (entry.isDirectory()) pending.push(absolute);
+        else if (/\.tsx?$/.test(entry.name) || entry.name === "build.mjs") {
+          assert.fail(`${name}: source Skill contains creator implementation artifact ${absolute.slice(skill.length + 1)}`);
+        }
+      }
+    }
+  }
+});
+
+test("every creator application ships a complete offline runtime bundle", () => {
+  for (const name of EXPECTED_SKILLS) {
+    const app = join(APPS, `${name}-cli`);
+    const pkg = JSON.parse(readFileSync(join(app, "package.json"), "utf-8"));
     assert.equal(pkg.offlineBundle, true, `${name}: offlineBundle`);
-    assert.ok(existsSync(join(skill, "dist")), `${name}: dist`);
-    assert.ok(existsSync(join(skill, "vendor", "manifest.json")), `${name}: vendor manifest`);
-    assert.ok(existsSync(join(skill, "THIRD_PARTY_NOTICES.md")), `${name}: notices`);
+    assert.ok(existsSync(join(app, "dist")), `${name}: dist`);
+    assert.ok(existsSync(join(app, "vendor", "manifest.json")), `${name}: vendor manifest`);
+    assert.ok(existsSync(join(SKILLS, name, "THIRD_PARTY_NOTICES.md")), `${name}: notices`);
     for (const dependency of Object.keys(pkg.dependencies ?? {})) {
-      assert.ok(existsSync(join(skill, "vendor", "node_modules", dependency, "package.json")), `${name}: ${dependency}`);
+      assert.ok(existsSync(join(app, "vendor", "node_modules", dependency, "package.json")), `${name}: ${dependency}`);
     }
   }
 });
 
 test("all creator evaluation sets are autonomous and fixture-backed", () => {
-  const designCli = join(SKILLS, "skill-creator", "dist", "scripts", "cli.js");
+  const designCli = join(APPS, "skill-creator-cli", "dist", "scripts", "cli.js");
   for (const name of EXPECTED_SKILLS) {
     const skillRoot = join(SKILLS, name);
     const evalSet = join(skillRoot, "evals", "evals.json");
@@ -137,11 +163,27 @@ test("all creator evaluation sets are autonomous and fixture-backed", () => {
   }
 });
 
-test("offline vendors contain production dependencies only", () => {
+test("root offline smoke uses app authoring code and staged release executables", () => {
+  for (const relative of ["scripts/test-offline-bundle.mjs", "scripts/package-offline.mjs"]) {
+    const source = readFileSync(join(ROOT, relative), "utf8");
+    assert.doesNotMatch(source, /skills[\"', ]+[^\"', ]+[\"', ]+(?:dist|vendor)/, relative + ": obsolete Skill implementation path");
+  }
+  const packager = readFileSync(join(ROOT, "scripts", "package-offline.mjs"), "utf8");
+  const smoke = readFileSync(join(ROOT, "scripts", "test-offline-bundle.mjs"), "utf8");
+  assert.match(packager, /build-bun-executables\.mjs/);
+  assert.match(packager, /release-manifest\.json/);
+  assert.match(packager, /plugin-creator[\"'],[\"']scripts[\"']/);
+  assert.match(smoke, /release-manifest\.json/);
+  assert.match(smoke, /PATH:[\"'][\"']/);
+  assert.doesNotMatch(packager, /join\(root,[\"']apps[\"']/);
+  assert.doesNotMatch(smoke, /path\.join\(root,[\"']apps[\"']/);
+});
+
+test("application offline vendors contain production dependencies only", () => {
   for (const name of EXPECTED_SKILLS) {
-    const skill = join(ROOT, "skills", name);
-    const pkg = JSON.parse(readFileSync(join(skill, "package.json"), "utf-8"));
-    const manifest = JSON.parse(readFileSync(join(skill, "vendor", "manifest.json"), "utf-8"));
+    const app = join(APPS, `${name}-cli`);
+    const pkg = JSON.parse(readFileSync(join(app, "package.json"), "utf-8"));
+    const manifest = JSON.parse(readFileSync(join(app, "vendor", "manifest.json"), "utf-8"));
     const bundled = new Set(manifest.packages.map((item: { name: string }) => item.name));
     for (const dependency of Object.keys(pkg.dependencies ?? {})) assert.ok(bundled.has(dependency));
     for (const devDependency of Object.keys(pkg.devDependencies ?? {})) assert.ok(!bundled.has(devDependency), `${name}: bundled dev dependency ${devDependency}`);

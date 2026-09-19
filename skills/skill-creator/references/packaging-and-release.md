@@ -14,7 +14,7 @@ Read this reference when packaging a standalone Skill or assessing release eligi
 ## Package
 
 ```bash
-node dist/scripts/cli.js package <skill-directory> [output-directory]
+skill-creator package <skill-directory> [output-directory]
 ```
 
 Packaging excludes development evaluation data and rejects symbolic links. Warnings remain visible; errors block archive creation.
@@ -22,7 +22,7 @@ Packaging excludes development evaluation data and rejects symbolic links. Warni
 ## Release gates
 
 ```bash
-node dist/scripts/cli.js verify <skill-directory> \
+skill-creator verify <skill-directory> \
   --profile release \
   --evaluation <iteration-workspace> \
   --tests-status pass \

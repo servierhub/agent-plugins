@@ -28,12 +28,12 @@ The current Goose custom-agent contract uses `.agents/agents`; do not package an
 
 ## Unified CLI
 
-Use `node dist/scripts/cli.js <init|validate|verify|package|full-eval>`. All subcommands accept `--format text|json`, `--quiet`, and `--help`. Exit codes are `0` success, `1` failure, `2` usage, and `3` blocked. Packaging runs schema and structural validation. `full-eval` returns a stable versioned envelope in JSON mode.
+Use `plugin-creator <init|validate|verify|package|full-eval>`. All subcommands accept `--format text|json`, `--quiet`, and `--help`. Exit codes are `0` success, `1` failure, `2` usage, and `3` blocked. Packaging runs schema and structural validation. `full-eval` returns a stable versioned envelope in JSON mode.
 
 ## Create a plugin
 
 ```bash
-node dist/scripts/init_goose_plugin.js my-plugin \
+plugin-creator init my-plugin \
   --path /tmp \
   --description "Reusable Goose workflows" \
   --skill my-workflow \
@@ -44,10 +44,10 @@ node dist/scripts/init_goose_plugin.js my-plugin \
 
 ```bash
 # Agent Plugins 1.0.0 schema conformance (offline, machine-readable)
-node dist/scripts/validate_agent_plugin_schema.js /path/to/my-plugin --format json
+plugin-creator validate /path/to/my-plugin --format json
 
 # Structural and Goose-specific operational checks
-node dist/scripts/validate_goose_plugin.js /path/to/my-plugin
+plugin-creator validate /path/to/my-plugin
 ```
 
 The validators check:
@@ -97,11 +97,11 @@ combined benchmark, release gates, and a static HTML review report.
 Use the deterministic orchestrator when an AI agent needs to evaluate a whole plugin without guessing the next step:
 
 ```bash
-node dist/scripts/cli.js full-eval /path/to/plugin --workspace /path/to/plugin/evaluations/full-eval --dry-run --format json
-node dist/scripts/cli.js full-eval /path/to/plugin --workspace /path/to/plugin/evaluations/full-eval --resume --format json
+plugin-creator full-eval /path/to/plugin --workspace /path/to/plugin/evaluations/full-eval --dry-run --format json
+plugin-creator full-eval /path/to/plugin --workspace /path/to/plugin/evaluations/full-eval --resume --format json
 ```
 
-The fixed phases are validation, typed component discovery, component evaluation receipt detection, integration output detection, packaging, and release verification. Skill commands use the bundled skill-creator CLI by absolute path, while agent, hook, and MCP entries provide explicit specialist handoffs. Each completed component evaluation writes `receipt.json` exactly where plugin orchestration expects it. Dry-run is side-effect free. Rerunning (optionally with `--resume`) discovers existing receipts and outputs, making each phase idempotent. The envelope reports exact Skill paths, expected receipt paths, component `skill-creator full-eval` commands, phase statuses, and `next_actions`.
+The fixed phases are validation, typed component discovery, component evaluation receipt detection, integration output detection, packaging, and release verification. Skill commands use the bundled skill-creator CLI by absolute path, while agent, hook, and MCP entries provide explicit specialist handoffs. Each completed component evaluation writes `receipt.json` exactly where plugin orchestration expects it. Dry-run is side-effect free. Rerunning (optionally with `--resume`) discovers existing receipts and outputs, making each phase idempotent. The envelope reports exact Skill paths, expected receipt paths, component `plugin-creator full-eval` commands, phase statuses, and `next_actions`.
 
 This command never runs or simulates an LLM. The workspace must be a proper subdirectory of the plugin's `evaluations/` directory; integration and archive paths must stay inside that workspace. Evaluation files are therefore excluded consistently from source fingerprints and release archives. Cancellation requires an existing persisted graph and uses its saved configuration. Expired or heartbeat-stale leases are reclaimed even if their PID is live; generation/token fencing prevents the displaced owner from checkpointing. Forced cancellation terminates the complete package process tree and persists signal targets, outcome, and survivors. It stops with exit code 3 when Skill receipts, `integration/benchmark.json`, `integration/review.html`, test evidence, or explicit `--human-review pass` are absent. Once prerequisites exist, it packages the plugin and invokes the existing release verifier. Inputs can be overridden with repeated `--component-receipt`, `--integration`, `--archive`, and `--tests-status pass`.
 
@@ -110,7 +110,7 @@ Non-dry runs append a versioned durable history to `full-eval-events.jsonl`. Pro
 ## Package
 
 ```bash
-node dist/scripts/package_goose_plugin.js /path/to/my-plugin ./dist/my-plugin.zip
+plugin-creator package /path/to/my-plugin ./dist/my-plugin.zip
 ```
 
 ## Installation

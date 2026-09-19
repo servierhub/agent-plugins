@@ -5,7 +5,7 @@
     {
       "id": "schema-aggregate-valid",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_agent_plugin_schema.ts",
       "field": "SchemaValidationResult.valid (aggregate)",
       "sourceEvidence": [
         "valid:documents.every(d=>d.valid)"
@@ -17,7 +17,7 @@
     {
       "id": "schema-document-valid",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_agent_plugin_schema.ts",
       "field": "DocumentResult.valid",
       "sourceEvidence": [
         "valid=Boolean(check(prepared.value))"
@@ -29,7 +29,7 @@
     {
       "id": "mcp-aggregate-valid",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "field": "McpSemanticResult.valid (aggregate)",
       "sourceEvidence": [
         "valid: servers.every(server => server.valid)"
@@ -41,7 +41,7 @@
     {
       "id": "mcp-aggregate-policy-valid",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "field": "McpSemanticResult.policyValid (aggregate)",
       "sourceEvidence": [
         "policyValid: servers.every(server => server.policyValid)"
@@ -53,7 +53,7 @@
     {
       "id": "mcp-server-valid",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "field": "McpServerSemanticResult.valid",
       "sourceEvidence": [
         "valid: semanticFindings.length === 0"
@@ -65,7 +65,7 @@
     {
       "id": "mcp-server-policy-valid",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "field": "McpServerSemanticResult.policyValid",
       "sourceEvidence": [
         "policyValid: strictPolicyFindings.length === 0"
@@ -77,7 +77,7 @@
     {
       "id": "path-containment-contained",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/path_containment.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/path_containment.ts",
       "field": "PathContainmentResult.contained",
       "sourceEvidence": [
         "contained: boolean;"
@@ -88,7 +88,7 @@
     {
       "id": "path-containment-kind-outcome",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/path_containment.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/path_containment.ts",
       "field": "PathContainmentResult.kindOutcome",
       "sourceEvidence": [
         "kindOutcome: ExpectedKindOutcome;"
@@ -99,7 +99,7 @@
     {
       "id": "run-loop-train-results-pass",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "field": "history[].train_results[].pass",
       "sourceEvidence": [
         "train_results: trainResultList,"
@@ -111,7 +111,7 @@
     {
       "id": "run-loop-test-results-pass",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "field": "history[].test_results[].pass",
       "sourceEvidence": [
         "test_results: testSummary ? testResultList : null,"
@@ -123,7 +123,7 @@
     {
       "id": "run-loop-fallback-results-pass",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "field": "history[].results[].pass (legacy fallback alias of train_results)",
       "sourceEvidence": [
         "results: trainResultList,"
@@ -135,7 +135,7 @@
     {
       "id": "improve-description-history-results-pass",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/improve_description.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/improve_description.ts",
       "field": "HistoryEntry.results[].pass",
       "sourceEvidence": [
         "const status = r.pass ? \"PASS\" : \"FAIL\";"
@@ -147,7 +147,7 @@
     {
       "id": "plugin-cli-outcome-status",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "field": "validate command outcome.status",
       "sourceEvidence": [
         "ok:outcome.status===\"accepted\""
@@ -159,7 +159,7 @@
     {
       "id": "paired-execution-status",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "field": "ExecutePairOutcome.status",
       "sourceEvidence": [
         "export interface ExecutePairOutcome { status:\"complete\"|\"blocked\"|\"failed\"|\"cancelled\""
@@ -171,7 +171,7 @@
     {
       "id": "agent-evidence-import-status",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "field": "importEvidenceRun return status",
       "sourceEvidence": [
         "status: \"imported\" | \"duplicate\""
@@ -183,7 +183,7 @@
     {
       "id": "component-evidence-status",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "field": "CommonEvidenceEnvelope.status",
       "sourceEvidence": [
         "status: EvidenceStatus;"
@@ -195,7 +195,7 @@
     {
       "id": "component-evidence-applicability",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "field": "EvidenceApplicability.status",
       "sourceEvidence": [
         "status: \"applicable\" | \"na\""
@@ -207,7 +207,7 @@
     {
       "id": "verification-integration-status-copy",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "field": "verification receipt integration_evidence.status",
       "sourceEvidence": [
         "integration_evidence: integrationReceipt ? { status: integrationAssessment?.status"
@@ -219,7 +219,7 @@
     {
       "id": "paired-failure-code-excluded",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/runners/paired.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/runners/paired.ts",
       "field": "PairedFailureCode",
       "sourceEvidence": [
         "export type PairedFailureCode ="
@@ -230,7 +230,7 @@
     {
       "id": "evidence-trust-excluded",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "field": "EvidenceRun.trust.level",
       "sourceEvidence": [
         "trust: { level: TrustLevel; reason: string; reviewed_by?: string };"
@@ -241,7 +241,7 @@
     {
       "id": "hook-production-approval-state",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
       "field": "inspectApproval.state",
       "sourceEvidence": [
         "function state(events:O[]){let s=\"pending\"",
@@ -253,7 +253,7 @@
     {
       "id": "hook-production-approval-provenance",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
       "field": "production approval identity, bindings, event history, signatures, rationale, accepted_risks, waivers, lineage",
       "sourceEvidence": [
         "export const BINDING_KEYS=",

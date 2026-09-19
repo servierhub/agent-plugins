@@ -179,6 +179,6 @@
     "migration/legacy-workspace/runs/eval-1/with_skill/run-1/grading.json": "440d8f48e61a25876a6cb4d90287a73fe3d0b9edaf948e7a7fd76ef09046cfde",
     "migration/legacy-workspace/runs/eval-1/with_skill/run-1/outputs/response.md": "147edb9b994ca947e40c4d819a2fad43c554fa72ba879c49b776bc69c83dd310",
     "migration/legacy-workspace/runs/eval-1/with_skill/run-1/timing.json": "da1aab93bf45bfee07536fe97d1c5a202048ecba54fd14a4b64b94b120e0f6b7",
-    "producer-discovery.json": "b7cb160bf6e11c86cbed21709c0e1b2c1f1423f17bdd272b8b4dd5c14540c6c3"
+    "producer-discovery.json": "65754079fad5b7c652aab22f30787fd1a52d12e942277020d294850a8f176049"
   }
 }

@@ -13,3 +13,9 @@ evaluations/
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Generated standalone creator executables
+/bin/
+
+# Generated immutable per-target release staging
+/release-staging/

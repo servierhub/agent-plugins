@@ -141,8 +141,8 @@ For a material Skill change, prefer at least:
 Before execution, inventory every material capability and create exactly one scenario of each kind: `normal`, `boundary`, `restraint`, `missing-capability`, and `non-regression`. Restraint scenarios test an explicit non-goal; missing-capability scenarios test honest failure or blocking. The derivation command creates incomplete shells and explicit elicitation questions rather than inventing user context:
 
 ```bash
-node dist/scripts/cli.js freeze-evals elicitation.json --draft -o draft.json
-node dist/scripts/cli.js freeze-evals completed-draft.json -o frozen-plan.json
+skill-creator freeze-evals elicitation.json --draft -o draft.json
+skill-creator freeze-evals completed-draft.json -o frozen-plan.json
 ```
 
 Each completed scenario records `execution_level`, `fixtures`, declared `capabilities`, positive `budget`, atomic `assertions`, separate `review_questions`, category-specific `semantics`, explicit `user_edits`, and non-empty `coverage_tags` containing both `capability:<id>` and `category:<kind>`. An empty `user_edits: []` is the required acknowledgement that no edits were made. Each assertion has a stable `id`, non-empty `subject`, an `operator` from the documented enum, a scalar `expected` value, and a typed `locator` (`json-pointer`, `file`, `stdout`, `stderr`, or `exit-code`). Free-form statements are invalid; `because`, `if`, `when`, and an embedded second predicate are rejected so no trailing clause can smuggle in another assertion. Subjective predicates such as *loves*, *feels*, or *seems* belong only in review questions. Prompts must remain natural user requests and must not repeat assertion wording, including short or punctuation/case/Unicode-normalized copies.
@@ -170,7 +170,7 @@ Require a specific command only when it is part of the public contract.
 ## Validate the design
 
 ```bash
-node dist/scripts/cli.js design-evals <evals.json> --skill-path <skill-directory> --format json
+skill-creator design-evals <evals.json> --skill-path <skill-directory> --format json
 ```
 
 Fix error-level findings before behavioral evaluation. Review warnings for weak discrimination, missing subject/language/preconditions, non-atomic assertions, missing target fixtures, absent navigation expectations, and uncovered declared domain dimensions.

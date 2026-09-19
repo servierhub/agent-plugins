@@ -15,7 +15,7 @@ The static and live review viewer targets **WCAG 2.2 Level AA**. Automated check
 Run:
 
 ```bash
-npm run build && npm test
+(cd apps/skill-creator-cli && npm run build && npm test)
 ```
 
 `check_review_accessibility` is an honest project-specific static audit: axe-core is not vendored or available in this package. It validates static semantics, status/announcement patterns, focus support, lazy rendering, safe DOM APIs, CSP, and token contrast; it must not be reported as an axe result. Browser coverage drives the generated report through the Chrome DevTools Protocol in installed Chromium/Chrome when available, including keyboard focus order, filter announcements, load-more focus, disclosure activation, feedback state, and an initially unrendered assertion deep link; environments without a supported browser report an explicit skipped test rather than a pass.

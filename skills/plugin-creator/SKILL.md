@@ -9,7 +9,7 @@ Create production-ready Agent Plugins for Goose. Own package architecture, root 
 
 ## Offline runtime
 
-Released distributions include compiled scripts and production dependencies under `vendor/node_modules`. Run utilities from `dist/`; consumers need Node.js but must not run `npm install` or require network access. Report a missing vendored dependency as a packaging defect.
+Use the released `plugin-creator` executable for user workflows. A source checkout needs Node.js 22+ to build, but tagged native archives do not require Node.js or installed dependencies. Report an incomplete archive as a packaging defect.
 
 ## Format baseline
 
@@ -48,7 +48,7 @@ Current Goose custom agents live under `.agents/agents/`; do not claim a plugin 
 5. For a new package run:
 
    ```bash
-   node dist/scripts/cli.js init <plugin-directory>
+   plugin-creator init <plugin-directory>
    ```
 
 6. Keep only required resources: root `plugin.json`; `skills/<name>/SKILL.md`; root `mcp.json`; and, only when needed, `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json` plus command scripts.
@@ -57,15 +57,15 @@ Current Goose custom agents live under `.agents/agents/`; do not claim a plugin 
 9. Run both profiles:
 
    ```bash
-   node dist/scripts/cli.js validate <plugin-directory> --mode portable-load --format json
-   node dist/scripts/cli.js validate <plugin-directory> --mode strict-authoring --format json
+   plugin-creator validate <plugin-directory> --mode portable-load --format json
+   plugin-creator validate <plugin-directory> --mode strict-authoring --format json
    ```
 
 10. Run specialist validation for changed Skills and hooks. Check paths, environment declarations, `${PLUGIN_ROOT}` references, and executable scripts.
 11. Package when requested:
 
    ```bash
-   node dist/scripts/cli.js package <plugin-directory> [output.zip]
+   plugin-creator package <plugin-directory> [output.zip]
    ```
 
 12. Deliver the artifact, architecture, prerequisites, both validation results, migration notes, and install command.
@@ -116,10 +116,10 @@ Never grade hidden deliverables; add criteria to the next iteration and rerun bo
 Start with:
 
 ```bash
-node dist/scripts/cli.js full-eval <plugin-directory> --workspace <plugin-directory>/evaluations/full-eval --dry-run --format json
+plugin-creator full-eval <plugin-directory> --workspace <plugin-directory>/evaluations/full-eval --dry-run --format json
 ```
 
-For unattended clean-checkout runs, use the config-driven `ci-eval` contract in [non-interactive CI evaluation](references/ci-evaluation.md). Follow returned commands and receipt paths, then rerun with `--resume`. Before a release claim, run `node dist/scripts/cli.js verify ...` with workflow-provided arguments. Ordered `next_actions` in a blocked result are authoritative. Non-dry runs append a sanitized durable history to `full-eval-events.jsonl`. Use `--progress quiet|normal|verbose` for terminal detail, or `--format jsonl|ci|review` for pure machine records, CI groups, or accessible historical replay; see [the event stream contract](references/execution-event-stream.md) and [execution reliability contract](references/execution-reliability.md).
+For unattended clean-checkout runs, use the config-driven `ci-eval` contract in [non-interactive CI evaluation](references/ci-evaluation.md). Follow returned commands and receipt paths, then rerun with `--resume`. Before a release claim, run `plugin-creator verify ...` with workflow-provided arguments. Ordered `next_actions` in a blocked result are authoritative. Non-dry runs append a sanitized durable history to `full-eval-events.jsonl`. Use `--progress quiet|normal|verbose` for terminal detail, or `--format jsonl|ci|review` for pure machine records, CI groups, or accessible historical replay; see [the event stream contract](references/execution-event-stream.md) and [execution reliability contract](references/execution-reliability.md).
 
 ## Independent challenge review
 
@@ -131,7 +131,7 @@ A deliverable is ready only when the 1.0.0 manifest is valid; portable component
 
 ## Golden end-to-end acceptance
 
-For offline factory acceptance from a natural-language idea, run `dist/scripts/cli.js golden-e2e`. Prefer novice defaults unless bounded expert overrides are requested. The deterministic adapter executes local generation, shipped validators, and fixture assertions (`executed: true`) but explicitly records that no LLM ran (`llm_executed: false`). Verify archive provenance and record-derived metrics. Passing thresholds still leaves production approval pending and must never activate an artifact. See [Golden end-to-end journeys](references/golden-e2e-journeys.md).
+For offline factory acceptance from a natural-language idea, run `plugin-creator golden-e2e`. Prefer novice defaults unless bounded expert overrides are requested. The deterministic adapter executes local generation, shipped validators, and fixture assertions (`executed: true`) but explicitly records that no LLM ran (`llm_executed: false`). Verify archive provenance and record-derived metrics. Passing thresholds still leaves production approval pending and must never activate an artifact. See [Golden end-to-end journeys](references/golden-e2e-journeys.md).
 
 ## Decision-comprehension research
 
@@ -139,7 +139,7 @@ When testing whether developers and nonexperts understand validation, evaluation
 
 ## Utilities
 
-- `dist/scripts/cli.js`: unified `init`, `validate`, `verify`, `package`, `full-eval`, `independent-review`, and `decision-research` interface.
+- `plugin-creator`: unified `init`, `validate`, `verify`, `package`, `full-eval`, `independent-review`, and `decision-research` interface.
 - `references/goose-plugin-format.md`: layouts, schemas, Goose namespace, and migrations.
 - `references/portable-conformance.md`: load, authoring, and release semantics.
 - `references/goose-hooks.md`: recorded Goose hook behavior.

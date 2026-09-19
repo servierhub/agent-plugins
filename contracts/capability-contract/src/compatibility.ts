@@ -854,7 +854,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.cli.envelope.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/cli.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/cli.ts",
     "sourceFieldOrLayout": "skill.cli.envelope.unversioned",
     "sourceEvidence": "JSON.stringify({ command: name, status:",
     "kind": "envelope",
@@ -875,7 +875,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.cli.envelope.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/cli.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/cli.ts",
     "sourceFieldOrLayout": "agent.cli.envelope.unversioned",
     "sourceEvidence": "JSON.stringify({ ok: exitCode === 0, command:",
     "kind": "envelope",
@@ -896,7 +896,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "hook.cli.envelope.unversioned",
     "creator": "hook-creator",
-    "sourceFile": "skills/hook-creator/scripts/cli.ts",
+    "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
     "sourceFieldOrLayout": "hook.cli.envelope.unversioned",
     "sourceEvidence": "JSON.stringify({ok:false,error:error.message,usage})",
     "kind": "envelope",
@@ -917,7 +917,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.cli.envelope.unversioned",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
     "sourceFieldOrLayout": "plugin.cli.envelope.unversioned",
     "sourceEvidence": "emit({ok:true,command,output}",
     "kind": "envelope",
@@ -938,7 +938,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.full-eval.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": "skill.full-eval.v1",
     "sourceEvidence": "schema_version:\"1.1\",command:\"full-eval\"",
     "kind": "envelope",
@@ -957,7 +957,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.full-eval.v1",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": "plugin.full-eval.v1",
     "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
     "kind": "envelope",
@@ -975,7 +975,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.full-eval-state.v2",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": ".full-eval-job.json",
     "sourceEvidence": "const STATE_FILE = \".full-eval-job.json\"",
     "kind": "evaluation-artifact",
@@ -993,7 +993,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.full-eval-state.v1",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": "full-eval-state.json",
     "sourceEvidence": "const STATE_FILE=\"full-eval-state.json\"",
     "kind": "evaluation-artifact",
@@ -1011,7 +1011,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.execution-evidence.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/execution-evidence.json",
     "sourceEvidence": "const manifestPath = join(runDir, \"execution-evidence.json\");",
     "kind": "evaluation-artifact",
@@ -1029,7 +1029,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.authoring-audit.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/audit_skill.ts",
     "sourceFieldOrLayout": "skill.authoring-audit.v1",
     "sourceEvidence": "schema_version: \"1.0\"",
     "kind": "envelope",
@@ -1047,7 +1047,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.evaluation-design.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/design_evals.ts",
     "sourceFieldOrLayout": "skill.evaluation-design.v1",
     "sourceEvidence": "artifact: \"evaluation-design\"",
     "kind": "envelope",
@@ -1065,7 +1065,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.evaluation-analysis.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
     "sourceFieldOrLayout": "skill.evaluation-analysis.v1",
     "sourceEvidence": "artifact:\"evaluation-analysis\"",
     "kind": "envelope",
@@ -1083,7 +1083,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.evaluation-receipt.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
     "sourceFieldOrLayout": "skill.evaluation-receipt.unversioned",
     "sourceEvidence": "status: \"complete\" | \"blocked\"",
     "kind": "receipt",
@@ -1104,7 +1104,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.verification-receipt.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
     "sourceFieldOrLayout": "skill.verification-receipt.v1",
     "sourceEvidence": "schema_version: \"1.0\"",
     "kind": "receipt",
@@ -1122,7 +1122,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.verification-receipt.v1",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
     "sourceFieldOrLayout": "plugin.verification-receipt.v1",
     "sourceEvidence": "schema_version: \"1.0\", artifact: \"plugin\"",
     "kind": "receipt",
@@ -1140,7 +1140,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.validation-outcome.unversioned",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/validation_outcomes.ts",
     "sourceFieldOrLayout": "plugin.validation-outcome.unversioned",
     "sourceEvidence": "export interface ValidationOutcome",
     "kind": "envelope",
@@ -1161,7 +1161,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.migration-report.unversioned",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
     "sourceFieldOrLayout": "plugin.migration-report.unversioned",
     "sourceEvidence": "export interface MigrationReport",
     "kind": "envelope",
@@ -1266,7 +1266,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.eval-metadata.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": "eval-<id>/eval_metadata.json",
     "sourceEvidence": "eval_metadata.json",
     "kind": "evaluation-artifact",
@@ -1287,7 +1287,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.eval-metadata.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
     "sourceFieldOrLayout": "eval-<id>/eval_metadata.json",
     "sourceEvidence": "eval_metadata.json",
     "kind": "evaluation-artifact",
@@ -1308,7 +1308,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.grading.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/grading.json",
     "sourceEvidence": "join(runDir, \"grading.json\")",
     "kind": "evaluation-artifact",
@@ -1329,7 +1329,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.grading.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/grading.json",
     "sourceEvidence": "grading.json",
     "kind": "evaluation-artifact",
@@ -1350,7 +1350,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.timing.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/timing.json",
     "sourceEvidence": "join(runDir, \"timing.json\")",
     "kind": "evaluation-artifact",
@@ -1371,7 +1371,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.timing.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/timing.json",
     "sourceEvidence": "writeFileSync(join(runDir, \"timing.json\")",
     "kind": "evaluation-artifact",
@@ -1392,7 +1392,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.review-html.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": "review.html",
     "sourceEvidence": "join(workspace,\"review.html\")",
     "kind": "review-artifact",
@@ -1413,7 +1413,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.viewer-html.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+    "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
     "sourceFieldOrLayout": "eval-viewer/viewer.html",
     "sourceEvidence": "readFileSync(join(HERE,\"viewer.html\"),\"utf8\")",
     "kind": "review-artifact",
@@ -1434,7 +1434,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.feedback.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
     "sourceFieldOrLayout": "feedback.json",
     "sourceEvidence": "join(workspace, \"feedback.json\")",
     "kind": "review-artifact",
@@ -1455,7 +1455,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.transcript.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/transcript.json",
     "sourceEvidence": "writeFileSync(join(runDir, \"transcript.json\")",
     "kind": "evaluation-artifact",
@@ -1476,7 +1476,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.review-html.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+    "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
     "sourceFieldOrLayout": "review.html",
     "sourceEvidence": "const html = generateHtml(runs, agentName, previous, benchmark)",
     "kind": "review-artifact",
@@ -1497,7 +1497,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.feedback.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+    "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
     "sourceFieldOrLayout": "feedback.json",
     "sourceEvidence": "const feedbackPath = join(workspace, \"feedback.json\")",
     "kind": "review-artifact",
@@ -1518,7 +1518,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.viewer-html.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+    "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
     "sourceFieldOrLayout": "eval-viewer/viewer.html",
     "sourceEvidence": "const templatePath = join(HERE, \"viewer.html\")",
     "kind": "review-artifact",
@@ -1539,7 +1539,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.trigger-eval-result.v2",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/run_eval.ts",
     "sourceFieldOrLayout": "EvalOutput",
     "sourceEvidence": "interface EvalOutput{schema_version:\"2.0\"",
     "kind": "evaluation-artifact",
@@ -1557,7 +1557,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.run-loop-result.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
     "sourceFieldOrLayout": "<results-dir>/<timestamp>/results.json",
     "sourceEvidence": "writeFileSync(join(resultsDir, \"results.json\")",
     "kind": "evaluation-artifact",
@@ -1578,7 +1578,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.run-loop-report.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
     "sourceFieldOrLayout": "<results-dir>/<timestamp>/report.html",
     "sourceEvidence": "writeFileSync(join(resultsDir, \"report.html\")",
     "kind": "review-artifact",
@@ -1599,7 +1599,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.benchmark.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
     "sourceFieldOrLayout": "skill.benchmark.unversioned",
     "sourceEvidence": "join(benchmarkDirArg, \"benchmark.json\")",
     "kind": "envelope",
@@ -1620,7 +1620,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.benchmark-markdown.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
     "sourceFieldOrLayout": "benchmark.md",
     "sourceEvidence": "const outputMd = outputJson.replace(/\\.json$/, \".md\")",
     "kind": "evaluation-artifact",
@@ -1641,7 +1641,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.benchmark.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts",
     "sourceFieldOrLayout": "agent.benchmark.unversioned",
     "sourceEvidence": "join(root,\"benchmark.json\")",
     "kind": "envelope",
@@ -1662,7 +1662,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.benchmark-markdown.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts",
     "sourceFieldOrLayout": "benchmark.md",
     "sourceEvidence": "out.replace(/\\.json$/,\".md\")",
     "kind": "evaluation-artifact",
@@ -1683,7 +1683,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.run-summary.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
     "sourceFieldOrLayout": "agent.run-summary.unversioned",
     "sourceEvidence": "join(workspace, \"run_summary.json\")",
     "kind": "envelope",
@@ -1704,7 +1704,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "workspace.skill-eval.current.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": "workspace.skill-eval.current.v1",
     "sourceEvidence": "for(const config of [\"with_skill\",baseline]){const configDir=join(ed,config);mkdirSync(configDir,{recursive:true});",
     "kind": "workspace-layout",
@@ -1722,7 +1722,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "workspace.skill-eval.legacy-runs.v0",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
     "sourceFieldOrLayout": "workspace.skill-eval.legacy-runs.v0",
     "sourceEvidence": "const legacyRoot = join(workspace, \"runs\")",
     "kind": "workspace-layout",
@@ -1744,7 +1744,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "workspace.agent-eval.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
     "sourceFieldOrLayout": "workspace.agent-eval.unversioned",
     "sourceEvidence": "const runDir = flatLayout ? join(workspace",
     "kind": "workspace-layout",
@@ -1765,7 +1765,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "workspace.plugin-eval.unversioned",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": "workspace.plugin-eval.unversioned",
     "sourceEvidence": "workspace=resolve(options.workspace??join(evaluations,\"plugin\"))",
     "kind": "workspace-layout",
@@ -1786,7 +1786,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "workspace.eval-run-artifacts.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
     "sourceFieldOrLayout": "workspace.eval-run-artifacts.unversioned",
     "sourceEvidence": "join(runDir, \"grading.json\")",
     "kind": "workspace-layout",
@@ -1807,7 +1807,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.manifest.v1",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
     "sourceFieldOrLayout": "plugin.manifest.v1",
     "sourceEvidence": "DEFAULT_SCHEMA_VERSION = \"1.0.0\"",
     "kind": "schema-document",
@@ -1825,7 +1825,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.manifest.draft-v1.1",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
     "sourceFieldOrLayout": "plugin.manifest.draft-v1.1",
     "sourceEvidence": "\"1.1.0\": registration(\"1.1.0\", \"draft\", false)",
     "kind": "schema-document",
@@ -1844,7 +1844,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.mcp.v1",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
     "sourceFieldOrLayout": "plugin.mcp.v1",
     "sourceEvidence": "mcp: Object.freeze({ id: schemaId(version, \"mcp.schema.json\")",
     "kind": "schema-document",
@@ -1862,7 +1862,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.mcp.draft-v1.1",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
     "sourceFieldOrLayout": "plugin.mcp.draft-v1.1",
     "sourceEvidence": "\"1.1.0\": registration(\"1.1.0\", \"draft\", false)",
     "kind": "schema-document",
@@ -1881,7 +1881,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "hook.document.current.unversioned",
     "creator": "hook-creator",
-    "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+    "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
     "sourceFieldOrLayout": "hook.document.current.unversioned",
     "sourceEvidence": "doc={hooks:{}}",
     "kind": "schema-document",
@@ -1899,7 +1899,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "hook.layout.legacy-root.v0",
     "creator": "hook-creator",
-    "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+    "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
     "sourceFieldOrLayout": "hook.layout.legacy-root.v0",
     "sourceEvidence": "LEGACY_HOOKS_PATH = \"hooks/hooks.json\"",
     "kind": "workspace-layout",
@@ -1920,7 +1920,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "hook.layout.historical-namespace.v0",
     "creator": "hook-creator",
-    "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+    "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
     "sourceFieldOrLayout": "hook.layout.historical-namespace.v0",
     "sourceEvidence": "HISTORICAL_HOOKS_PATH = \"extensions/io.github.block.goose/hooks.json\"",
     "kind": "workspace-layout",
@@ -1941,7 +1941,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "hook.layout.current.v1",
     "creator": "hook-creator",
-    "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+    "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
     "sourceFieldOrLayout": "hook.layout.current.v1",
     "sourceEvidence": "CANONICAL_HOOKS_PATH = \"extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json\"",
     "kind": "workspace-layout",
@@ -1959,7 +1959,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "hook.extension-envelope.v1",
     "creator": "hook-creator",
-    "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+    "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
     "sourceFieldOrLayout": "hook.extension-envelope.v1",
     "sourceEvidence": "version:GOOSE_ENVELOPE_VERSION",
     "kind": "envelope",
@@ -2031,7 +2031,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "result.exit-family.skill",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/cli.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/cli.ts",
     "sourceFieldOrLayout": "result.exit-family.skill",
     "sourceEvidence": "status === \"blocked\" ? 3 : 1",
     "kind": "status-exit-family",
@@ -2049,7 +2049,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "result.exit-family.agent",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/cli.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/cli.ts",
     "sourceFieldOrLayout": "result.exit-family.agent",
     "sourceEvidence": "Exit codes: 0 success, 1 failure, 2 usage error, 3 blocked operation.",
     "kind": "status-exit-family",
@@ -2067,7 +2067,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "result.exit-family.hook",
     "creator": "hook-creator",
-    "sourceFile": "skills/hook-creator/scripts/cli.ts",
+    "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
     "sourceFieldOrLayout": "result.exit-family.hook",
     "sourceEvidence": "return usage?2:1",
     "kind": "status-exit-family",
@@ -2085,7 +2085,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "result.exit-family.plugin",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
     "sourceFieldOrLayout": "result.exit-family.plugin",
     "sourceEvidence": "EXIT_SUCCESS=0, EXIT_FAILURE=1, EXIT_USAGE=2, EXIT_BLOCKED=3",
     "kind": "status-exit-family",
@@ -2103,7 +2103,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.post-evaluation-pattern-review.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": "post-evaluation-pattern-review.json",
     "sourceEvidence": "const path=join(workspace,\"post-evaluation-pattern-review.json\"),analysis=analyzeEvaluation(workspace,skill)",
     "kind": "evaluation-artifact",
@@ -2124,7 +2124,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.response-markdown.unversioned",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/outputs/response.md",
     "sourceEvidence": "writeFileSync(join(outputs, \"response.md\")",
     "kind": "evaluation-artifact",
@@ -2145,7 +2145,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.paired-stream.unversioned",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/transcript.json",
     "sourceEvidence": "writeFileSync(join(runDir,\"transcript.json\"),",
     "kind": "evaluation-artifact",
@@ -2166,7 +2166,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.paired-events.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/events.json",
     "sourceEvidence": "atomic(join(runDir,\"events.json\"),",
     "kind": "evaluation-artifact",
@@ -2184,7 +2184,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.paired-failure.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/execution-outcome.json",
     "sourceEvidence": "atomic(join(runDir,\"execution-outcome.json\"),",
     "kind": "evaluation-artifact",
@@ -2202,7 +2202,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.evidence-job.v1",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
     "sourceFieldOrLayout": "portable evidence bundle/job.json",
     "sourceEvidence": "schema_version: JOB_SCHEMA",
     "kind": "evaluation-definition",
@@ -2220,7 +2220,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.evidence-run.v1",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
     "sourceFieldOrLayout": "portable run.example.json and imported evidence.json",
     "sourceEvidence": "schema_version: RUN_SCHEMA",
     "kind": "evaluation-artifact",
@@ -2238,7 +2238,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.component-evidence-receipt.v1",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
     "sourceFieldOrLayout": "typed Skill, agent, hook, MCP, or integration receipt",
     "sourceEvidence": "schema_version: \"1.0\";",
     "kind": "receipt",
@@ -2256,7 +2256,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.eval-metadata.v2",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
     "sourceFieldOrLayout": "eval-<id>/eval_metadata.json",
     "sourceEvidence": "schema_version: 2,",
     "kind": "evaluation-artifact",
@@ -2274,7 +2274,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "agent.semantic-grading.v2",
     "creator": "agent-creator",
-    "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+    "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/grading.json",
     "sourceEvidence": "schema_version:2,assertion_hash:meta.assertion_hash",
     "kind": "evaluation-artifact",
@@ -2292,7 +2292,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "plugin.independent-review.v1",
     "creator": "plugin-creator",
-    "sourceFile": "skills/plugin-creator/scripts/independent_review.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/independent_review.ts",
     "sourceFieldOrLayout": "runIndependentReview result / CLI JSON output",
     "sourceEvidence": "return{schemaVersion:1,runId:config.runId",
     "kind": "review-artifact",
@@ -2310,7 +2310,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "hook.evaluation-run-manifest.v1",
     "creator": "hook-creator",
-    "sourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
+    "sourceFile": "apps/hook-creator-cli/scripts/evaluation_run_manifest.ts",
     "sourceFieldOrLayout": "eval-manifest create <spec.json> <manifest.json>",
     "sourceEvidence": "MANIFEST_VERSION=\"hook-evaluation-run-manifest/v1\"",
     "kind": "evaluation-artifact",
@@ -2328,7 +2328,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "hook.production-approval.v1",
     "creator": "hook-creator",
-    "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+    "sourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
     "sourceFieldOrLayout": "hook-production-approval/v1",
     "sourceEvidence": "export const APPROVAL_VERSION=\"hook-production-approval/v1\"",
     "kind": "evaluation-artifact",
@@ -2940,7 +2940,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.evaluator-grading.v2",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/evaluator_grading.ts",
     "sourceFieldOrLayout": "gradeOutput return grading",
     "sourceEvidence": "grading: { schema_version: 2, authority: \"evaluator\"",
     "kind": "evaluation-artifact",
@@ -2958,7 +2958,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.deterministic-evidence.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
     "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/deterministic-evidence.json",
     "sourceEvidence": "atomic(join(runDir,\"deterministic-evidence.json\")",
     "kind": "evaluation-artifact",
@@ -2976,7 +2976,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.evidence-mode.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
     "sourceFieldOrLayout": "eval_metadata.json/evidence_mode",
     "sourceEvidence": "const evidence_mode={schema_version:1,planned:options.execute?\"goose-evaluator\":\"manual-governed-import\"};",
     "kind": "evaluation-artifact",
@@ -2994,7 +2994,7 @@ export const COMPATIBILITY_REGISTRY:readonly CompatibilityEntry[]=Object.freeze(
   {
     "id": "skill.trigger-run-outcome.v1",
     "creator": "skill-creator",
-    "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+    "sourceFile": "apps/skill-creator-cli/scripts/trigger_evaluation.ts",
     "sourceFieldOrLayout": "TriggerRunOutcome",
     "sourceEvidence": "export interface TriggerRunOutcome{schema_version:typeof TRIGGER_OUTCOME_SCHEMA_VERSION;",
     "kind": "evaluation-artifact",

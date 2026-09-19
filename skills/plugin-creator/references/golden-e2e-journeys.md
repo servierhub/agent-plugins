@@ -8,8 +8,8 @@ Configured challenger branches run as separate children. Each receives candidate
 
 Metrics are derived from baseline and revised records: effectiveness is pass rate, productivity is intervention savings counted only from strict evaluator-owned observed-action events, and outcome success is normalized improvement over baseline. Candidate output fields are not metric inputs; event counts must be finite and nonnegative. Actual wall time is reported separately without claiming that the improved artifact is faster. Timer-driven heartbeats are emitted while evaluation and challenge children are active. Cancellation terminates the active child and durably persists the active phase plus complete baseline, initial, and revised repetition records; resume executes only remaining complete revised repetitions without duplicates. Provenance hashes and a checksummed CI archive reject direct or transitive artifact, result, record, and fixture tampering. Completed runs terminate at `pending-production-approval` (exit 4); the executor has no activation capability. Cancellation is exit 3. `--inspect` detects stale or invalid evidence and still denies activation.
 
-    node dist/scripts/cli.js golden-e2e --list
-    node dist/scripts/cli.js golden-e2e --journey idea-api-review-skill --workspace ./evaluations/golden/api --format json
-    node dist/scripts/cli.js golden-e2e --journey dependency-review-agent --workspace ./evaluations/golden/deps --profile expert --override repetitions=9 --resume
+    plugin-creator golden-e2e --list
+    plugin-creator golden-e2e --journey idea-api-review-skill --workspace ./evaluations/golden/api --format json
+    plugin-creator golden-e2e --journey dependency-review-agent --workspace ./evaluations/golden/deps --profile expert --override repetitions=9 --resume
 
 Fixtures, suites, thresholds, and expected contracts live under `assets/golden-e2e/`. Fixture checksum mismatch fails closed.

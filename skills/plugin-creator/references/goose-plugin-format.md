@@ -104,8 +104,8 @@ Document required Goose capabilities, MCP support, external CLIs, APIs, and envi
 Run the unified CLI from the installed `plugin-creator` directory:
 
 ```bash
-node dist/scripts/cli.js validate <plugin-directory> --mode portable-load --format json
-node dist/scripts/cli.js validate <plugin-directory> --mode strict-authoring --format json
+plugin-creator validate <plugin-directory> --mode portable-load --format json
+plugin-creator validate <plugin-directory> --mode strict-authoring --format json
 ```
 
 `portable-load` models normative 1.0.0 loading and isolation. `strict-authoring` is the default and combines schema with Goose operational and authoring-policy checks. See [portable-conformance.md](portable-conformance.md).
@@ -113,7 +113,7 @@ node dist/scripts/cli.js validate <plugin-directory> --mode strict-authoring --f
 For direct document-level schema diagnostics only:
 
 ```bash
-node dist/scripts/validate_agent_plugin_schema.js <file-or-directory> \
+plugin-creator validate <file-or-directory> \
   --type auto --mode strict-authoring --format json
 ```
 

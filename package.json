@@ -7,6 +7,15 @@
     "test:offline": "node scripts/test-offline-bundle.mjs",
     "test:distribution": "node --test tests/test_distribution.test.ts",
     "test": "node scripts/test.mjs",
-    "package:offline": "node scripts/package-offline.mjs"
+    "package:offline": "node scripts/package-offline.mjs",
+    "build:executables": "node scripts/build-bun-executables.mjs",
+    "test:executables": "npm run build:executables && node --test tests/test_bun_executables.test.ts",
+    "test:release": "bun test tests/test_bun_release_workflow.test.ts && node --test tests/test_release_packaging.test.ts",
+    "stage:release": "node scripts/build-bun-executables.mjs",
+    "package:release": "node scripts/package-bun-release-assets.mjs"
+  },
+  "packageManager": "bun@1.3.12",
+  "engines": {
+    "bun": "=1.3.12"
   }
 }

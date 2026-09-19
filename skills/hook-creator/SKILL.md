@@ -7,7 +7,7 @@ description: Creates, audits, and tests lifecycle hooks inside Open Plugins. Use
 
 ## Offline runtime
 
-Released distributions include compiled scripts and production dependencies under `vendor/node_modules`. Run scripts from `dist/`; consumer machines need Node.js but must not run `npm install` or require network access. A missing vendor dependency is a packaging defect: report it and rebuild with the repository's `scripts/prepare-offline-bundle.mjs`.
+Use the released `hook-creator` executable for user workflows. A source checkout needs Node.js 22+ to build, but tagged native archives do not require Node.js or installed dependencies. An incomplete archive is a packaging defect.
 
 
 Create trusted Goose lifecycle hooks as components of a plugin. A hook never lives independently under `.agents/hooks`; it belongs inside a plugin discovered from `.agents/plugins/`.
@@ -97,7 +97,7 @@ When invoked from `plugin-creator`, return a validated hook component that can b
 8. Validate the plugin hook component with the official bundled validator, not a custom substitute, and preserve its output plus executable-file evidence:
 
    ```bash
-   node <hook-creator>/dist/scripts/validate_hook.js <plugin-dir>
+   hook-creator validate <plugin-dir>
    test -x <plugin-dir>/scripts/<handler>
    ```
 
@@ -138,9 +138,7 @@ A hook component is ready only when:
 
 - `references/hooks.md`: vendored Goose hooks documentation.
 - `references/UPSTREAM.md`: source and refresh instructions.
-- `dist/cli.js`: unified `init` and `validate` CLI; supports `--format text|json`, `--quiet`, and `--help`.
-- `dist/init_hook.js`: legacy scaffold entrypoint preserved for compatibility.
-- `dist/validate_hook.js`: legacy validation entrypoint preserved for compatibility.
+- `hook-creator`: unified `init` and `validate` CLI; supports `--format text|json`, `--quiet`, and `--help`. Legacy internal-script entrypoints are not part of the released interface.
 - `evals/evals.json`: autonomous creation, safety-audit, handler-behavior, and plugin-handoff scenarios.
 - `assets/evaluation-fixtures/`: immutable plugin roots, hook configurations, executable handlers, and inert payloads.
 - `references/evidence-attestation.md`: DSSE/in-toto evidence and offline trust policy.

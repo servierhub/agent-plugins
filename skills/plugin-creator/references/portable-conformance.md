@@ -27,7 +27,7 @@ The portable core is root `plugin.json`, optional `skills/`, and optional root `
 The portable loader gives no meaning to `.mcp.json`, inline `plugin.json.mcpServers`, root `hooks/`, or custom-agent directories.
 
 ```bash
-node dist/scripts/cli.js validate <plugin-directory> --mode portable-load --format json
+plugin-creator validate <plugin-directory> --mode portable-load --format json
 ```
 
 Review component outcomes and warnings; do not reduce the report to an unqualified “valid.”
@@ -37,7 +37,7 @@ Review component outcomes and warnings; do not reduce the report to an unqualifi
 Strict authoring is the default. It rejects hazards portable loading may ignore or isolate, including unknown authoring data, inactive schemas, unsafe paths, malformed Skills, MCP semantic errors or likely packaged secrets, Goose extension errors, and ambiguous canonical/legacy sources.
 
 ```bash
-node dist/scripts/cli.js validate <plugin-directory> --mode strict-authoring --format json
+plugin-creator validate <plugin-directory> --mode strict-authoring --format json
 ```
 
 The unified command combines canonical schema and Goose operational validation. Use `validate_agent_plugin_schema.js` only for direct document-level schema diagnostics.

@@ -33,11 +33,11 @@ A performed record is not qualifying evidence by itself. The production analyzer
 
 After a real session and privacy review, create a canonical unsigned request:
 
-    node dist/scripts/cli.js screen-reader-acceptance --create-attestation-request record.json --issued-at 2026-09-18T15:01:00Z --expires-at 2026-09-19T15:01:00Z -o request.json
+    skill-creator screen-reader-acceptance --create-attestation-request record.json --issued-at 2026-09-18T15:01:00Z --expires-at 2026-09-19T15:01:00Z -o request.json
 
 The kit never accepts or ships private keys. A qualified reviewer signs the decoded signing_input externally with Ed25519. Verify against the shipped policy only (there is deliberately no policy override):
 
-    node dist/scripts/cli.js screen-reader-acceptance --verify-attestation receipt.json --record record.json
+    skill-creator screen-reader-acceptance --verify-attestation receipt.json --record record.json
 
 ### Governance update process
 
@@ -52,8 +52,8 @@ The signature identifies the accountable trusted attestor but does not prove par
 ## Validate and analyze
 
 ```bash
-node dist/scripts/cli.js screen-reader-acceptance --validate <record-or-directory> --format json
-node dist/scripts/cli.js screen-reader-acceptance <records-directory> --attestations <receipts-directory> --format json
+skill-creator screen-reader-acceptance --validate <record-or-directory> --format json
+skill-creator screen-reader-acceptance <records-directory> --attestations <receipts-directory> --format json
 ```
 
 The analyzer returns `PASS` only when each non-synthetic performed record also has exactly one current, signature-valid, trusted, exact-record-bound attestation and records cover both required combinations, every required static and live task passes, all qualifying records identify the same nonempty report-build SHA-256, and there are zero P0/P1 findings. Missing, unavailable, invalid, synthetic, or failed evidence cannot produce PASS. Keep the parent gate open until actual records pass; do not fake results or convert automated checks into manual evidence.

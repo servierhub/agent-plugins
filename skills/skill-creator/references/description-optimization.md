@@ -40,7 +40,7 @@ Use `assets/eval_review.html` to review and edit the query set before optimizati
 ## Optimization loop
 
 ```bash
-node dist/scripts/run_loop.js \
+skill-creator evidence-loop \
   --eval-set <trigger-eval.json> \
   --skill-path <skill-directory> \
   --model <session-model> \

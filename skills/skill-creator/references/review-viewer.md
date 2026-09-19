@@ -12,7 +12,7 @@ The self-contained HTML has no remote dependencies. Embedded artifact text is JS
 
 ```bash
 # live
-node dist/eval-viewer/generate_review.js WORKSPACE --benchmark WORKSPACE/benchmark.json
+skill-creator review WORKSPACE --benchmark WORKSPACE/benchmark.json
 # static
-node dist/eval-viewer/generate_review.js WORKSPACE --benchmark WORKSPACE/benchmark.json --static WORKSPACE/review.html
+skill-creator review WORKSPACE --benchmark WORKSPACE/benchmark.json --static WORKSPACE/review.html
 ```

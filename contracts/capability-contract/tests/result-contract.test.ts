@@ -170,12 +170,12 @@ test("independent producer expectations cover receipt status, forwarded fail, va
   const inventory = json("fixtures/result/producer-inventory.json");
   const byContext = new Map(inventory.current.map((item: any) => [item.context, item]));
   const expected = [
-    { context: "plugin-verification-receipt-status", tokens: ["pass","fail","blocked"], file: "skills/plugin-creator/scripts/verify_plugin_gates.ts", snippets: ["const status = aggregate(gates);", "artifact: \"plugin\", name, profile: parsed.profile, status"] },
-    { context: "skill-verification-receipt-status", tokens: ["pass","fail","blocked"], file: "skills/skill-creator/scripts/verify_skill_gates.ts", snippets: ["const status = aggregate(gates);", "artifact: \"skill\",", "status,"] },
-    { context: "skill-full-eval-status", tokens: ["planned","success","failure","fail","blocked"], file: "skills/skill-creator/scripts/full_eval.ts", snippets: ["return envelope(options,job,verification.status,next"] },
-    { context: "plugin-validation-outcome", tokens: ["accepted","rejected","partial"], file: "skills/plugin-creator/scripts/validation_outcomes.ts", snippets: ["return { mode, status: deriveOutcomeStatus(diagnostics, components), diagnostics, components };"] },
-    { context: "plugin-component-outcome-status", tokens: ["accepted","skipped","skipped-invalid","skipped-unsupported","runtime-failed"], file: "skills/plugin-creator/scripts/mcp_runtime.ts", snippets: ["return{status:\"runtime-failed\""] },
-    { context: "plugin-release-eligible", tokens: ["true","false"], file: "skills/plugin-creator/scripts/verify_plugin_gates.ts", snippets: ["release_eligible: (parsed.profile === \"release\"||parsed.profile === \"production\") && status === \"pass\""] },
+    { context: "plugin-verification-receipt-status", tokens: ["pass","fail","blocked"], file: "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts", snippets: ["const status = aggregate(gates);", "artifact: \"plugin\", name, profile: parsed.profile, status"] },
+    { context: "skill-verification-receipt-status", tokens: ["pass","fail","blocked"], file: "apps/skill-creator-cli/scripts/verify_skill_gates.ts", snippets: ["const status = aggregate(gates);", "artifact: \"skill\",", "status,"] },
+    { context: "skill-full-eval-status", tokens: ["planned","success","failure","fail","blocked"], file: "apps/skill-creator-cli/scripts/full_eval.ts", snippets: ["return envelope(options,job,verification.status,next"] },
+    { context: "plugin-validation-outcome", tokens: ["accepted","rejected","partial"], file: "apps/plugin-creator-cli/scripts/validation_outcomes.ts", snippets: ["return { mode, status: deriveOutcomeStatus(diagnostics, components), diagnostics, components };"] },
+    { context: "plugin-component-outcome-status", tokens: ["accepted","skipped","skipped-invalid","skipped-unsupported","runtime-failed"], file: "apps/plugin-creator-cli/scripts/mcp_runtime.ts", snippets: ["return{status:\"runtime-failed\""] },
+    { context: "plugin-release-eligible", tokens: ["true","false"], file: "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts", snippets: ["release_eligible: (parsed.profile === \"release\"||parsed.profile === \"production\") && status === \"pass\""] },
   ];
   const mappings = new Set(LEGACY_STATUS_MAPPINGS.map((item) => item.creator + "/" + item.context + "/" + item.token));
   for (const item of expected) {
@@ -244,12 +244,12 @@ test("independent expectedConsumerFields fixture maps every field to exactly one
 });
 
 test("non-current status vocabularies remain absent from exact emitting fields and mappings", () => {
-  const validation = readFileSync(join(repositoryRoot, "skills/plugin-creator/scripts/validation_outcomes.ts"), "utf8");
+  const validation = readFileSync(join(repositoryRoot, "apps/plugin-creator-cli/scripts/validation_outcomes.ts"), "utf8");
   const derive = validation.slice(validation.indexOf("export function deriveOutcomeStatus"), validation.indexOf("export function createValidationOutcome"));
   assert.deepEqual([...derive.matchAll(/return \"([^\"]+)\"/g)].map((match) => match[1]), ["rejected","partial","accepted"]);
-  const mcp = readFileSync(join(repositoryRoot, "skills/plugin-creator/scripts/mcp_compatibility.ts"), "utf8");
+  const mcp = readFileSync(join(repositoryRoot, "apps/plugin-creator-cli/scripts/mcp_compatibility.ts"), "utf8");
   assert.equal(/return\{status:\"legacy-compatible\"/.test(mcp), false);
-  const packaging = readFileSync(join(repositoryRoot, "skills/plugin-creator/scripts/package_goose_plugin.ts"), "utf8");
+  const packaging = readFileSync(join(repositoryRoot, "apps/plugin-creator-cli/scripts/package_goose_plugin.ts"), "utf8");
   assert.equal(/status\s*[:=]\s*\"packaged\"/.test(packaging), false);
   assert.equal(/(?:return|status\s*:)\s*\"policy-failed\"/.test(validation), false);
   const keys = new Set(LEGACY_STATUS_MAPPINGS.map((item) => item.creator + "/" + item.context + "/" + item.token));

@@ -43,10 +43,10 @@ test("feedback annotation schemas, contracts, APIs, revisions, and hashes are ex
 });
 
 test("updated skill viewer source artifacts and decision template are classified",()=>{
-  const rule=discovery.artifactDiscovery.find((x:any)=>x.sourceFile==="skills/skill-creator/eval-viewer/generate_review.ts");
+  const rule=discovery.artifactDiscovery.find((x:any)=>x.sourceFile==="apps/skill-creator-cli/eval-viewer/generate_review.ts");
   assert.ok(rule.expected.includes("benchmark.json"));assert.ok(rule.expected.includes("timing.json"));
   const viewer=COMPATIBILITY_REGISTRY.find(x=>x.id==="skill.viewer-html.unversioned")!;assert.equal(viewer.sourceEvidence,'readFileSync(join(HERE,"viewer.html"),"utf8")');
-  assert.equal(validateSurfaceShape(viewer.id,loadSource("skills/skill-creator/eval-viewer/viewer.html")).valid,true);
+  assert.equal(validateSurfaceShape(viewer.id,loadSource("apps/skill-creator-cli/eval-viewer/viewer.html")).valid,true);
 });
 
 test("production approval artifact and schema are explicit supported surfaces",()=>{
@@ -185,8 +185,8 @@ test("artifact discovery accounts for every producer site exactly once",()=>{
   }
   for(const surfaceId of discovery.producerBackedSurfaceIds){assert.equal(registryIds.filter(id=>id===surfaceId).length,1,surfaceId+" registry row");const canonical=discovery.canonicalArtifacts.find((row:any)=>row.registrySurfaceId===surfaceId);assert.ok(canonical,surfaceId+" canonical link");assert.ok(discovery.producerSiteAliases.some((row:any)=>row.canonicalArtifactId===canonical.canonicalArtifactId),surfaceId+" site link");}
   const alias=(source:string,artifact:string)=>discovery.producerSiteAliases.find((row:any)=>row.sourceFile===source&&row.sourceFieldOrArtifact===artifact).canonicalArtifactId;
-  const skillViewer="skills/skill-creator/eval-viewer/generate_review.ts",agentViewer="skills/agent-creator/eval-viewer/generate_review.ts";
-  assert.notEqual(alias(skillViewer,"metrics.json"),alias("skills/skill-creator/scripts/aggregate_benchmark.ts","benchmark.json"));
+  const skillViewer="apps/skill-creator-cli/eval-viewer/generate_review.ts",agentViewer="apps/agent-creator-cli/eval-viewer/generate_review.ts";
+  assert.notEqual(alias(skillViewer,"metrics.json"),alias("apps/skill-creator-cli/scripts/aggregate_benchmark.ts","benchmark.json"));
   assert.notEqual(alias(skillViewer,"user_notes.md"),alias(skillViewer,"feedback.json"));
   assert.equal(alias(skillViewer,"metrics.json"),alias(agentViewer,"metrics.json"),"identical viewer copies may share canonical identity");
 });
@@ -239,7 +239,7 @@ test("every significant semantic site is removal-sensitive and every discovered 
       assert.throws(()=>discoverArtifactSurfaceMappings(removed,rule,discovery.producerSiteAliases,discovery.structuralExclusions),/drift/i,rule.sourceFile+"::"+artifact+" removal");
     }
   }
-  const requiredSources=["skills/plugin-creator/scripts/mcp_runtime.ts","skills/plugin-creator/scripts/mcp_semantics.ts","skills/plugin-creator/scripts/package_manifest.ts","skills/plugin-creator/scripts/plugin_data_lifecycle.ts","skills/agent-creator/scripts/agent_format.ts","skills/hook-creator/scripts/validate_hook.ts"];
+  const requiredSources=["apps/plugin-creator-cli/scripts/mcp_runtime.ts","apps/plugin-creator-cli/scripts/mcp_semantics.ts","apps/plugin-creator-cli/scripts/package_manifest.ts","apps/plugin-creator-cli/scripts/plugin_data_lifecycle.ts","apps/agent-creator-cli/scripts/agent_format.ts","apps/hook-creator-cli/scripts/validate_hook.ts"];
   for(const sourceFile of requiredSources)assert.ok(discovery.artifactDiscovery.some((rule:any)=>rule.sourceFile===sourceFile),sourceFile);
 });
 

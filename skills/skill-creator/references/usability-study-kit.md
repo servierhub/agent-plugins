@@ -58,8 +58,8 @@ Record `consent.granted: true`, the protocol version, collection mode, capture t
 ## Deterministic analysis
 
 ```bash
-node dist/scripts/cli.js usability-study --validate <session.json> --format json
-node dist/scripts/cli.js usability-study <sessions-directory-or-json-array> --format json
+skill-creator usability-study --validate <session.json> --format json
+skill-creator usability-study <sessions-directory-or-json-array> --format json
 ```
 
 The analyzer reports completion without correction, question burden, wrong-artifact recovery, comprehension, time to first candidate, confidence, cohort mix, task/artifact coverage, the parent `>=5` requirement, the stricter `>=6` protocol eligibility gate, and the `80%` completion threshold. Eligibility requires all six checked-in task IDs, all three artifact types, and both cohorts. It emits deterministic suggested `bd create` commands for P0/P1 findings but never executes them. Review classifications before creating issues.

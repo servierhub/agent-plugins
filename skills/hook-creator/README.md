@@ -1,7 +1,7 @@
 # Hook Creator
 
 Creates and validates Goose/Open Plugins lifecycle-hook components. The package is
-standalone-installable and requires only Node.js at runtime.
+standalone-installable. Tagged native archives require no separate runtime; a source build requires Node.js 22+.
 
 Hooks belong inside a plugin:
 
@@ -22,7 +22,7 @@ After building, invoke the CLI directly or through the package's `hook-creator`
 bin mapping:
 
 ```bash
-node dist/cli.js --help
+hook-creator --help
 hook-creator init /path/to/plugin PostToolUse record-tool \
   --matcher 'developer__shell' --timeout 10
 hook-creator validate /path/to/plugin
@@ -52,9 +52,9 @@ errors.
 The original entrypoints remain supported for compatibility:
 
 ```bash
-node dist/init_hook.js /path/to/plugin PostToolUse record-tool \
+hook-creator init /path/to/plugin PostToolUse record-tool \
   --matcher 'developer__shell' --timeout 10
-node dist/validate_hook.js /path/to/plugin
+hook-creator validate /path/to/plugin
 ```
 
 ## Reproducible evaluation manifests
@@ -67,10 +67,13 @@ Use the attestation create and verify CLI commands for DSSE-wrapped in-toto evid
 
 ## Development
 
+The portable Skill contains documentation, references, schemas, and evaluation assets only. Develop and test the TypeScript CLI separately:
+
 ```bash
-npm run build
-npm test
+(cd apps/hook-creator-cli && npm install && npm run build && npm test)
 ```
+
+Tagged staging injects the native executable as `skills/hook-creator/scripts/hook-creator` (`.exe` on Windows); never write build output into the source Skill.
 
 ## Use with Goose
 

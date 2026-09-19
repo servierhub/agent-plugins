@@ -4,7 +4,7 @@
   "current": [
     {
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/cli.ts",
       "field": "JSON envelope ok",
       "context": "agent-cli-ok",
       "tokens": [
@@ -22,7 +22,7 @@
     },
     {
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/cli.ts",
       "field": "process exitCode",
       "context": "agent-cli-exit",
       "tokens": [
@@ -44,7 +44,7 @@
     },
     {
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "field": "grading.json expectations[].passed",
       "context": "agent-grading-passed",
       "tokens": [
@@ -61,7 +61,7 @@
     },
     {
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
       "field": "JSON envelope ok",
       "context": "hook-cli-ok",
       "tokens": [
@@ -79,7 +79,7 @@
     },
     {
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
       "field": "JSON envelope usage",
       "context": "hook-cli-usage",
       "tokens": [
@@ -96,7 +96,7 @@
     },
     {
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
       "field": "process exit",
       "context": "hook-cli-exit",
       "tokens": [
@@ -115,7 +115,7 @@
     },
     {
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
       "field": "inspectApproval.state",
       "context": "hook-production-approval-state",
       "tokens": [
@@ -139,7 +139,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "field": "JSON envelope ok",
       "context": "plugin-cli-ok",
       "tokens": [
@@ -157,7 +157,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "field": "process exit",
       "context": "plugin-cli-exit",
       "tokens": [
@@ -176,7 +176,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "field": "full-eval.status",
       "context": "plugin-full-eval-status",
       "tokens": [
@@ -197,7 +197,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "field": "phases[].status",
       "context": "plugin-full-eval-phase",
       "tokens": [
@@ -217,7 +217,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "field": "gates.*.status",
       "context": "plugin-gate-status",
       "tokens": [
@@ -236,7 +236,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "field": "verification receipt status",
       "context": "plugin-verification-receipt-status",
       "tokens": [
@@ -256,7 +256,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "field": "humanReview input (review completion, not production approval)",
       "context": "plugin-human-review-status",
       "tokens": [
@@ -274,7 +274,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validation_outcomes.ts",
       "field": "ValidationOutcome.status",
       "context": "plugin-validation-outcome",
       "tokens": [
@@ -295,7 +295,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/portable_loader.ts",
       "field": "ComponentOutcome.status",
       "context": "plugin-component-outcome-status",
       "tokens": [
@@ -315,13 +315,13 @@
         ]
       },
       "sourceFiles": [
-        "skills/plugin-creator/scripts/portable_loader.ts",
-        "skills/plugin-creator/scripts/mcp_runtime.ts"
+        "apps/plugin-creator-cli/scripts/portable_loader.ts",
+        "apps/plugin-creator-cli/scripts/mcp_runtime.ts"
       ]
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "field": "verification receipt release_eligible",
       "context": "plugin-release-eligible",
       "tokens": [
@@ -338,7 +338,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
       "field": "MigrationReport.status",
       "context": "plugin-migration-status",
       "tokens": [
@@ -356,7 +356,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
       "field": "MigrationFinding.classification",
       "context": "plugin-migration-classification",
       "tokens": [
@@ -377,7 +377,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
       "field": "SchemaVersionRegistration.status",
       "context": "plugin-schema-version-status",
       "tokens": [
@@ -394,7 +394,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts",
       "field": "McpCompatibilityReport.status",
       "context": "plugin-mcp-compatibility",
       "tokens": [
@@ -416,7 +416,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/path_containment.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/path_containment.ts",
       "field": "PathContainmentResult.status",
       "context": "plugin-path-containment-status",
       "tokens": [
@@ -442,7 +442,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/cli.ts",
       "field": "JSON wrapper status",
       "context": "skill-cli-status",
       "tokens": [
@@ -461,7 +461,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/cli.ts",
       "field": "JSON wrapper exit_code",
       "context": "skill-cli-exit",
       "tokens": [
@@ -482,7 +482,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "field": "full-eval.status",
       "context": "skill-full-eval-status",
       "tokens": [
@@ -504,7 +504,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "field": "phases[].status",
       "context": "skill-full-eval-phase",
       "tokens": [
@@ -524,7 +524,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "field": "gates.*.status",
       "context": "skill-gate-status",
       "tokens": [
@@ -543,7 +543,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "field": "verification receipt status",
       "context": "skill-verification-receipt-status",
       "tokens": [
@@ -564,7 +564,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "field": "humanReview input",
       "context": "skill-human-review-status",
       "tokens": [
@@ -582,7 +582,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "field": "receipt.status",
       "context": "skill-receipt-status",
       "tokens": [
@@ -599,7 +599,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/audit_skill.ts",
       "field": "authoring-audit.status",
       "context": "skill-audit-status",
       "tokens": [
@@ -617,7 +617,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/design_evals.ts",
       "field": "evaluation-design.status",
       "context": "skill-design-status",
       "tokens": [
@@ -635,7 +635,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "field": "evaluation-analysis.status",
       "context": "skill-analysis-status",
       "tokens": [
@@ -652,7 +652,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "field": "navigation[].status",
       "context": "skill-navigation-status",
       "tokens": [
@@ -670,7 +670,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "field": "decision",
       "context": "skill-analysis-decision",
       "tokens": [
@@ -687,7 +687,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_eval.ts",
       "field": "trigger-eval v2 results[].pass",
       "context": "skill-trigger-result-pass",
       "tokens": [
@@ -704,7 +704,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "field": "grading.json expectations[].passed",
       "context": "skill-grading-passed",
       "tokens": [
@@ -721,7 +721,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_agent_plugin_schema.ts",
       "field": "SchemaValidationResult.valid (aggregate)",
       "context": "plugin-schema-aggregate-valid",
       "tokens": [
@@ -738,7 +738,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_agent_plugin_schema.ts",
       "field": "DocumentResult.valid",
       "context": "plugin-schema-document-valid",
       "tokens": [
@@ -755,7 +755,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "field": "McpSemanticResult.valid (aggregate)",
       "context": "plugin-mcp-aggregate-valid",
       "tokens": [
@@ -772,7 +772,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "field": "McpSemanticResult.policyValid (aggregate)",
       "context": "plugin-mcp-aggregate-policy-valid",
       "tokens": [
@@ -789,7 +789,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "field": "ExecutePairOutcome.status",
       "context": "skill-paired-execution-status",
       "tokens": [
@@ -808,7 +808,7 @@
     },
     {
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "field": "importEvidenceRun return status",
       "context": "agent-evidence-import-status",
       "tokens": [
@@ -825,7 +825,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "field": "CommonEvidenceEnvelope.status",
       "context": "plugin-component-evidence-status",
       "tokens": [
@@ -845,7 +845,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "field": "EvidenceApplicability.status",
       "context": "plugin-evidence-applicability",
       "tokens": [
@@ -864,7 +864,7 @@
   "documentedNonCurrent": [
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validation_outcomes.ts",
       "field": "ValidationOutcome.status type-only alternatives",
       "context": "plugin-validation-outcome",
       "tokens": [
@@ -885,7 +885,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validation_outcomes.ts",
       "field": "ComponentOutcome.status type-only alternatives",
       "context": "plugin-component-outcome-status",
       "tokens": [
@@ -904,7 +904,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts",
       "field": "McpCompatibilityReport.status type only",
       "context": "plugin-mcp-compatibility",
       "tokens": [
@@ -920,7 +920,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts",
       "field": "documentation shorthand only",
       "context": "plugin-package-status",
       "tokens": [
@@ -949,7 +949,7 @@
     },
     {
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "field": "derived validation shorthand only",
       "context": "hook-validation-ok",
       "tokens": [
@@ -963,7 +963,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_eval.ts",
       "field": "rendered text label only",
       "context": "skill-trigger-label",
       "tokens": [
@@ -979,7 +979,7 @@
   "copiedNestedFields": [
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "field": "verification receipt components.*.status",
       "canonicalContext": "plugin-component-evidence-status",
       "tokens": [
@@ -994,7 +994,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "field": "full-eval.verification.status and verification.gates.*.status",
       "canonicalContexts": [
         "plugin-verification-receipt-status",
@@ -1007,7 +1007,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "field": "verification receipt artifacts.authoring_audit.status",
       "canonicalContext": "skill-audit-status",
       "tokens": [
@@ -1022,7 +1022,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "field": "full-eval audit.status, design.status, receipt.status, and verification.status including nested gates/artifacts",
       "canonicalContexts": [
         "skill-audit-status",
@@ -1038,7 +1038,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "field": "McpServerSemanticResult.valid",
       "canonicalContext": "plugin-mcp-aggregate-valid",
       "tokens": [
@@ -1051,7 +1051,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "field": "McpServerSemanticResult.policyValid",
       "canonicalContext": "plugin-mcp-aggregate-policy-valid",
       "tokens": [
@@ -1064,7 +1064,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "field": "history[].train_results[].pass, history[].test_results[].pass, and history[].results[].pass (legacy fallback alias of train_results)",
       "canonicalContext": "skill-trigger-result-pass",
       "sourceEvidence": [
@@ -1075,7 +1075,7 @@
     },
     {
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/improve_description.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/improve_description.ts",
       "field": "HistoryEntry.results[].pass rendered as PASS/FAIL",
       "canonicalContext": "skill-trigger-result-pass",
       "sourceEvidence": [
@@ -1084,7 +1084,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "field": "validate command outcome.status forwarded into ok",
       "canonicalContext": "plugin-validation-outcome",
       "sourceEvidence": [
@@ -1093,7 +1093,7 @@
     },
     {
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "field": "verification receipt integration_evidence.status",
       "canonicalContext": "plugin-component-evidence-status",
       "tokens": [
@@ -1161,7 +1161,7 @@
     },
     {
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
       "fields": [
         "production approval identity, bindings, event history, signatures, rationale, accepted_risks, waivers, lineage"
       ],

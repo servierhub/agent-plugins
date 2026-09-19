@@ -13,5 +13,5 @@ This repository maintains the Goose/Open Plugins creator skill.
 - Treat hooks as executable security-sensitive code.
 - Keep Goose-specific behavior explicit and source-verified.
 - Preserve portable components when migrating another plugin ecosystem.
-- Run `npm run build` (TypeScript compile) after script changes.
-- Run `npm test` (validator's automated tests and a package smoke test) before release.
+- Make TypeScript CLI changes in `apps/plugin-creator-cli/`, never in this portable Skill tree.
+- Run `(cd apps/plugin-creator-cli && npm run build && npm test)` after CLI changes.

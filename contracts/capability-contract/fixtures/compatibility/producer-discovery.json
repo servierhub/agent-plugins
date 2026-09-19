@@ -850,7 +850,7 @@
     {
       "id": "skill.cli.envelope.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/cli.ts",
       "sourceFieldOrLayout": "skill.cli.envelope.unversioned",
       "sourceEvidence": "JSON.stringify({ command: name, status:",
       "kind": "envelope",
@@ -871,7 +871,7 @@
     {
       "id": "agent.cli.envelope.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/cli.ts",
       "sourceFieldOrLayout": "agent.cli.envelope.unversioned",
       "sourceEvidence": "JSON.stringify({ ok: exitCode === 0, command:",
       "kind": "envelope",
@@ -892,7 +892,7 @@
     {
       "id": "hook.cli.envelope.unversioned",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
       "sourceFieldOrLayout": "hook.cli.envelope.unversioned",
       "sourceEvidence": "JSON.stringify({ok:false,error:error.message,usage})",
       "kind": "envelope",
@@ -913,7 +913,7 @@
     {
       "id": "plugin.cli.envelope.unversioned",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "sourceFieldOrLayout": "plugin.cli.envelope.unversioned",
       "sourceEvidence": "emit({ok:true,command,output}",
       "kind": "envelope",
@@ -934,7 +934,7 @@
     {
       "id": "skill.full-eval.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": "skill.full-eval.v1",
       "sourceEvidence": "schema_version:\"1.1\",command:\"full-eval\"",
       "kind": "envelope",
@@ -953,7 +953,7 @@
     {
       "id": "plugin.full-eval.v1",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": "plugin.full-eval.v1",
       "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
       "kind": "envelope",
@@ -971,7 +971,7 @@
     {
       "id": "skill.full-eval-state.v2",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": ".full-eval-job.json",
       "sourceEvidence": "const STATE_FILE = \".full-eval-job.json\"",
       "kind": "evaluation-artifact",
@@ -989,7 +989,7 @@
     {
       "id": "plugin.full-eval-state.v1",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": "full-eval-state.json",
       "sourceEvidence": "const STATE_FILE=\"full-eval-state.json\"",
       "kind": "evaluation-artifact",
@@ -1007,7 +1007,7 @@
     {
       "id": "skill.execution-evidence.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/execution-evidence.json",
       "sourceEvidence": "const manifestPath = join(runDir, \"execution-evidence.json\");",
       "kind": "evaluation-artifact",
@@ -1025,7 +1025,7 @@
     {
       "id": "skill.authoring-audit.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/audit_skill.ts",
       "sourceFieldOrLayout": "skill.authoring-audit.v1",
       "sourceEvidence": "schema_version: \"1.0\"",
       "kind": "envelope",
@@ -1043,7 +1043,7 @@
     {
       "id": "skill.evaluation-design.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/design_evals.ts",
       "sourceFieldOrLayout": "skill.evaluation-design.v1",
       "sourceEvidence": "artifact: \"evaluation-design\"",
       "kind": "envelope",
@@ -1061,7 +1061,7 @@
     {
       "id": "skill.evaluation-analysis.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "sourceFieldOrLayout": "skill.evaluation-analysis.v1",
       "sourceEvidence": "artifact:\"evaluation-analysis\"",
       "kind": "envelope",
@@ -1079,7 +1079,7 @@
     {
       "id": "skill.evaluation-receipt.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrLayout": "skill.evaluation-receipt.unversioned",
       "sourceEvidence": "status: \"complete\" | \"blocked\"",
       "kind": "receipt",
@@ -1100,7 +1100,7 @@
     {
       "id": "skill.verification-receipt.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrLayout": "skill.verification-receipt.v1",
       "sourceEvidence": "schema_version: \"1.0\"",
       "kind": "receipt",
@@ -1118,7 +1118,7 @@
     {
       "id": "plugin.verification-receipt.v1",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "sourceFieldOrLayout": "plugin.verification-receipt.v1",
       "sourceEvidence": "schema_version: \"1.0\", artifact: \"plugin\"",
       "kind": "receipt",
@@ -1136,7 +1136,7 @@
     {
       "id": "plugin.validation-outcome.unversioned",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validation_outcomes.ts",
       "sourceFieldOrLayout": "plugin.validation-outcome.unversioned",
       "sourceEvidence": "export interface ValidationOutcome",
       "kind": "envelope",
@@ -1157,7 +1157,7 @@
     {
       "id": "plugin.migration-report.unversioned",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
       "sourceFieldOrLayout": "plugin.migration-report.unversioned",
       "sourceEvidence": "export interface MigrationReport",
       "kind": "envelope",
@@ -1262,7 +1262,7 @@
     {
       "id": "skill.eval-metadata.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": "eval-<id>/eval_metadata.json",
       "sourceEvidence": "eval_metadata.json",
       "kind": "evaluation-artifact",
@@ -1283,7 +1283,7 @@
     {
       "id": "agent.eval-metadata.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrLayout": "eval-<id>/eval_metadata.json",
       "sourceEvidence": "eval_metadata.json",
       "kind": "evaluation-artifact",
@@ -1304,7 +1304,7 @@
     {
       "id": "skill.grading.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/grading.json",
       "sourceEvidence": "join(runDir, \"grading.json\")",
       "kind": "evaluation-artifact",
@@ -1325,7 +1325,7 @@
     {
       "id": "agent.grading.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/grading.json",
       "sourceEvidence": "grading.json",
       "kind": "evaluation-artifact",
@@ -1346,7 +1346,7 @@
     {
       "id": "skill.timing.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/timing.json",
       "sourceEvidence": "join(runDir, \"timing.json\")",
       "kind": "evaluation-artifact",
@@ -1367,7 +1367,7 @@
     {
       "id": "agent.timing.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/timing.json",
       "sourceEvidence": "writeFileSync(join(runDir, \"timing.json\")",
       "kind": "evaluation-artifact",
@@ -1388,7 +1388,7 @@
     {
       "id": "skill.review-html.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": "review.html",
       "sourceEvidence": "join(workspace,\"review.html\")",
       "kind": "review-artifact",
@@ -1409,7 +1409,7 @@
     {
       "id": "skill.viewer-html.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrLayout": "eval-viewer/viewer.html",
       "sourceEvidence": "readFileSync(join(HERE,\"viewer.html\"),\"utf8\")",
       "kind": "review-artifact",
@@ -1430,7 +1430,7 @@
     {
       "id": "skill.feedback.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrLayout": "feedback.json",
       "sourceEvidence": "join(workspace, \"feedback.json\")",
       "kind": "review-artifact",
@@ -1451,7 +1451,7 @@
     {
       "id": "agent.transcript.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/transcript.json",
       "sourceEvidence": "writeFileSync(join(runDir, \"transcript.json\")",
       "kind": "evaluation-artifact",
@@ -1472,7 +1472,7 @@
     {
       "id": "agent.review-html.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrLayout": "review.html",
       "sourceEvidence": "const html = generateHtml(runs, agentName, previous, benchmark)",
       "kind": "review-artifact",
@@ -1493,7 +1493,7 @@
     {
       "id": "agent.feedback.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrLayout": "feedback.json",
       "sourceEvidence": "const feedbackPath = join(workspace, \"feedback.json\")",
       "kind": "review-artifact",
@@ -1514,7 +1514,7 @@
     {
       "id": "agent.viewer-html.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrLayout": "eval-viewer/viewer.html",
       "sourceEvidence": "const templatePath = join(HERE, \"viewer.html\")",
       "kind": "review-artifact",
@@ -1535,7 +1535,7 @@
     {
       "id": "skill.trigger-eval-result.v2",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_eval.ts",
       "sourceFieldOrLayout": "EvalOutput",
       "sourceEvidence": "interface EvalOutput{schema_version:\"2.0\"",
       "kind": "evaluation-artifact",
@@ -1553,7 +1553,7 @@
     {
       "id": "skill.run-loop-result.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "sourceFieldOrLayout": "<results-dir>/<timestamp>/results.json",
       "sourceEvidence": "writeFileSync(join(resultsDir, \"results.json\")",
       "kind": "evaluation-artifact",
@@ -1574,7 +1574,7 @@
     {
       "id": "skill.run-loop-report.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "sourceFieldOrLayout": "<results-dir>/<timestamp>/report.html",
       "sourceEvidence": "writeFileSync(join(resultsDir, \"report.html\")",
       "kind": "review-artifact",
@@ -1595,7 +1595,7 @@
     {
       "id": "skill.benchmark.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrLayout": "skill.benchmark.unversioned",
       "sourceEvidence": "join(benchmarkDirArg, \"benchmark.json\")",
       "kind": "envelope",
@@ -1616,7 +1616,7 @@
     {
       "id": "skill.benchmark-markdown.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrLayout": "benchmark.md",
       "sourceEvidence": "const outputMd = outputJson.replace(/\\.json$/, \".md\")",
       "kind": "evaluation-artifact",
@@ -1637,7 +1637,7 @@
     {
       "id": "agent.benchmark.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrLayout": "agent.benchmark.unversioned",
       "sourceEvidence": "join(root,\"benchmark.json\")",
       "kind": "envelope",
@@ -1658,7 +1658,7 @@
     {
       "id": "agent.benchmark-markdown.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrLayout": "benchmark.md",
       "sourceEvidence": "out.replace(/\\.json$/,\".md\")",
       "kind": "evaluation-artifact",
@@ -1679,7 +1679,7 @@
     {
       "id": "agent.run-summary.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrLayout": "agent.run-summary.unversioned",
       "sourceEvidence": "join(workspace, \"run_summary.json\")",
       "kind": "envelope",
@@ -1700,7 +1700,7 @@
     {
       "id": "workspace.skill-eval.current.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": "workspace.skill-eval.current.v1",
       "sourceEvidence": "for(const config of [\"with_skill\",baseline]){const configDir=join(ed,config);mkdirSync(configDir,{recursive:true});",
       "kind": "workspace-layout",
@@ -1718,7 +1718,7 @@
     {
       "id": "workspace.skill-eval.legacy-runs.v0",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrLayout": "workspace.skill-eval.legacy-runs.v0",
       "sourceEvidence": "const legacyRoot = join(workspace, \"runs\")",
       "kind": "workspace-layout",
@@ -1740,7 +1740,7 @@
     {
       "id": "workspace.agent-eval.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrLayout": "workspace.agent-eval.unversioned",
       "sourceEvidence": "const runDir = flatLayout ? join(workspace",
       "kind": "workspace-layout",
@@ -1761,7 +1761,7 @@
     {
       "id": "workspace.plugin-eval.unversioned",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": "workspace.plugin-eval.unversioned",
       "sourceEvidence": "workspace=resolve(options.workspace??join(evaluations,\"plugin\"))",
       "kind": "workspace-layout",
@@ -1782,7 +1782,7 @@
     {
       "id": "workspace.eval-run-artifacts.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrLayout": "workspace.eval-run-artifacts.unversioned",
       "sourceEvidence": "join(runDir, \"grading.json\")",
       "kind": "workspace-layout",
@@ -1803,7 +1803,7 @@
     {
       "id": "plugin.manifest.v1",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
       "sourceFieldOrLayout": "plugin.manifest.v1",
       "sourceEvidence": "DEFAULT_SCHEMA_VERSION = \"1.0.0\"",
       "kind": "schema-document",
@@ -1821,7 +1821,7 @@
     {
       "id": "plugin.manifest.draft-v1.1",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
       "sourceFieldOrLayout": "plugin.manifest.draft-v1.1",
       "sourceEvidence": "\"1.1.0\": registration(\"1.1.0\", \"draft\", false)",
       "kind": "schema-document",
@@ -1840,7 +1840,7 @@
     {
       "id": "plugin.mcp.v1",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
       "sourceFieldOrLayout": "plugin.mcp.v1",
       "sourceEvidence": "mcp: Object.freeze({ id: schemaId(version, \"mcp.schema.json\")",
       "kind": "schema-document",
@@ -1858,7 +1858,7 @@
     {
       "id": "plugin.mcp.draft-v1.1",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
       "sourceFieldOrLayout": "plugin.mcp.draft-v1.1",
       "sourceEvidence": "\"1.1.0\": registration(\"1.1.0\", \"draft\", false)",
       "kind": "schema-document",
@@ -1877,7 +1877,7 @@
     {
       "id": "hook.document.current.unversioned",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
       "sourceFieldOrLayout": "hook.document.current.unversioned",
       "sourceEvidence": "doc={hooks:{}}",
       "kind": "schema-document",
@@ -1895,7 +1895,7 @@
     {
       "id": "hook.layout.legacy-root.v0",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "sourceFieldOrLayout": "hook.layout.legacy-root.v0",
       "sourceEvidence": "LEGACY_HOOKS_PATH = \"hooks/hooks.json\"",
       "kind": "workspace-layout",
@@ -1916,7 +1916,7 @@
     {
       "id": "hook.layout.historical-namespace.v0",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "sourceFieldOrLayout": "hook.layout.historical-namespace.v0",
       "sourceEvidence": "HISTORICAL_HOOKS_PATH = \"extensions/io.github.block.goose/hooks.json\"",
       "kind": "workspace-layout",
@@ -1937,7 +1937,7 @@
     {
       "id": "hook.layout.current.v1",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "sourceFieldOrLayout": "hook.layout.current.v1",
       "sourceEvidence": "CANONICAL_HOOKS_PATH = \"extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json\"",
       "kind": "workspace-layout",
@@ -1955,7 +1955,7 @@
     {
       "id": "hook.extension-envelope.v1",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
       "sourceFieldOrLayout": "hook.extension-envelope.v1",
       "sourceEvidence": "version:GOOSE_ENVELOPE_VERSION",
       "kind": "envelope",
@@ -2027,7 +2027,7 @@
     {
       "id": "result.exit-family.skill",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/cli.ts",
       "sourceFieldOrLayout": "result.exit-family.skill",
       "sourceEvidence": "status === \"blocked\" ? 3 : 1",
       "kind": "status-exit-family",
@@ -2045,7 +2045,7 @@
     {
       "id": "result.exit-family.agent",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/cli.ts",
       "sourceFieldOrLayout": "result.exit-family.agent",
       "sourceEvidence": "Exit codes: 0 success, 1 failure, 2 usage error, 3 blocked operation.",
       "kind": "status-exit-family",
@@ -2063,7 +2063,7 @@
     {
       "id": "result.exit-family.hook",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
       "sourceFieldOrLayout": "result.exit-family.hook",
       "sourceEvidence": "return usage?2:1",
       "kind": "status-exit-family",
@@ -2081,7 +2081,7 @@
     {
       "id": "result.exit-family.plugin",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "sourceFieldOrLayout": "result.exit-family.plugin",
       "sourceEvidence": "EXIT_SUCCESS=0, EXIT_FAILURE=1, EXIT_USAGE=2, EXIT_BLOCKED=3",
       "kind": "status-exit-family",
@@ -2099,7 +2099,7 @@
     {
       "id": "skill.post-evaluation-pattern-review.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": "post-evaluation-pattern-review.json",
       "sourceEvidence": "const path=join(workspace,\"post-evaluation-pattern-review.json\"),analysis=analyzeEvaluation(workspace,skill)",
       "kind": "evaluation-artifact",
@@ -2120,7 +2120,7 @@
     {
       "id": "agent.response-markdown.unversioned",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/outputs/response.md",
       "sourceEvidence": "writeFileSync(join(outputs, \"response.md\")",
       "kind": "evaluation-artifact",
@@ -2141,7 +2141,7 @@
     {
       "id": "skill.paired-stream.unversioned",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/transcript.json",
       "sourceEvidence": "writeFileSync(join(runDir,\"transcript.json\"),",
       "kind": "evaluation-artifact",
@@ -2162,7 +2162,7 @@
     {
       "id": "skill.paired-events.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/events.json",
       "sourceEvidence": "atomic(join(runDir,\"events.json\"),",
       "kind": "evaluation-artifact",
@@ -2180,7 +2180,7 @@
     {
       "id": "skill.paired-failure.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/execution-outcome.json",
       "sourceEvidence": "atomic(join(runDir,\"execution-outcome.json\"),",
       "kind": "evaluation-artifact",
@@ -2198,7 +2198,7 @@
     {
       "id": "agent.evidence-job.v1",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrLayout": "portable evidence bundle/job.json",
       "sourceEvidence": "schema_version: JOB_SCHEMA",
       "kind": "evaluation-definition",
@@ -2216,7 +2216,7 @@
     {
       "id": "agent.evidence-run.v1",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrLayout": "portable run.example.json and imported evidence.json",
       "sourceEvidence": "schema_version: RUN_SCHEMA",
       "kind": "evaluation-artifact",
@@ -2234,7 +2234,7 @@
     {
       "id": "plugin.component-evidence-receipt.v1",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "sourceFieldOrLayout": "typed Skill, agent, hook, MCP, or integration receipt",
       "sourceEvidence": "schema_version: \"1.0\";",
       "kind": "receipt",
@@ -2252,7 +2252,7 @@
     {
       "id": "agent.eval-metadata.v2",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrLayout": "eval-<id>/eval_metadata.json",
       "sourceEvidence": "schema_version: 2,",
       "kind": "evaluation-artifact",
@@ -2270,7 +2270,7 @@
     {
       "id": "agent.semantic-grading.v2",
       "creator": "agent-creator",
-      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/grading.json",
       "sourceEvidence": "schema_version:2,assertion_hash:meta.assertion_hash",
       "kind": "evaluation-artifact",
@@ -2288,7 +2288,7 @@
     {
       "id": "plugin.independent-review.v1",
       "creator": "plugin-creator",
-      "sourceFile": "skills/plugin-creator/scripts/independent_review.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/independent_review.ts",
       "sourceFieldOrLayout": "runIndependentReview result / CLI JSON output",
       "sourceEvidence": "return{schemaVersion:1,runId:config.runId",
       "kind": "review-artifact",
@@ -2306,7 +2306,7 @@
     {
       "id": "hook.evaluation-run-manifest.v1",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/evaluation_run_manifest.ts",
       "sourceFieldOrLayout": "eval-manifest create <spec.json> <manifest.json>",
       "sourceEvidence": "MANIFEST_VERSION=\"hook-evaluation-run-manifest/v1\"",
       "kind": "evaluation-artifact",
@@ -2324,7 +2324,7 @@
     {
       "id": "hook.production-approval.v1",
       "creator": "hook-creator",
-      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
       "sourceFieldOrLayout": "hook-production-approval/v1",
       "sourceEvidence": "export const APPROVAL_VERSION=\"hook-production-approval/v1\"",
       "kind": "evaluation-artifact",
@@ -2936,7 +2936,7 @@
     {
       "id": "skill.evaluator-grading.v2",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluator_grading.ts",
       "sourceFieldOrLayout": "gradeOutput return grading",
       "sourceEvidence": "grading: { schema_version: 2, authority: \"evaluator\"",
       "kind": "evaluation-artifact",
@@ -2954,7 +2954,7 @@
     {
       "id": "skill.deterministic-evidence.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrLayout": "eval-<id>/<configuration>/run-<n>/deterministic-evidence.json",
       "sourceEvidence": "atomic(join(runDir,\"deterministic-evidence.json\")",
       "kind": "evaluation-artifact",
@@ -2972,7 +2972,7 @@
     {
       "id": "skill.evidence-mode.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrLayout": "eval_metadata.json/evidence_mode",
       "sourceEvidence": "const evidence_mode={schema_version:1,planned:options.execute?\"goose-evaluator\":\"manual-governed-import\"};",
       "kind": "evaluation-artifact",
@@ -2990,7 +2990,7 @@
     {
       "id": "skill.trigger-run-outcome.v1",
       "creator": "skill-creator",
-      "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/trigger_evaluation.ts",
       "sourceFieldOrLayout": "TriggerRunOutcome",
       "sourceEvidence": "export interface TriggerRunOutcome{schema_version:typeof TRIGGER_OUTCOME_SCHEMA_VERSION;",
       "kind": "evaluation-artifact",
@@ -3170,7 +3170,7 @@
     ]
   },
   "schemaRegistry": {
-    "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+    "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
     "registrations": [
       {
         "version": "1.0.0",
@@ -3198,7 +3198,7 @@
       "expected": []
     },
     {
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "expected": [
         "eval_metadata.json",
         "feedback.json",
@@ -3210,11 +3210,11 @@
       ]
     },
     {
-      "sourceFile": "skills/agent-creator/scripts/agent_format.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/agent_format.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts",
       "expected": [
         "benchmark.json",
         "eval_metadata.json",
@@ -3223,11 +3223,11 @@
       ]
     },
     {
-      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/cli.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "expected": [
         "agent.md",
         "eval_metadata.json",
@@ -3243,7 +3243,7 @@
       ]
     },
     {
-      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "expected": [
         "eval_metadata.json",
         "grading.json",
@@ -3252,7 +3252,7 @@
       ]
     },
     {
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "expected": [
         "eval_metadata.json",
         "execution_evidence.json",
@@ -3264,39 +3264,39 @@
       ]
     },
     {
-      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/evaluation_run_manifest.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "expected": [
         "plugin.json"
       ]
     },
     {
-      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
       "expected": [
         "plugin.json"
       ]
     },
     {
-      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/hook-creator/scripts/validate_hook.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/validate_hook.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "expected": [
         "SKILL.md",
         "hooks.json",
@@ -3304,7 +3304,7 @@
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "expected": [
         "benchmark.json",
         "full-eval-cancel.json",
@@ -3316,11 +3316,11 @@
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/independent_review.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/independent_review.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/init_goose_plugin.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/init_goose_plugin.ts",
       "expected": [
         "SKILL.md",
         "hooks.json",
@@ -3328,7 +3328,7 @@
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts",
       "expected": [
         ".mcp.json",
         "mcp.json",
@@ -3336,17 +3336,17 @@
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/mcp_runtime.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_runtime.ts",
       "expected": [
         "mcp.json"
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
       "expected": [
         ".mcp.json",
         "mcp.json",
@@ -3354,7 +3354,7 @@
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts",
       "expected": [
         "THIRD_PARTY_NOTICES.md",
         "manifest.json",
@@ -3363,15 +3363,15 @@
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/package_manifest.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/package_manifest.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/plugin_data_lifecycle.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/plugin_data_lifecycle.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/portable_loader.ts",
       "expected": [
         "SKILL.md",
         "manifest.json",
@@ -3380,14 +3380,14 @@
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_agent_plugin_schema.ts",
       "expected": [
         "mcp.json",
         "plugin.json"
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts",
       "expected": [
         ".mcp.json",
         "SKILL.md",
@@ -3397,11 +3397,11 @@
       ]
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validation_outcomes.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "expected": [
         "benchmark.json",
         "plugin.json",
@@ -3409,7 +3409,7 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "expected": [
         "benchmark.json",
         "eval_metadata.json",
@@ -3422,7 +3422,7 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
       "expected": [
         "benchmark.json",
         "eval_metadata.json",
@@ -3431,7 +3431,7 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "expected": [
         "SKILL.md",
         "benchmark.json",
@@ -3442,21 +3442,21 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/audit_skill.ts",
       "expected": [
         "SKILL.md"
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/cli.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/design_evals.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "expected": [
         "deterministic-evidence.json",
         "eval_metadata.json",
@@ -3469,11 +3469,11 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluator_grading.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "expected": [
         ".full-eval-job.json",
         "SKILL.md",
@@ -3491,11 +3491,11 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/generate_report.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/generate_report.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/package_skill.ts",
       "expected": [
         "SKILL.md",
         "THIRD_PARTY_NOTICES.md",
@@ -3504,7 +3504,7 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "expected": [
         "deterministic-evidence.json",
         "eval_metadata.json",
@@ -3517,13 +3517,13 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_eval.ts",
       "expected": [
         "SKILL.md"
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "expected": [
         "SKILL.md",
         "report.html",
@@ -3531,11 +3531,11 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/trigger_evaluation.ts",
       "expected": []
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "expected": [
         "benchmark.json",
         "benchmark.md",
@@ -3547,7 +3547,7 @@
       ]
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "expected": [
         ".full-eval-job.json",
         "THIRD_PARTY_NOTICES.md",
@@ -3938,98 +3938,98 @@
     },
     {
       "id": "skill.full-eval.v1",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceEvidence": "schema_version:\"1.1\",command:\"full-eval\"",
       "emittedVersion": "1.1",
-      "versionSourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "versionEvidence": "schema_version:\"1.1\",command:\"full-eval\""
     },
     {
       "id": "plugin.full-eval.v1",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceEvidence": "schema_version:\"1.0\",command:\"full-eval\"",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "versionSourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "versionEvidence": "schema_version:\"1.0\",command:\"full-eval\""
     },
     {
       "id": "skill.authoring-audit.v1",
-      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/audit_skill.ts",
       "sourceEvidence": "schema_version: \"1.0\"",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/audit_skill.ts",
       "versionEvidence": "schema_version: \"1.0\""
     },
     {
       "id": "skill.evaluation-design.v1",
-      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/design_evals.ts",
       "sourceEvidence": "artifact: \"evaluation-design\"",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/design_evals.ts",
       "versionEvidence": "artifact: \"evaluation-design\""
     },
     {
       "id": "skill.evaluation-analysis.v1",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "sourceEvidence": "artifact:\"evaluation-analysis\"",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "versionEvidence": "artifact:\"evaluation-analysis\""
     },
     {
       "id": "skill.verification-receipt.v1",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceEvidence": "schema_version: \"1.0\"",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "versionEvidence": "schema_version: \"1.0\""
     },
     {
       "id": "plugin.verification-receipt.v1",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "sourceEvidence": "schema_version: \"1.0\", artifact: \"plugin\"",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "versionSourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "versionEvidence": "schema_version: \"1.0\", artifact: \"plugin\""
     },
     {
       "id": "workspace.skill-eval.current.v1",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceEvidence": "for(const config of [\"with_skill\",baseline]){const configDir=join(ed,config);mkdirSync(configDir,{recursive:true});",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "versionEvidence": "for(const config of [\"with_skill\",baseline]){const configDir=join(ed,config);mkdirSync(configDir,{recursive:true});"
     },
     {
       "id": "plugin.manifest.v1",
-      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
       "sourceEvidence": "DEFAULT_SCHEMA_VERSION = \"1.0.0\"",
       "emittedVersion": "1.0.0",
-      "versionSourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "versionSourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
       "versionEvidence": "DEFAULT_SCHEMA_VERSION = \"1.0.0\""
     },
     {
       "id": "plugin.mcp.v1",
-      "sourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
       "sourceEvidence": "mcp: Object.freeze({ id: schemaId(version, \"mcp.schema.json\")",
       "emittedVersion": "1.0.0",
-      "versionSourceFile": "skills/plugin-creator/scripts/schema_registry.ts",
+      "versionSourceFile": "apps/plugin-creator-cli/scripts/schema_registry.ts",
       "versionEvidence": "DEFAULT_SCHEMA_VERSION = \"1.0.0\""
     },
     {
       "id": "hook.layout.current.v1",
-      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "sourceEvidence": "CANONICAL_HOOKS_PATH = \"extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json\"",
       "emittedVersion": "1",
-      "versionSourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "versionSourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "versionEvidence": "CANONICAL_HOOKS_PATH = \"extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json\""
     },
     {
       "id": "hook.extension-envelope.v1",
-      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
       "sourceEvidence": "version:GOOSE_ENVELOPE_VERSION",
       "emittedVersion": "1",
-      "versionSourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "versionSourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "versionEvidence": "GOOSE_ENVELOPE_VERSION = 1"
     },
     {
@@ -4058,138 +4058,138 @@
     },
     {
       "id": "result.exit-family.skill",
-      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/cli.ts",
       "sourceEvidence": "status === \"blocked\" ? 3 : 1",
       "emittedVersion": "1.0.0",
-      "versionSourceFile": "skills/skill-creator/scripts/cli.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/cli.ts",
       "versionEvidence": "status === \"blocked\" ? 3 : 1"
     },
     {
       "id": "result.exit-family.agent",
-      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/cli.ts",
       "sourceEvidence": "Exit codes: 0 success, 1 failure, 2 usage error, 3 blocked operation.",
       "emittedVersion": "1.0.0",
-      "versionSourceFile": "skills/agent-creator/scripts/cli.ts",
+      "versionSourceFile": "apps/agent-creator-cli/scripts/cli.ts",
       "versionEvidence": "Exit codes: 0 success, 1 failure, 2 usage error, 3 blocked operation."
     },
     {
       "id": "result.exit-family.hook",
-      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
       "sourceEvidence": "return usage?2:1",
       "emittedVersion": "1.0.0",
-      "versionSourceFile": "skills/hook-creator/scripts/cli.ts",
+      "versionSourceFile": "apps/hook-creator-cli/scripts/cli.ts",
       "versionEvidence": "return usage?2:1"
     },
     {
       "id": "result.exit-family.plugin",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "sourceEvidence": "EXIT_SUCCESS=0, EXIT_FAILURE=1, EXIT_USAGE=2, EXIT_BLOCKED=3",
       "emittedVersion": "1.0.0",
-      "versionSourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "versionSourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "versionEvidence": "EXIT_SUCCESS=0, EXIT_FAILURE=1, EXIT_USAGE=2, EXIT_BLOCKED=3"
     },
     {
       "id": "skill.full-eval-state.v2",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceEvidence": "const STATE_FILE = \".full-eval-job.json\"",
       "emittedVersion": "2.0",
-      "versionSourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "versionEvidence": "const SCHEMA_VERSION = \"2.0\";"
     },
     {
       "id": "plugin.full-eval-state.v1",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceEvidence": "const STATE_FILE=\"full-eval-state.json\"",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "versionSourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "versionEvidence": "schema_version:\"1.0\",command:\"full-eval\""
     },
     {
       "id": "skill.execution-evidence.v1",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceEvidence": "const manifestPath = join(runDir, \"execution-evidence.json\");",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "versionEvidence": "schema_version: \"1.0\";"
     },
     {
       "id": "skill.paired-events.v1",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceEvidence": "atomic(join(runDir,\"events.json\"),",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "versionEvidence": "atomic(join(runDir,\"events.json\"),"
     },
     {
       "id": "skill.paired-failure.v1",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceEvidence": "atomic(join(runDir,\"execution-outcome.json\"),",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "versionEvidence": "atomic(join(runDir,\"execution-outcome.json\"),"
     },
     {
       "id": "agent.evidence-job.v1",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceEvidence": "schema_version: JOB_SCHEMA",
       "emittedVersion": "agent-creator.evidence-job/v1",
-      "versionSourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "versionSourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "versionEvidence": "schema_version: JOB_SCHEMA"
     },
     {
       "id": "agent.evidence-run.v1",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceEvidence": "schema_version: RUN_SCHEMA",
       "emittedVersion": "agent-creator.evidence-run/v1",
-      "versionSourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "versionSourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "versionEvidence": "schema_version: RUN_SCHEMA"
     },
     {
       "id": "plugin.component-evidence-receipt.v1",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "sourceEvidence": "schema_version: \"1.0\";",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "versionSourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "versionEvidence": "schema_version: \"1.0\";"
     },
     {
       "id": "agent.eval-metadata.v2",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceEvidence": "schema_version: 2,",
       "emittedVersion": "2",
-      "versionSourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "versionSourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "versionEvidence": "schema_version: 2,"
     },
     {
       "id": "agent.semantic-grading.v2",
-      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "sourceEvidence": "schema_version:2,assertion_hash:meta.assertion_hash",
       "emittedVersion": "2",
-      "versionSourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "versionSourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "versionEvidence": "schema_version:2,assertion_hash:meta.assertion_hash"
     },
     {
       "id": "plugin.independent-review.v1",
-      "sourceFile": "skills/plugin-creator/scripts/independent_review.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/independent_review.ts",
       "sourceEvidence": "return{schemaVersion:1,runId:config.runId",
       "emittedVersion": "1",
-      "versionSourceFile": "skills/plugin-creator/scripts/independent_review.ts",
+      "versionSourceFile": "apps/plugin-creator-cli/scripts/independent_review.ts",
       "versionEvidence": "return{schemaVersion:1,runId:config.runId"
     },
     {
       "id": "hook.evaluation-run-manifest.v1",
-      "sourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/evaluation_run_manifest.ts",
       "sourceEvidence": "MANIFEST_VERSION=\"hook-evaluation-run-manifest/v1\"",
       "emittedVersion": "hook-evaluation-run-manifest/v1",
-      "versionSourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
+      "versionSourceFile": "apps/hook-creator-cli/scripts/evaluation_run_manifest.ts",
       "versionEvidence": "MANIFEST_VERSION=\"hook-evaluation-run-manifest/v1\""
     },
     {
       "id": "hook.production-approval.v1",
-      "versionSourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "versionSourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
       "versionEvidence": "export const APPROVAL_VERSION=\"hook-production-approval/v1\"",
       "emittedVersion": "hook-production-approval/v1",
-      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
       "sourceEvidence": "export const APPROVAL_VERSION=\"hook-production-approval/v1\""
     },
     {
@@ -4242,34 +4242,34 @@
     },
     {
       "id": "skill.evaluator-grading.v2",
-      "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluator_grading.ts",
       "sourceEvidence": "grading: { schema_version: 2, authority: \"evaluator\"",
       "emittedVersion": "2",
-      "versionSourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/evaluator_grading.ts",
       "versionEvidence": "grading: { schema_version: 2, authority: \"evaluator\""
     },
     {
       "id": "skill.evidence-mode.v1",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceEvidence": "const evidence_mode={schema_version:1,planned:options.execute?\"goose-evaluator\":\"manual-governed-import\"};",
       "emittedVersion": "1",
-      "versionSourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "versionEvidence": "const evidence_mode={schema_version:1,planned:options.execute?\"goose-evaluator\":\"manual-governed-import\"};"
     },
     {
       "id": "skill.trigger-run-outcome.v1",
-      "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/trigger_evaluation.ts",
       "sourceEvidence": "TRIGGER_OUTCOME_SCHEMA_VERSION = \"1.0\"",
       "emittedVersion": "1.0",
-      "versionSourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/trigger_evaluation.ts",
       "versionEvidence": "TRIGGER_OUTCOME_SCHEMA_VERSION = \"1.0\""
     },
     {
       "id": "skill.trigger-eval-result.v2",
-      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_eval.ts",
       "sourceEvidence": "interface EvalOutput{schema_version:\"2.0\"",
       "emittedVersion": "2.0",
-      "versionSourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "versionSourceFile": "apps/skill-creator-cli/scripts/run_eval.ts",
       "versionEvidence": "interface EvalOutput{schema_version:\"2.0\""
     }
   ],
@@ -4741,8 +4741,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::eval_metadata.json",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/agent-creator-cli/eval-viewer/generate_review.ts::eval_metadata.json",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "agent.eval-metadata.unversioned",
@@ -4750,8 +4750,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::feedback.json",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/agent-creator-cli/eval-viewer/generate_review.ts::feedback.json",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "feedback.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "agent.feedback.unversioned",
@@ -4759,8 +4759,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::grading.json",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/agent-creator-cli/eval-viewer/generate_review.ts::grading.json",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "consumer",
       "canonicalArtifactId": "agent.grading.unversioned",
@@ -4768,8 +4768,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::metrics.json",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/agent-creator-cli/eval-viewer/generate_review.ts::metrics.json",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "metrics.json",
       "role": "consumer",
       "canonicalArtifactId": "creator.metrics.unversioned",
@@ -4777,8 +4777,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::transcript.md",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/agent-creator-cli/eval-viewer/generate_review.ts::transcript.md",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "transcript.md",
       "role": "consumer",
       "canonicalArtifactId": "creator.transcript-markdown.unversioned",
@@ -4786,8 +4786,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::user_notes.md",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/agent-creator-cli/eval-viewer/generate_review.ts::user_notes.md",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "user_notes.md",
       "role": "consumer",
       "canonicalArtifactId": "creator.user-notes-markdown.unversioned",
@@ -4795,8 +4795,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/eval-viewer/generate_review.ts::viewer.html",
-      "sourceFile": "skills/agent-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/agent-creator-cli/eval-viewer/generate_review.ts::viewer.html",
+      "sourceFile": "apps/agent-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "viewer.html",
       "role": "consumer",
       "canonicalArtifactId": "agent.viewer-html.unversioned",
@@ -4804,8 +4804,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::benchmark.json",
-      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "siteId": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts::benchmark.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "benchmark.json",
       "role": "producer",
       "canonicalArtifactId": "agent.benchmark.unversioned",
@@ -4813,8 +4813,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::eval_metadata.json",
-      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "siteId": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts::eval_metadata.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "agent.eval-metadata.unversioned",
@@ -4822,8 +4822,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::grading.json",
-      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "siteId": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts::grading.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "consumer",
       "canonicalArtifactId": "agent.grading.unversioned",
@@ -4831,8 +4831,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/agent-creator/scripts/aggregate_benchmark.ts::timing.json",
-      "sourceFile": "skills/agent-creator/scripts/aggregate_benchmark.ts",
+      "siteId": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts::timing.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "consumer",
       "canonicalArtifactId": "agent.timing.unversioned",
@@ -4840,8 +4840,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/cli.ts::JSON CLI envelope",
-      "sourceFile": "skills/agent-creator/scripts/cli.ts",
+      "siteId": "apps/agent-creator-cli/scripts/cli.ts::JSON CLI envelope",
+      "sourceFile": "apps/agent-creator-cli/scripts/cli.ts",
       "sourceFieldOrArtifact": "JSON CLI envelope",
       "role": "producer-consumer",
       "canonicalArtifactId": "agent.cli.envelope.unversioned",
@@ -4849,8 +4849,8 @@
       "evidenceOccurrences": 9
     },
     {
-      "siteId": "skills/agent-creator/scripts/grade_agent_eval.ts::eval_metadata.json",
-      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "siteId": "apps/agent-creator-cli/scripts/grade_agent_eval.ts::eval_metadata.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "agent.eval-metadata.unversioned",
@@ -4858,8 +4858,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/grade_agent_eval.ts::grading.json",
-      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "siteId": "apps/agent-creator-cli/scripts/grade_agent_eval.ts::grading.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "producer",
       "canonicalArtifactId": "agent.semantic-grading.v2",
@@ -4867,8 +4867,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/agent-creator/scripts/grade_agent_eval.ts::response.md",
-      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "siteId": "apps/agent-creator-cli/scripts/grade_agent_eval.ts::response.md",
+      "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "sourceFieldOrArtifact": "response.md",
       "role": "consumer",
       "canonicalArtifactId": "agent.response-markdown.unversioned",
@@ -4876,8 +4876,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/agent-creator/scripts/grade_agent_eval.ts::timing.json",
-      "sourceFile": "skills/agent-creator/scripts/grade_agent_eval.ts",
+      "siteId": "apps/agent-creator-cli/scripts/grade_agent_eval.ts::timing.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/grade_agent_eval.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "consumer",
       "canonicalArtifactId": "agent.timing.unversioned",
@@ -4885,8 +4885,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::eval_metadata.json",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "siteId": "apps/agent-creator-cli/scripts/run_agent_eval.ts::eval_metadata.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "producer",
       "canonicalArtifactId": "agent.eval-metadata.v2",
@@ -4894,8 +4894,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::response.md",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "siteId": "apps/agent-creator-cli/scripts/run_agent_eval.ts::response.md",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrArtifact": "response.md",
       "role": "producer",
       "canonicalArtifactId": "agent.response-markdown.unversioned",
@@ -4903,8 +4903,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::run_summary.json",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "siteId": "apps/agent-creator-cli/scripts/run_agent_eval.ts::run_summary.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrArtifact": "run_summary.json",
       "role": "producer",
       "canonicalArtifactId": "agent.run-summary.unversioned",
@@ -4912,8 +4912,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::timing.json",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "siteId": "apps/agent-creator-cli/scripts/run_agent_eval.ts::timing.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "producer",
       "canonicalArtifactId": "agent.timing.unversioned",
@@ -4921,8 +4921,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::transcript.json",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "siteId": "apps/agent-creator-cli/scripts/run_agent_eval.ts::transcript.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrArtifact": "transcript.json",
       "role": "producer",
       "canonicalArtifactId": "agent.transcript.unversioned",
@@ -4930,8 +4930,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/hook-creator/scripts/cli.ts::JSON CLI envelope",
-      "sourceFile": "skills/hook-creator/scripts/cli.ts",
+      "siteId": "apps/hook-creator-cli/scripts/cli.ts::JSON CLI envelope",
+      "sourceFile": "apps/hook-creator-cli/scripts/cli.ts",
       "sourceFieldOrArtifact": "JSON CLI envelope",
       "role": "producer-consumer",
       "canonicalArtifactId": "hook.cli.envelope.unversioned",
@@ -4939,8 +4939,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/hook-creator/scripts/hook_format.ts::canonical hook document consumer",
-      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "siteId": "apps/hook-creator-cli/scripts/hook_format.ts::canonical hook document consumer",
+      "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "sourceFieldOrArtifact": "canonical hook document consumer",
       "role": "producer-consumer",
       "canonicalArtifactId": "hook.document.current.unversioned",
@@ -4948,8 +4948,8 @@
       "evidenceOccurrences": 6
     },
     {
-      "siteId": "skills/hook-creator/scripts/hook_format.ts::plugin extension consumer",
-      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "siteId": "apps/hook-creator-cli/scripts/hook_format.ts::plugin extension consumer",
+      "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "sourceFieldOrArtifact": "plugin extension consumer",
       "role": "producer-consumer",
       "canonicalArtifactId": "hook.extension-envelope.v1",
@@ -4957,8 +4957,8 @@
       "evidenceOccurrences": 9
     },
     {
-      "siteId": "skills/hook-creator/scripts/hook_format.ts::plugin.json",
-      "sourceFile": "skills/hook-creator/scripts/hook_format.ts",
+      "siteId": "apps/hook-creator-cli/scripts/hook_format.ts::plugin.json",
+      "sourceFile": "apps/hook-creator-cli/scripts/hook_format.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -4966,8 +4966,8 @@
       "evidenceOccurrences": 8
     },
     {
-      "siteId": "skills/hook-creator/scripts/init_hook.ts::canonical hook document producer",
-      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "siteId": "apps/hook-creator-cli/scripts/init_hook.ts::canonical hook document producer",
+      "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
       "sourceFieldOrArtifact": "canonical hook document producer",
       "role": "producer-consumer",
       "canonicalArtifactId": "hook.document.current.unversioned",
@@ -4975,8 +4975,8 @@
       "evidenceOccurrences": 5
     },
     {
-      "siteId": "skills/hook-creator/scripts/init_hook.ts::hook extension envelope producer",
-      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "siteId": "apps/hook-creator-cli/scripts/init_hook.ts::hook extension envelope producer",
+      "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
       "sourceFieldOrArtifact": "hook extension envelope producer",
       "role": "producer-consumer",
       "canonicalArtifactId": "hook.extension-envelope.v1",
@@ -4984,8 +4984,8 @@
       "evidenceOccurrences": 6
     },
     {
-      "siteId": "skills/hook-creator/scripts/init_hook.ts::plugin manifest producer-consumer",
-      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "siteId": "apps/hook-creator-cli/scripts/init_hook.ts::plugin manifest producer-consumer",
+      "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
       "sourceFieldOrArtifact": "plugin manifest producer-consumer",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -4993,8 +4993,8 @@
       "evidenceOccurrences": 5
     },
     {
-      "siteId": "skills/hook-creator/scripts/init_hook.ts::plugin.json",
-      "sourceFile": "skills/hook-creator/scripts/init_hook.ts",
+      "siteId": "apps/hook-creator-cli/scripts/init_hook.ts::plugin.json",
+      "sourceFile": "apps/hook-creator-cli/scripts/init_hook.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5002,17 +5002,17 @@
       "evidenceOccurrences": 5
     },
     {
-      "sourceFile": "skills/hook-creator/scripts/validate_hook.ts",
+      "sourceFile": "apps/hook-creator-cli/scripts/validate_hook.ts",
       "sourceFieldOrArtifact": "hook validation result",
       "sourceEvidence": "export function validateHook",
-      "siteId": "skills/hook-creator/scripts/validate_hook.ts::hook validation result",
+      "siteId": "apps/hook-creator-cli/scripts/validate_hook.ts::hook validation result",
       "canonicalArtifactId": "hook.document.current.unversioned",
       "role": "consumer",
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/cli.ts::JSON CLI envelope",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/cli.ts::JSON CLI envelope",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "sourceFieldOrArtifact": "JSON CLI envelope",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.cli.envelope.unversioned",
@@ -5020,8 +5020,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/cli.ts::full-eval forwarder",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/cli.ts::full-eval forwarder",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "sourceFieldOrArtifact": "full-eval forwarder",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.full-eval.v1",
@@ -5029,8 +5029,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/cli.ts::migration report forwarder",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/cli.ts::migration report forwarder",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "sourceFieldOrArtifact": "migration report forwarder",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.migration-report.unversioned",
@@ -5038,8 +5038,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/cli.ts::validation outcome forwarder",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/cli.ts::validation outcome forwarder",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "sourceFieldOrArtifact": "validation outcome forwarder",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.validation-outcome.unversioned",
@@ -5047,8 +5047,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/cli.ts::verification receipt forwarder",
-      "sourceFile": "skills/plugin-creator/scripts/cli.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/cli.ts::verification receipt forwarder",
+      "sourceFile": "apps/plugin-creator-cli/scripts/cli.ts",
       "sourceFieldOrArtifact": "verification receipt forwarder",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.verification-receipt.v1",
@@ -5056,8 +5056,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/full_eval.ts::benchmark.json",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/full_eval.ts::benchmark.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "benchmark.json",
       "role": "consumer",
       "canonicalArtifactId": "plugin.integration-benchmark.unversioned",
@@ -5065,8 +5065,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/plugin-creator/scripts/full_eval.ts::full-eval return envelope",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/full_eval.ts::full-eval return envelope",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "full-eval return envelope",
       "role": "producer",
       "canonicalArtifactId": "plugin.full-eval.v1",
@@ -5074,8 +5074,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/full_eval.ts::plugin.json",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/full_eval.ts::plugin.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5083,8 +5083,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/full_eval.ts::receipt.json",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/full_eval.ts::receipt.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "receipt.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.verification-receipt.v1",
@@ -5092,8 +5092,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/plugin-creator/scripts/full_eval.ts::review.html",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/full_eval.ts::review.html",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "review.html",
       "role": "consumer",
       "canonicalArtifactId": "plugin.integration-review-html.unversioned",
@@ -5101,8 +5101,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/plugin-creator/scripts/init_goose_plugin.ts::SKILL.md",
-      "sourceFile": "skills/plugin-creator/scripts/init_goose_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/init_goose_plugin.ts::SKILL.md",
+      "sourceFile": "apps/plugin-creator-cli/scripts/init_goose_plugin.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "role": "producer-consumer",
       "canonicalArtifactId": "layout.skill-artifact.current",
@@ -5110,8 +5110,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/init_goose_plugin.ts::hooks.json",
-      "sourceFile": "skills/plugin-creator/scripts/init_goose_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/init_goose_plugin.ts::hooks.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/init_goose_plugin.ts",
       "sourceFieldOrArtifact": "hooks.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "hook.document.current.unversioned",
@@ -5119,8 +5119,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/init_goose_plugin.ts::plugin.json",
-      "sourceFile": "skills/plugin-creator/scripts/init_goose_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/init_goose_plugin.ts::plugin.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/init_goose_plugin.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5128,8 +5128,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/mcp_compatibility.ts::mcp.json",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts::mcp.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts",
       "sourceFieldOrArtifact": "mcp.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.mcp.v1",
@@ -5137,8 +5137,8 @@
       "evidenceOccurrences": 5
     },
     {
-      "siteId": "skills/plugin-creator/scripts/mcp_compatibility.ts::plugin.json",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts::plugin.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5146,26 +5146,26 @@
       "evidenceOccurrences": 2
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/mcp_runtime.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_runtime.ts",
       "sourceFieldOrArtifact": "mcp.json",
       "sourceEvidence": "sourcePath:\"mcp.json\"",
-      "siteId": "skills/plugin-creator/scripts/mcp_runtime.ts::mcp.json",
+      "siteId": "apps/plugin-creator-cli/scripts/mcp_runtime.ts::mcp.json",
       "canonicalArtifactId": "plugin.validation-outcome.unversioned",
       "role": "producer",
       "evidenceOccurrences": 5
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/mcp_semantics.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_semantics.ts",
       "sourceFieldOrArtifact": "mcp semantic configuration",
       "sourceEvidence": "validateMcpSemantics",
-      "siteId": "skills/plugin-creator/scripts/mcp_semantics.ts::mcp semantic configuration",
+      "siteId": "apps/plugin-creator-cli/scripts/mcp_semantics.ts::mcp semantic configuration",
       "canonicalArtifactId": "plugin.mcp.v1",
       "role": "consumer",
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/migrate_plugin.ts::mcp.json",
-      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/migrate_plugin.ts::mcp.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
       "sourceFieldOrArtifact": "mcp.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.mcp.v1",
@@ -5173,8 +5173,8 @@
       "evidenceOccurrences": 13
     },
     {
-      "siteId": "skills/plugin-creator/scripts/migrate_plugin.ts::migration report return value",
-      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/migrate_plugin.ts::migration report return value",
+      "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
       "sourceFieldOrArtifact": "migration report return value",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.migration-report.unversioned",
@@ -5182,8 +5182,8 @@
       "evidenceOccurrences": 11
     },
     {
-      "siteId": "skills/plugin-creator/scripts/migrate_plugin.ts::plugin.json",
-      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/migrate_plugin.ts::plugin.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5191,8 +5191,8 @@
       "evidenceOccurrences": 14
     },
     {
-      "siteId": "skills/plugin-creator/scripts/package_goose_plugin.ts::plugin.json",
-      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts::plugin.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5200,8 +5200,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/portable_loader.ts::SKILL.md",
-      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/portable_loader.ts::SKILL.md",
+      "sourceFile": "apps/plugin-creator-cli/scripts/portable_loader.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "role": "producer-consumer",
       "canonicalArtifactId": "layout.skill-artifact.current",
@@ -5209,8 +5209,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/plugin-creator/scripts/portable_loader.ts::mcp.json",
-      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/portable_loader.ts::mcp.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/portable_loader.ts",
       "sourceFieldOrArtifact": "mcp.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.mcp.v1",
@@ -5218,8 +5218,8 @@
       "evidenceOccurrences": 15
     },
     {
-      "siteId": "skills/plugin-creator/scripts/portable_loader.ts::plugin.json",
-      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/portable_loader.ts::plugin.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/portable_loader.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5227,8 +5227,8 @@
       "evidenceOccurrences": 9
     },
     {
-      "siteId": "skills/plugin-creator/scripts/portable_loader.ts::portable validation outcome",
-      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/portable_loader.ts::portable validation outcome",
+      "sourceFile": "apps/plugin-creator-cli/scripts/portable_loader.ts",
       "sourceFieldOrArtifact": "portable validation outcome",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.validation-outcome.unversioned",
@@ -5236,8 +5236,8 @@
       "evidenceOccurrences": 6
     },
     {
-      "siteId": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts::mcp.json",
-      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/validate_agent_plugin_schema.ts::mcp.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_agent_plugin_schema.ts",
       "sourceFieldOrArtifact": "mcp.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.mcp.v1",
@@ -5245,8 +5245,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts::plugin.json",
-      "sourceFile": "skills/plugin-creator/scripts/validate_agent_plugin_schema.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/validate_agent_plugin_schema.ts::plugin.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_agent_plugin_schema.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5254,8 +5254,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/validate_goose_plugin.ts::SKILL.md",
-      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts::SKILL.md",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "role": "producer-consumer",
       "canonicalArtifactId": "layout.skill-artifact.current",
@@ -5263,8 +5263,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/plugin-creator/scripts/validate_goose_plugin.ts::hooks.json",
-      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts::hooks.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts",
       "sourceFieldOrArtifact": "hooks.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "hook.document.current.unversioned",
@@ -5272,8 +5272,8 @@
       "evidenceOccurrences": 9
     },
     {
-      "siteId": "skills/plugin-creator/scripts/validate_goose_plugin.ts::mcp.json",
-      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts::mcp.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts",
       "sourceFieldOrArtifact": "mcp.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.mcp.v1",
@@ -5281,8 +5281,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/validate_goose_plugin.ts::plugin.json",
-      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts::plugin.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5290,8 +5290,8 @@
       "evidenceOccurrences": 13
     },
     {
-      "siteId": "skills/plugin-creator/scripts/validation_outcomes.ts::validation outcome return value",
-      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/validation_outcomes.ts::validation outcome return value",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validation_outcomes.ts",
       "sourceFieldOrArtifact": "validation outcome return value",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.validation-outcome.unversioned",
@@ -5299,8 +5299,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/verify_plugin_gates.ts::benchmark.json",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts::benchmark.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "sourceFieldOrArtifact": "benchmark.json",
       "role": "consumer",
       "canonicalArtifactId": "plugin.integration-benchmark.unversioned",
@@ -5308,8 +5308,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/plugin-creator/scripts/verify_plugin_gates.ts::plugin.json",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts::plugin.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "sourceFieldOrArtifact": "plugin.json",
       "role": "consumer",
       "canonicalArtifactId": "plugin.manifest.v1",
@@ -5317,8 +5317,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/verify_plugin_gates.ts::review.html",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts::review.html",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "sourceFieldOrArtifact": "review.html",
       "role": "consumer",
       "canonicalArtifactId": "plugin.integration-review-html.unversioned",
@@ -5326,8 +5326,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/plugin-creator/scripts/verify_plugin_gates.ts::verification receipt return value",
-      "sourceFile": "skills/plugin-creator/scripts/verify_plugin_gates.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts::verification receipt return value",
+      "sourceFile": "apps/plugin-creator-cli/scripts/verify_plugin_gates.ts",
       "sourceFieldOrArtifact": "verification receipt return value",
       "role": "producer",
       "canonicalArtifactId": "plugin.verification-receipt.v1",
@@ -5335,8 +5335,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::eval_metadata.json",
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/skill-creator-cli/eval-viewer/generate_review.ts::eval_metadata.json",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.eval-metadata.unversioned",
@@ -5344,8 +5344,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::feedback.json",
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/skill-creator-cli/eval-viewer/generate_review.ts::feedback.json",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "feedback.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.feedback.unversioned",
@@ -5353,8 +5353,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::grading.json",
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/skill-creator-cli/eval-viewer/generate_review.ts::grading.json",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.grading.unversioned",
@@ -5362,8 +5362,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::metrics.json",
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/skill-creator-cli/eval-viewer/generate_review.ts::metrics.json",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "metrics.json",
       "role": "consumer",
       "canonicalArtifactId": "creator.metrics.unversioned",
@@ -5371,8 +5371,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::user_notes.md",
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/skill-creator-cli/eval-viewer/generate_review.ts::user_notes.md",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "user_notes.md",
       "role": "consumer",
       "canonicalArtifactId": "creator.user-notes-markdown.unversioned",
@@ -5380,8 +5380,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::viewer.html",
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/skill-creator-cli/eval-viewer/generate_review.ts::viewer.html",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "viewer.html",
       "role": "consumer",
       "canonicalArtifactId": "skill.viewer-html.unversioned",
@@ -5389,8 +5389,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::benchmark.json",
-      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "siteId": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts::benchmark.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "benchmark.json",
       "role": "producer",
       "canonicalArtifactId": "skill.benchmark.unversioned",
@@ -5398,8 +5398,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::benchmark.md",
-      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "siteId": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts::benchmark.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "benchmark.md",
       "role": "producer",
       "canonicalArtifactId": "skill.benchmark-markdown.unversioned",
@@ -5407,8 +5407,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::eval_metadata.json",
-      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "siteId": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts::eval_metadata.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.eval-metadata.unversioned",
@@ -5416,8 +5416,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::grading.json",
-      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "siteId": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts::grading.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.grading.unversioned",
@@ -5425,8 +5425,8 @@
       "evidenceOccurrences": 10
     },
     {
-      "siteId": "skills/skill-creator/scripts/aggregate_benchmark.ts::timing.json",
-      "sourceFile": "skills/skill-creator/scripts/aggregate_benchmark.ts",
+      "siteId": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts::timing.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/aggregate_benchmark.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.timing.unversioned",
@@ -5434,8 +5434,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::analysis return value",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "siteId": "apps/skill-creator-cli/scripts/analyze_evaluation.ts::analysis return value",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "sourceFieldOrArtifact": "analysis return value",
       "role": "producer",
       "canonicalArtifactId": "skill.evaluation-analysis.v1",
@@ -5443,8 +5443,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::benchmark.json",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "siteId": "apps/skill-creator-cli/scripts/analyze_evaluation.ts::benchmark.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "sourceFieldOrArtifact": "benchmark.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.benchmark.unversioned",
@@ -5452,8 +5452,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::eval_metadata.json",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "siteId": "apps/skill-creator-cli/scripts/analyze_evaluation.ts::eval_metadata.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.eval-metadata.unversioned",
@@ -5461,8 +5461,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::grading.json",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "siteId": "apps/skill-creator-cli/scripts/analyze_evaluation.ts::grading.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.grading.unversioned",
@@ -5470,8 +5470,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/analyze_evaluation.ts::review.html",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "siteId": "apps/skill-creator-cli/scripts/analyze_evaluation.ts::review.html",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "sourceFieldOrArtifact": "review.html",
       "role": "consumer",
       "canonicalArtifactId": "skill.review-html.unversioned",
@@ -5479,8 +5479,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/audit_skill.ts::SKILL.md",
-      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "siteId": "apps/skill-creator-cli/scripts/audit_skill.ts::SKILL.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/audit_skill.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "role": "producer-consumer",
       "canonicalArtifactId": "layout.skill-artifact.current",
@@ -5488,8 +5488,8 @@
       "evidenceOccurrences": 18
     },
     {
-      "siteId": "skills/skill-creator/scripts/audit_skill.ts::auditSkill return value",
-      "sourceFile": "skills/skill-creator/scripts/audit_skill.ts",
+      "siteId": "apps/skill-creator-cli/scripts/audit_skill.ts::auditSkill return value",
+      "sourceFile": "apps/skill-creator-cli/scripts/audit_skill.ts",
       "sourceFieldOrArtifact": "auditSkill return value",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.authoring-audit.v1",
@@ -5497,8 +5497,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/cli.ts::JSON CLI envelope",
-      "sourceFile": "skills/skill-creator/scripts/cli.ts",
+      "siteId": "apps/skill-creator-cli/scripts/cli.ts::JSON CLI envelope",
+      "sourceFile": "apps/skill-creator-cli/scripts/cli.ts",
       "sourceFieldOrArtifact": "JSON CLI envelope",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.cli.envelope.unversioned",
@@ -5506,8 +5506,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/design_evals.ts::designEvals return value",
-      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "siteId": "apps/skill-creator-cli/scripts/design_evals.ts::designEvals return value",
+      "sourceFile": "apps/skill-creator-cli/scripts/design_evals.ts",
       "sourceFieldOrArtifact": "designEvals return value",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.evaluation-design.v1",
@@ -5515,8 +5515,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/design_evals.ts::normalized eval set",
-      "sourceFile": "skills/skill-creator/scripts/design_evals.ts",
+      "siteId": "apps/skill-creator-cli/scripts/design_evals.ts::normalized eval set",
+      "sourceFile": "apps/skill-creator-cli/scripts/design_evals.ts",
       "sourceFieldOrArtifact": "normalized eval set",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.evals-form.unversioned",
@@ -5524,8 +5524,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::SKILL.md",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::SKILL.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "role": "structural-member",
       "canonicalArtifactId": "layout.skill-artifact.current",
@@ -5533,8 +5533,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::authoring-audit.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::authoring-audit.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "authoring-audit.json",
       "role": "producer",
       "canonicalArtifactId": "skill.authoring-audit.v1",
@@ -5542,8 +5542,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::benchmark.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::benchmark.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "benchmark.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.benchmark.unversioned",
@@ -5551,8 +5551,8 @@
       "evidenceOccurrences": 9
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::benchmark.md",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::benchmark.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "benchmark.md",
       "role": "consumer",
       "canonicalArtifactId": "skill.benchmark-markdown.unversioned",
@@ -5560,8 +5560,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::eval_metadata.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::eval_metadata.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "producer",
       "canonicalArtifactId": "skill.eval-metadata.unversioned",
@@ -5569,8 +5569,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::evals.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::evals.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "evals.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.evals-form.unversioned",
@@ -5578,8 +5578,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::evaluation-design.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::evaluation-design.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "evaluation-design.json",
       "role": "producer",
       "canonicalArtifactId": "skill.evaluation-design.v1",
@@ -5587,8 +5587,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::grading.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::grading.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.grading.unversioned",
@@ -5596,8 +5596,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::post-evaluation-pattern-review.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::post-evaluation-pattern-review.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "post-evaluation-pattern-review.json",
       "role": "producer",
       "canonicalArtifactId": "skill.post-evaluation-pattern-review.unversioned",
@@ -5605,8 +5605,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::receipt.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::receipt.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "receipt.json",
       "role": "producer",
       "canonicalArtifactId": "skill.verification-receipt.v1",
@@ -5614,8 +5614,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::review.html",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::review.html",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "review.html",
       "role": "consumer",
       "canonicalArtifactId": "skill.review-html.unversioned",
@@ -5623,8 +5623,8 @@
       "evidenceOccurrences": 9
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::timing.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::timing.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.timing.unversioned",
@@ -5632,8 +5632,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/generate_report.ts::generated review HTML",
-      "sourceFile": "skills/skill-creator/scripts/generate_report.ts",
+      "siteId": "apps/skill-creator-cli/scripts/generate_report.ts::generated review HTML",
+      "sourceFile": "apps/skill-creator-cli/scripts/generate_report.ts",
       "sourceFieldOrArtifact": "generated review HTML",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.review-html.unversioned",
@@ -5641,8 +5641,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/generate_report.ts::report input",
-      "sourceFile": "skills/skill-creator/scripts/generate_report.ts",
+      "siteId": "apps/skill-creator-cli/scripts/generate_report.ts::report input",
+      "sourceFile": "apps/skill-creator-cli/scripts/generate_report.ts",
       "sourceFieldOrArtifact": "report input",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.benchmark.unversioned",
@@ -5650,17 +5650,17 @@
       "evidenceOccurrences": 2
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/package_skill.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "sourceEvidence": "SKILL.md",
       "evidenceOccurrences": 2,
-      "siteId": "skills/skill-creator/scripts/package_skill.ts::SKILL.md",
+      "siteId": "apps/skill-creator-cli/scripts/package_skill.ts::SKILL.md",
       "canonicalArtifactId": "layout.skill-artifact.current",
       "role": "consumer"
     },
     {
-      "siteId": "skills/skill-creator/scripts/run_eval.ts::SKILL.md",
-      "sourceFile": "skills/skill-creator/scripts/run_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/run_eval.ts::SKILL.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_eval.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "role": "producer-consumer",
       "canonicalArtifactId": "layout.skill-artifact.current",
@@ -5668,8 +5668,8 @@
       "evidenceOccurrences": 5
     },
     {
-      "siteId": "skills/skill-creator/scripts/run_loop.ts::SKILL.md",
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "siteId": "apps/skill-creator-cli/scripts/run_loop.ts::SKILL.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "role": "structural-member",
       "canonicalArtifactId": "layout.skill-artifact.current",
@@ -5677,8 +5677,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/run_loop.ts::report.html",
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "siteId": "apps/skill-creator-cli/scripts/run_loop.ts::report.html",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "sourceFieldOrArtifact": "report.html",
       "role": "producer",
       "canonicalArtifactId": "skill.run-loop-report.unversioned",
@@ -5686,8 +5686,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/run_loop.ts::results.json",
-      "sourceFile": "skills/skill-creator/scripts/run_loop.ts",
+      "siteId": "apps/skill-creator-cli/scripts/run_loop.ts::results.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/run_loop.ts",
       "sourceFieldOrArtifact": "results.json",
       "role": "producer",
       "canonicalArtifactId": "skill.run-loop-result.unversioned",
@@ -5695,8 +5695,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::benchmark.json",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "siteId": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts::benchmark.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrArtifact": "benchmark.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.benchmark.unversioned",
@@ -5704,8 +5704,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::benchmark.md",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "siteId": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts::benchmark.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrArtifact": "benchmark.md",
       "role": "consumer",
       "canonicalArtifactId": "skill.benchmark-markdown.unversioned",
@@ -5713,8 +5713,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::eval_metadata.json",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "siteId": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts::eval_metadata.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.eval-metadata.unversioned",
@@ -5722,8 +5722,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::feedback.json",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "siteId": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts::feedback.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrArtifact": "feedback.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.feedback.unversioned",
@@ -5731,8 +5731,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::grading.json",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "siteId": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts::grading.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.grading.unversioned",
@@ -5740,8 +5740,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::review.html",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "siteId": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts::review.html",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrArtifact": "review.html",
       "role": "consumer",
       "canonicalArtifactId": "skill.review-html.unversioned",
@@ -5749,8 +5749,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/validate_evaluation_receipt.ts::timing.json",
-      "sourceFile": "skills/skill-creator/scripts/validate_evaluation_receipt.ts",
+      "siteId": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts::timing.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/validate_evaluation_receipt.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.timing.unversioned",
@@ -5758,8 +5758,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::.full-eval-job.json",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "siteId": "apps/skill-creator-cli/scripts/verify_skill_gates.ts::.full-eval-job.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": ".full-eval-job.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.full-eval-state.v2",
@@ -5767,8 +5767,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::authoring audit input",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "siteId": "apps/skill-creator-cli/scripts/verify_skill_gates.ts::authoring audit input",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": "authoring audit input",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.authoring-audit.v1",
@@ -5776,8 +5776,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::benchmark.json",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "siteId": "apps/skill-creator-cli/scripts/verify_skill_gates.ts::benchmark.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": "benchmark.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.benchmark.unversioned",
@@ -5785,8 +5785,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::post-evaluation-pattern-review.json",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "siteId": "apps/skill-creator-cli/scripts/verify_skill_gates.ts::post-evaluation-pattern-review.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": "post-evaluation-pattern-review.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.post-evaluation-pattern-review.unversioned",
@@ -5794,8 +5794,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::benchmark.md",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "siteId": "apps/skill-creator-cli/scripts/verify_skill_gates.ts::benchmark.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": "benchmark.md",
       "role": "consumer",
       "canonicalArtifactId": "skill.benchmark-markdown.unversioned",
@@ -5803,8 +5803,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::review.html",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "siteId": "apps/skill-creator-cli/scripts/verify_skill_gates.ts::review.html",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": "review.html",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.review-html.unversioned",
@@ -5812,8 +5812,8 @@
       "evidenceOccurrences": 5
     },
     {
-      "siteId": "skills/skill-creator/scripts/verify_skill_gates.ts::verification receipt return value",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "siteId": "apps/skill-creator-cli/scripts/verify_skill_gates.ts::verification receipt return value",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": "verification receipt return value",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.verification-receipt.v1",
@@ -5821,8 +5821,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/full_eval.ts::full-eval-state.json",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/full_eval.ts::full-eval-state.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "full-eval-state.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.full-eval-state.v1",
@@ -5830,8 +5830,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/full_eval.ts::.full-eval-job.json",
-      "sourceFile": "skills/skill-creator/scripts/full_eval.ts",
+      "siteId": "apps/skill-creator-cli/scripts/full_eval.ts::.full-eval-job.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": ".full-eval-job.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.full-eval-state.v2",
@@ -5839,8 +5839,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::eval_metadata.json",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "siteId": "apps/skill-creator-cli/scripts/evaluation_provenance.ts::eval_metadata.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.eval-metadata.unversioned",
@@ -5848,8 +5848,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::execution-evidence.json",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "siteId": "apps/skill-creator-cli/scripts/evaluation_provenance.ts::execution-evidence.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceFieldOrArtifact": "execution-evidence.json",
       "role": "producer-consumer",
       "canonicalArtifactId": "skill.execution-evidence.v1",
@@ -5857,8 +5857,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::grading.json",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "siteId": "apps/skill-creator-cli/scripts/evaluation_provenance.ts::grading.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.grading.unversioned",
@@ -5866,8 +5866,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::timing.json",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "siteId": "apps/skill-creator-cli/scripts/evaluation_provenance.ts::timing.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.timing.unversioned",
@@ -5875,8 +5875,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::transcript.json",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "siteId": "apps/skill-creator-cli/scripts/evaluation_provenance.ts::transcript.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceFieldOrArtifact": "transcript.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.paired-stream.unversioned",
@@ -5884,8 +5884,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/paired_execution.ts::eval_metadata.json",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "siteId": "apps/skill-creator-cli/scripts/paired_execution.ts::eval_metadata.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.eval-metadata.unversioned",
@@ -5893,8 +5893,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/paired_execution.ts::events.json",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "siteId": "apps/skill-creator-cli/scripts/paired_execution.ts::events.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrArtifact": "events.json",
       "role": "producer",
       "canonicalArtifactId": "skill.paired-events.v1",
@@ -5902,8 +5902,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/skill-creator/scripts/paired_execution.ts::execution-evidence.json",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "siteId": "apps/skill-creator-cli/scripts/paired_execution.ts::execution-evidence.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrArtifact": "execution-evidence.json",
       "role": "producer",
       "canonicalArtifactId": "skill.execution-evidence.v1",
@@ -5911,8 +5911,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/paired_execution.ts::execution-outcome.json",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "siteId": "apps/skill-creator-cli/scripts/paired_execution.ts::execution-outcome.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrArtifact": "execution-outcome.json",
       "role": "producer",
       "canonicalArtifactId": "skill.paired-failure.v1",
@@ -5920,8 +5920,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/paired_execution.ts::grading.json",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "siteId": "apps/skill-creator-cli/scripts/paired_execution.ts::grading.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrArtifact": "grading.json",
       "role": "producer",
       "canonicalArtifactId": "skill.evaluator-grading.v2",
@@ -5929,8 +5929,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/paired_execution.ts::timing.json",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "siteId": "apps/skill-creator-cli/scripts/paired_execution.ts::timing.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "producer",
       "canonicalArtifactId": "skill.timing.unversioned",
@@ -5938,8 +5938,8 @@
       "evidenceOccurrences": 6
     },
     {
-      "siteId": "skills/skill-creator/scripts/paired_execution.ts::transcript.json",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "siteId": "apps/skill-creator-cli/scripts/paired_execution.ts::transcript.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrArtifact": "transcript.json",
       "role": "producer",
       "canonicalArtifactId": "skill.paired-stream.unversioned",
@@ -5947,8 +5947,8 @@
       "evidenceOccurrences": 6
     },
     {
-      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::eval_metadata.json",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "siteId": "apps/agent-creator-cli/scripts/evidence_exchange.ts::eval_metadata.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "eval_metadata.json",
       "role": "producer",
       "canonicalArtifactId": "agent.eval-metadata.unversioned",
@@ -5956,8 +5956,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::evals.json",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "siteId": "apps/agent-creator-cli/scripts/evidence_exchange.ts::evals.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "evals.json",
       "role": "consumer",
       "canonicalArtifactId": "agent.evals-form.unversioned",
@@ -5965,8 +5965,8 @@
       "evidenceOccurrences": 5
     },
     {
-      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::evidence.json",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "siteId": "apps/agent-creator-cli/scripts/evidence_exchange.ts::evidence.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "evidence.json",
       "role": "producer",
       "canonicalArtifactId": "agent.evidence-run.v1",
@@ -5974,8 +5974,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::job.json",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "siteId": "apps/agent-creator-cli/scripts/evidence_exchange.ts::job.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "job.json",
       "role": "producer",
       "canonicalArtifactId": "agent.evidence-job.v1",
@@ -5983,8 +5983,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::run.example.json",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "siteId": "apps/agent-creator-cli/scripts/evidence_exchange.ts::run.example.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "run.example.json",
       "role": "producer",
       "canonicalArtifactId": "agent.evidence-run.v1",
@@ -5992,8 +5992,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::response.md",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "siteId": "apps/agent-creator-cli/scripts/evidence_exchange.ts::response.md",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "response.md",
       "role": "producer",
       "canonicalArtifactId": "agent.response-markdown.unversioned",
@@ -6001,8 +6001,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::timing.json",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "siteId": "apps/agent-creator-cli/scripts/evidence_exchange.ts::timing.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "producer",
       "canonicalArtifactId": "agent.timing.unversioned",
@@ -6010,8 +6010,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/agent-creator/scripts/evidence_exchange.ts::transcript.json",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "siteId": "apps/agent-creator-cli/scripts/evidence_exchange.ts::transcript.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "transcript.json",
       "role": "producer",
       "canonicalArtifactId": "agent.transcript.unversioned",
@@ -6019,8 +6019,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/component_evidence.ts::SKILL.md",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/component_evidence.ts::SKILL.md",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "role": "consumer",
       "canonicalArtifactId": "layout.skill-artifact.current",
@@ -6028,8 +6028,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/component_evidence.ts::hooks.json",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/component_evidence.ts::hooks.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "sourceFieldOrArtifact": "hooks.json",
       "role": "consumer",
       "canonicalArtifactId": "hook.document.current.unversioned",
@@ -6037,8 +6037,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/component_evidence.ts::mcp.json",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/component_evidence.ts::mcp.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "sourceFieldOrArtifact": "mcp.json",
       "role": "consumer",
       "canonicalArtifactId": "plugin.mcp.v1",
@@ -6046,8 +6046,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/plugin-creator/scripts/component_evidence.ts::typed component evidence receipt",
-      "sourceFile": "skills/plugin-creator/scripts/component_evidence.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/component_evidence.ts::typed component evidence receipt",
+      "sourceFile": "apps/plugin-creator-cli/scripts/component_evidence.ts",
       "sourceFieldOrArtifact": "typed component evidence receipt",
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.component-evidence-receipt.v1",
@@ -6055,8 +6055,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/plugin-creator/scripts/independent_review.ts::ReviewResult",
-      "sourceFile": "skills/plugin-creator/scripts/independent_review.ts",
+      "siteId": "apps/plugin-creator-cli/scripts/independent_review.ts::ReviewResult",
+      "sourceFile": "apps/plugin-creator-cli/scripts/independent_review.ts",
       "sourceFieldOrArtifact": "ReviewResult",
       "role": "producer",
       "canonicalArtifactId": "plugin.independent-review.v1",
@@ -6064,8 +6064,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/hook-creator/scripts/evaluation_run_manifest.ts::EvaluationRunManifest",
-      "sourceFile": "skills/hook-creator/scripts/evaluation_run_manifest.ts",
+      "siteId": "apps/hook-creator-cli/scripts/evaluation_run_manifest.ts::EvaluationRunManifest",
+      "sourceFile": "apps/hook-creator-cli/scripts/evaluation_run_manifest.ts",
       "sourceFieldOrArtifact": "EvaluationRunManifest",
       "role": "producer-consumer",
       "canonicalArtifactId": "hook.evaluation-run-manifest.v1",
@@ -6073,8 +6073,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/hook-creator/scripts/production_approval.ts::ProductionApproval",
-      "sourceFile": "skills/hook-creator/scripts/production_approval.ts",
+      "siteId": "apps/hook-creator-cli/scripts/production_approval.ts::ProductionApproval",
+      "sourceFile": "apps/hook-creator-cli/scripts/production_approval.ts",
       "sourceFieldOrArtifact": "ProductionApproval",
       "role": "producer-consumer",
       "canonicalArtifactId": "hook.production-approval.v1",
@@ -6082,8 +6082,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::benchmark.json",
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/skill-creator-cli/eval-viewer/generate_review.ts::benchmark.json",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "benchmark.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.benchmark.unversioned",
@@ -6091,8 +6091,8 @@
       "evidenceOccurrences": 4
     },
     {
-      "siteId": "skills/skill-creator/eval-viewer/generate_review.ts::timing.json",
-      "sourceFile": "skills/skill-creator/eval-viewer/generate_review.ts",
+      "siteId": "apps/skill-creator-cli/eval-viewer/generate_review.ts::timing.json",
+      "sourceFile": "apps/skill-creator-cli/eval-viewer/generate_review.ts",
       "sourceFieldOrArtifact": "timing.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.timing.unversioned",
@@ -6100,8 +6100,8 @@
       "evidenceOccurrences": 2
     },
     {
-      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::deterministic-evidence.json",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "siteId": "apps/skill-creator-cli/scripts/evaluation_provenance.ts::deterministic-evidence.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceFieldOrArtifact": "deterministic-evidence.json",
       "role": "consumer",
       "canonicalArtifactId": "skill.deterministic-evidence.v1",
@@ -6109,8 +6109,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/paired_execution.ts::deterministic-evidence.json",
-      "sourceFile": "skills/skill-creator/scripts/paired_execution.ts",
+      "siteId": "apps/skill-creator-cli/scripts/paired_execution.ts::deterministic-evidence.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/paired_execution.ts",
       "sourceFieldOrArtifact": "deterministic-evidence.json",
       "role": "producer",
       "canonicalArtifactId": "skill.deterministic-evidence.v1",
@@ -6118,8 +6118,8 @@
       "evidenceOccurrences": 3
     },
     {
-      "siteId": "skills/skill-creator/scripts/evaluator_grading.ts::gradeOutput return grading",
-      "sourceFile": "skills/skill-creator/scripts/evaluator_grading.ts",
+      "siteId": "apps/skill-creator-cli/scripts/evaluator_grading.ts::gradeOutput return grading",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluator_grading.ts",
       "sourceFieldOrArtifact": "gradeOutput return grading",
       "role": "producer",
       "canonicalArtifactId": "skill.evaluator-grading.v2",
@@ -6127,8 +6127,8 @@
       "evidenceOccurrences": 1
     },
     {
-      "siteId": "skills/skill-creator/scripts/trigger_evaluation.ts::TriggerRunOutcome",
-      "sourceFile": "skills/skill-creator/scripts/trigger_evaluation.ts",
+      "siteId": "apps/skill-creator-cli/scripts/trigger_evaluation.ts::TriggerRunOutcome",
+      "sourceFile": "apps/skill-creator-cli/scripts/trigger_evaluation.ts",
       "sourceFieldOrArtifact": "TriggerRunOutcome",
       "role": "producer",
       "canonicalArtifactId": "skill.trigger-run-outcome.v1",
@@ -6138,245 +6138,245 @@
   ],
   "structuralExclusions": [
     {
-      "sourceFile": "skills/agent-creator/scripts/agent_format.ts",
+      "sourceFile": "apps/agent-creator-cli/scripts/agent_format.ts",
       "sourceFieldOrArtifact": "agent document parser",
       "sourceEvidence": "export function parseAgent",
       "evidenceOccurrences": 1,
-      "site": "skills/agent-creator/scripts/agent_format.ts::agent document parser",
+      "site": "apps/agent-creator-cli/scripts/agent_format.ts::agent document parser",
       "rationale": "Agent frontmatter parser handles an independent YAML/Markdown document with no registered JSON compatibility surface."
     },
     {
-      "site": "skills/plugin-creator/scripts/mcp_compatibility.ts::.mcp.json",
-      "sourceFile": "skills/plugin-creator/scripts/mcp_compatibility.ts",
+      "site": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts::.mcp.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts",
       "sourceFieldOrArtifact": ".mcp.json",
       "sourceEvidence": ".mcp.json",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 2
     },
     {
-      "site": "skills/plugin-creator/scripts/migrate_plugin.ts::.mcp.json",
-      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "site": "apps/plugin-creator-cli/scripts/migrate_plugin.ts::.mcp.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
       "sourceFieldOrArtifact": ".mcp.json",
       "sourceEvidence": ".mcp.json",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 4
     },
     {
-      "site": "skills/plugin-creator/scripts/migrate_plugin.ts::.mcp.json legacy input",
-      "sourceFile": "skills/plugin-creator/scripts/migrate_plugin.ts",
+      "site": "apps/plugin-creator-cli/scripts/migrate_plugin.ts::.mcp.json legacy input",
+      "sourceFile": "apps/plugin-creator-cli/scripts/migrate_plugin.ts",
       "sourceFieldOrArtifact": ".mcp.json legacy input",
       "sourceEvidence": ".mcp.json",
       "rationale": "Structural or legacy helper/member with no independent serialized compatibility surface.",
       "evidenceOccurrences": 4
     },
     {
-      "site": "skills/plugin-creator/scripts/package_goose_plugin.ts::THIRD_PARTY_NOTICES.md",
-      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "site": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts::THIRD_PARTY_NOTICES.md",
+      "sourceFile": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts",
       "sourceFieldOrArtifact": "THIRD_PARTY_NOTICES.md",
       "sourceEvidence": "THIRD_PARTY_NOTICES.md",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 2
     },
     {
-      "site": "skills/plugin-creator/scripts/package_goose_plugin.ts::manifest.json",
-      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "site": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts::manifest.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts",
       "sourceFieldOrArtifact": "manifest.json",
       "sourceEvidence": "manifest.json",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 2
     },
     {
-      "site": "skills/plugin-creator/scripts/package_goose_plugin.ts::package.json",
-      "sourceFile": "skills/plugin-creator/scripts/package_goose_plugin.ts",
+      "site": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts::package.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/package_goose_plugin.ts",
       "sourceFieldOrArtifact": "package.json",
       "sourceEvidence": "package.json",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 1
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/package_manifest.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/package_manifest.ts",
       "sourceFieldOrArtifact": "package manifest entries",
       "sourceEvidence": "files.push({",
-      "site": "skills/plugin-creator/scripts/package_manifest.ts::package manifest entries",
+      "site": "apps/plugin-creator-cli/scripts/package_manifest.ts::package manifest entries",
       "rationale": "Runtime, packaging, or lifecycle helper with no independent serialized compatibility document.",
       "evidenceOccurrences": 1
     },
     {
-      "sourceFile": "skills/plugin-creator/scripts/plugin_data_lifecycle.ts",
+      "sourceFile": "apps/plugin-creator-cli/scripts/plugin_data_lifecycle.ts",
       "sourceFieldOrArtifact": "plugin data lifecycle",
       "sourceEvidence": "preparePluginData",
-      "site": "skills/plugin-creator/scripts/plugin_data_lifecycle.ts::plugin data lifecycle",
+      "site": "apps/plugin-creator-cli/scripts/plugin_data_lifecycle.ts::plugin data lifecycle",
       "rationale": "Runtime, packaging, or lifecycle helper with no independent serialized compatibility document.",
       "evidenceOccurrences": 1
     },
     {
-      "site": "skills/plugin-creator/scripts/portable_loader.ts::SKILL.md structural member",
-      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "site": "apps/plugin-creator-cli/scripts/portable_loader.ts::SKILL.md structural member",
+      "sourceFile": "apps/plugin-creator-cli/scripts/portable_loader.ts",
       "sourceFieldOrArtifact": "SKILL.md structural member",
       "sourceEvidence": "SKILL.md",
       "rationale": "Structural or legacy helper/member with no independent serialized compatibility surface.",
       "evidenceOccurrences": 3
     },
     {
-      "site": "skills/plugin-creator/scripts/portable_loader.ts::manifest.json",
-      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "site": "apps/plugin-creator-cli/scripts/portable_loader.ts::manifest.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/portable_loader.ts",
       "sourceFieldOrArtifact": "manifest.json",
       "sourceEvidence": "manifest.json",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 1
     },
     {
-      "site": "skills/plugin-creator/scripts/portable_loader.ts::manifest.json package member",
-      "sourceFile": "skills/plugin-creator/scripts/portable_loader.ts",
+      "site": "apps/plugin-creator-cli/scripts/portable_loader.ts::manifest.json package member",
+      "sourceFile": "apps/plugin-creator-cli/scripts/portable_loader.ts",
       "sourceFieldOrArtifact": "manifest.json package member",
       "sourceEvidence": "manifest.json",
       "rationale": "Structural or legacy helper/member with no independent serialized compatibility surface.",
       "evidenceOccurrences": 1
     },
     {
-      "site": "skills/plugin-creator/scripts/validate_goose_plugin.ts::.mcp.json",
-      "sourceFile": "skills/plugin-creator/scripts/validate_goose_plugin.ts",
+      "site": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts::.mcp.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validate_goose_plugin.ts",
       "sourceFieldOrArtifact": ".mcp.json",
       "sourceEvidence": ".mcp.json",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 1
     },
     {
-      "site": "skills/plugin-creator/scripts/validation_outcomes.ts::deriveOutcomeStatus helper",
-      "sourceFile": "skills/plugin-creator/scripts/validation_outcomes.ts",
+      "site": "apps/plugin-creator-cli/scripts/validation_outcomes.ts::deriveOutcomeStatus helper",
+      "sourceFile": "apps/plugin-creator-cli/scripts/validation_outcomes.ts",
       "sourceFieldOrArtifact": "deriveOutcomeStatus helper",
       "sourceEvidence": "deriveOutcomeStatus",
       "rationale": "Structural or legacy helper/member with no independent serialized compatibility surface.",
       "evidenceOccurrences": 2
     },
     {
-      "site": "skills/skill-creator/scripts/analyze_evaluation.ts::SKILL.md",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "site": "apps/skill-creator-cli/scripts/analyze_evaluation.ts::SKILL.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "sourceFieldOrArtifact": "SKILL.md",
       "sourceEvidence": "SKILL.md",
       "rationale": "Skill entrypoint existence is a structural precondition for analysis, not a serialized evaluation artifact at this site.",
       "evidenceOccurrences": 2
     },
     {
-      "site": "skills/skill-creator/scripts/analyze_evaluation.ts::navigation.json",
-      "sourceFile": "skills/skill-creator/scripts/analyze_evaluation.ts",
+      "site": "apps/skill-creator-cli/scripts/analyze_evaluation.ts::navigation.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/analyze_evaluation.ts",
       "sourceFieldOrArtifact": "navigation.json",
       "sourceEvidence": "navigation.json",
       "rationale": "Optional navigation telemetry has no stable public serialized contract and is consumed only as best-effort analysis evidence.",
       "evidenceOccurrences": 3
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/package_skill.ts",
       "sourceFieldOrArtifact": "THIRD_PARTY_NOTICES.md",
       "sourceEvidence": "THIRD_PARTY_NOTICES.md",
       "evidenceOccurrences": 2,
-      "site": "skills/skill-creator/scripts/package_skill.ts::THIRD_PARTY_NOTICES.md",
+      "site": "apps/skill-creator-cli/scripts/package_skill.ts::THIRD_PARTY_NOTICES.md",
       "rationale": "Package dependency or notice member; not an independent serialized compatibility result surface."
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/package_skill.ts",
       "sourceFieldOrArtifact": "manifest.json",
       "sourceEvidence": "manifest.json",
       "evidenceOccurrences": 2,
-      "site": "skills/skill-creator/scripts/package_skill.ts::manifest.json",
+      "site": "apps/skill-creator-cli/scripts/package_skill.ts::manifest.json",
       "rationale": "Package dependency or notice member; not an independent serialized compatibility result surface."
     },
     {
-      "sourceFile": "skills/skill-creator/scripts/package_skill.ts",
+      "sourceFile": "apps/skill-creator-cli/scripts/package_skill.ts",
       "sourceFieldOrArtifact": "package.json",
       "sourceEvidence": "package.json",
       "evidenceOccurrences": 1,
-      "site": "skills/skill-creator/scripts/package_skill.ts::package.json",
+      "site": "apps/skill-creator-cli/scripts/package_skill.ts::package.json",
       "rationale": "Package dependency or notice member; not an independent serialized compatibility result surface."
     },
     {
-      "site": "skills/skill-creator/scripts/verify_skill_gates.ts::THIRD_PARTY_NOTICES.md",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "site": "apps/skill-creator-cli/scripts/verify_skill_gates.ts::THIRD_PARTY_NOTICES.md",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": "THIRD_PARTY_NOTICES.md",
       "sourceEvidence": "THIRD_PARTY_NOTICES.md",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 1
     },
     {
-      "site": "skills/skill-creator/scripts/verify_skill_gates.ts::package.json",
-      "sourceFile": "skills/skill-creator/scripts/verify_skill_gates.ts",
+      "site": "apps/skill-creator-cli/scripts/verify_skill_gates.ts::package.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/verify_skill_gates.ts",
       "sourceFieldOrArtifact": "package.json",
       "sourceEvidence": "package.json",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
       "evidenceOccurrences": 2
     },
     {
-      "site": "skills/skill-creator/scripts/evaluation_provenance.ts::navigation.json",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "site": "apps/skill-creator-cli/scripts/evaluation_provenance.ts::navigation.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceFieldOrArtifact": "navigation.json",
       "sourceEvidence": "navigation.json",
       "evidenceOccurrences": 1,
       "rationale": "Optional navigation telemetry has no stable public serialized contract and is consumed only as best-effort execution-provenance evidence."
     },
     {
-      "site": "skills/agent-creator/scripts/evidence_exchange.ts::agent.md",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "site": "apps/agent-creator-cli/scripts/evidence_exchange.ts::agent.md",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "agent.md",
       "sourceEvidence": "agent.md",
       "evidenceOccurrences": 2,
       "rationale": "Portable bundle input snapshot; not a standalone creator result surface."
     },
     {
-      "site": "skills/agent-creator/scripts/evidence_exchange.ts::evidence_job.json",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "site": "apps/agent-creator-cli/scripts/evidence_exchange.ts::evidence_job.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "evidence_job.json",
       "sourceEvidence": "evidence_job.json",
       "evidenceOccurrences": 1,
       "rationale": "Workspace pin marker duplicates evidence-job identity and is not an independent exchange document."
     },
     {
-      "site": "skills/agent-creator/scripts/evidence_exchange.ts::run.schema.json",
-      "sourceFile": "skills/agent-creator/scripts/evidence_exchange.ts",
+      "site": "apps/agent-creator-cli/scripts/evidence_exchange.ts::run.schema.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/evidence_exchange.ts",
       "sourceFieldOrArtifact": "run.schema.json",
       "sourceEvidence": "run.schema.json",
       "evidenceOccurrences": 1,
       "rationale": "Generated schema helper for evidence-run; excluded until independently published as a compatibility schema."
     },
     {
-      "site": "skills/plugin-creator/scripts/full_eval.ts::full-eval-events.jsonl",
-      "siteId": "skills/plugin-creator/scripts/full_eval.ts::full-eval-events.jsonl",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "site": "apps/plugin-creator-cli/scripts/full_eval.ts::full-eval-events.jsonl",
+      "siteId": "apps/plugin-creator-cli/scripts/full_eval.ts::full-eval-events.jsonl",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "full-eval-events.jsonl",
       "sourceEvidence": "full-eval-events.jsonl",
       "evidenceOccurrences": 1,
       "rationale": "The append-only execution stream is governed by its dedicated versioned event module and replay validator; this filename site is structural storage wiring rather than a distinct serialized shape."
     },
     {
-      "site": "skills/agent-creator/scripts/run_agent_eval.ts::execution_heartbeats.jsonl",
-      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::execution_heartbeats.jsonl",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "site": "apps/agent-creator-cli/scripts/run_agent_eval.ts::execution_heartbeats.jsonl",
+      "siteId": "apps/agent-creator-cli/scripts/run_agent_eval.ts::execution_heartbeats.jsonl",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrArtifact": "execution_heartbeats.jsonl",
       "sourceEvidence": "execution_heartbeats.jsonl",
       "evidenceOccurrences": 1,
       "rationale": "Heartbeat JSONL records are an operational projection governed by the agent heartbeat module; this filename site is storage wiring rather than a distinct canonical evaluation artifact."
     },
     {
-      "site": "skills/plugin-creator/scripts/full_eval.ts::full-eval-cancel.json",
-      "siteId": "skills/plugin-creator/scripts/full_eval.ts::full-eval-cancel.json",
-      "sourceFile": "skills/plugin-creator/scripts/full_eval.ts",
+      "site": "apps/plugin-creator-cli/scripts/full_eval.ts::full-eval-cancel.json",
+      "siteId": "apps/plugin-creator-cli/scripts/full_eval.ts::full-eval-cancel.json",
+      "sourceFile": "apps/plugin-creator-cli/scripts/full_eval.ts",
       "sourceFieldOrArtifact": "full-eval-cancel.json",
       "sourceEvidence": "full-eval-cancel.json",
       "evidenceOccurrences": 1,
       "rationale": "The cancellation request is transient reliability control state governed by execution reliability semantics, not durable product evidence."
     },
     {
-      "site": "skills/agent-creator/scripts/run_agent_eval.ts::execution_evidence.json",
-      "siteId": "skills/agent-creator/scripts/run_agent_eval.ts::execution_evidence.json",
-      "sourceFile": "skills/agent-creator/scripts/run_agent_eval.ts",
+      "site": "apps/agent-creator-cli/scripts/run_agent_eval.ts::execution_evidence.json",
+      "siteId": "apps/agent-creator-cli/scripts/run_agent_eval.ts::execution_evidence.json",
+      "sourceFile": "apps/agent-creator-cli/scripts/run_agent_eval.ts",
       "sourceFieldOrArtifact": "execution_evidence.json",
       "sourceEvidence": "execution_evidence.json",
       "evidenceOccurrences": 1,
       "rationale": "Agent paired-run execution coordinates are governed by the repeated-run module and remain internal workspace provenance rather than a standalone portable public contract."
     },
     {
-      "site": "skills/skill-creator/scripts/evaluation_provenance.ts::manual-import-manifest.json",
-      "siteId": "skills/skill-creator/scripts/evaluation_provenance.ts::manual-import-manifest.json",
-      "sourceFile": "skills/skill-creator/scripts/evaluation_provenance.ts",
+      "site": "apps/skill-creator-cli/scripts/evaluation_provenance.ts::manual-import-manifest.json",
+      "siteId": "apps/skill-creator-cli/scripts/evaluation_provenance.ts::manual-import-manifest.json",
+      "sourceFile": "apps/skill-creator-cli/scripts/evaluation_provenance.ts",
       "sourceFieldOrArtifact": "manual-import-manifest.json",
       "sourceEvidence": "manual-import-manifest.json",
       "evidenceOccurrences": 2,

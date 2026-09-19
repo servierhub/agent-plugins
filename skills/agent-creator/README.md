@@ -33,7 +33,7 @@ instruction body must be non-empty.
 
 ## Unified CLI
 
-The package exposes **agent-creator** (mapped to dist/scripts/cli.js) with init, validate, evaluate, grade, aggregate, and install commands. The legacy compiled entrypoints remain available.
+The package exposes the stable **agent-creator** executable with init, validate, evaluate, grade, aggregate, install, and privacy commands. Legacy internal-script entrypoints are not part of the released interface.
 
     agent-creator --help
     agent-creator init code-reviewer --path /tmp/agents
@@ -45,7 +45,7 @@ All commands accept --format text|json, --quiet, and --help. Exit codes are 0 fo
 ## Create
 
 ```bash
-node dist/scripts/init_agent.js code-reviewer \
+agent-creator init code-reviewer \
   --path /tmp/agents \
   --description "Reviews code for correctness and risk" \
   --role "You are a senior code reviewer. Prioritize correctness, security, and tests."
@@ -54,7 +54,7 @@ node dist/scripts/init_agent.js code-reviewer \
 ## Validate
 
 ```bash
-node dist/scripts/validate_agent.js /tmp/agents/code-reviewer.md \
+agent-creator validate /tmp/agents/code-reviewer.md \
   --require-filename-match
 ```
 
@@ -63,14 +63,14 @@ node dist/scripts/validate_agent.js /tmp/agents/code-reviewer.md \
 Project scope:
 
 ```bash
-node dist/scripts/install_agent.js /tmp/agents/code-reviewer.md \
+agent-creator install /tmp/agents/code-reviewer.md \
   --project /path/to/project
 ```
 
 User scope:
 
 ```bash
-node dist/scripts/install_agent.js /tmp/agents/code-reviewer.md --global
+agent-creator install /tmp/agents/code-reviewer.md --global
 ```
 
 Existing files are not overwritten unless `--force` is supplied.
@@ -111,24 +111,24 @@ Then run the specialized agent and a neutral delegated baseline on exactly the
 same tasks:
 
 ```bash
-node dist/scripts/run_agent_eval.js \
+agent-creator evaluate \
   --agent /path/to/code-reviewer.md \
   --eval-set /path/to/evals.json \
   --workspace /tmp/code-reviewer-workspace/iteration-1
 
-node dist/scripts/grade_agent_eval.js \
+agent-creator grade \
   /tmp/code-reviewer-workspace/iteration-1 \
   --llm-grader \
   --grader reviewer-a=model-a \
   --grader reviewer-b=model-b \
   --max-grader-calls 24
 
-node dist/scripts/aggregate_benchmark.js \
+agent-creator aggregate \
   /tmp/code-reviewer-workspace/iteration-1 \
   --agent-name code-reviewer \
   --agent-path /path/to/code-reviewer.md
 
-node dist/eval-viewer/generate_review.js \
+skill-creator review \
   /tmp/code-reviewer-workspace/iteration-1 \
   --agent-name code-reviewer \
   --benchmark /tmp/code-reviewer-workspace/iteration-1/benchmark.json
@@ -147,7 +147,7 @@ For host-neutral evaluation handoff, canonical manifest verification, the closed
 
 ## Cautious ETA estimation
 
-`dist/scripts/execution_eta.js` exposes a pure incremental reducer for long-running work. Feed snapshots plus comparable completed jobs with phase history, observed concurrency, and retries. It withholds numeric dates until the configurable minimum (five by default), returning explicit `unavailable` or `calculating` reasons instead. Available estimates keep current-phase and total completion separate and include timestamp, last source update, sample basis, a rounded likely value, an earliest/latest range, and conservative confidence. Snapshot updates recalculate after a phase, retry, or concurrency change; completion records actual-versus-estimated error and range coverage for later evaluation.
+The source module `apps/agent-creator-cli/scripts/execution_eta.ts` exposes a pure incremental reducer for long-running work. Feed snapshots plus comparable completed jobs with phase history, observed concurrency, and retries. It withholds numeric dates until the configurable minimum (five by default), returning explicit `unavailable` or `calculating` reasons instead. Available estimates keep current-phase and total completion separate and include timestamp, last source update, sample basis, a rounded likely value, an earliest/latest range, and conservative confidence. Snapshot updates recalculate after a phase, retry, or concurrency change; completion records actual-versus-estimated error and range coverage for later evaluation.
 
 `estimateExecutionEta(state, job, timestamp)` and `updateEtaEstimator(state, event)` read no wall clock and perform no I/O. Persist returned state in the host if cross-process learning is required. ETA precision is intentionally rounded (seconds, tens of seconds, or five minutes according to scale); the range is the contract, not an exact deadline. Snapshot chronology is validated before estimation: phase plans and records must be unique and ordered, completed phases must be bounded by their job, active timestamps cannot exceed the snapshot, and the current phase must be the single non-completed running phase in the plan. Invalid or contradictory snapshots return stable `unavailable` components with reason `invalid_input`, never a misleading numeric ETA. Invalid completed evidence is rejected. An already-generated estimate may optionally be attached as `snapshot.eta` and will then appear in heartbeat data. Heartbeats never invent an ETA or maintain hidden history.
 
@@ -157,10 +157,10 @@ The versioned privacy policy classifies metadata, content, and protected artifac
 
 ## Execution heartbeats
 
-Long-running evaluators can consume executor snapshots through `dist/scripts/execution_heartbeat.js`. The API emits the stable `agent-creator.execution-heartbeat/v1` event envelope every 30 seconds by default, marks a snapshot stale after two intervals without an update, and stops before emitting when a terminal snapshot is observed. Counts, actual active workers/models, elapsed time, a privacy-safe checkpoint, and per-unit budget consumption and limits are included. Top-level primitive checkpoints are always redacted; use a structured artifact reference for a publishable checkpoint.
+Long-running evaluators can consume executor snapshots through the source module `apps/agent-creator-cli/scripts/execution_heartbeat.ts`. The API emits the stable `agent-creator.execution-heartbeat/v1` event envelope every 30 seconds by default, marks a snapshot stale after two intervals without an update, and stops before emitting when a terminal snapshot is observed. Counts, actual active workers/models, elapsed time, a privacy-safe checkpoint, and per-unit budget consumption and limits are included. Top-level primitive checkpoints are always redacted; use a structured artifact reference for a publishable checkpoint.
 
 ```ts
-import { createExecutionHeartbeat } from "agent-creator/dist/scripts/execution_heartbeat.js";
+import { createExecutionHeartbeat } from "./apps/agent-creator-cli/scripts/execution_heartbeat.ts";
 
 const heartbeat = createExecutionHeartbeat(
   () => executor.snapshot(),

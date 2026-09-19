@@ -1,7 +1,7 @@
 # Privacy and evidence retention
 
 Agent Creator uses the versioned `agent-creator.privacy-policy/v1` policy. It is
-implemented by `dist/scripts/privacy_policy.js`; applications should import the
+implemented in source at `apps/agent-creator-cli/scripts/privacy_policy.ts`; applications should import the
 same redactor rather than maintain separate secret patterns.
 
 ## Classifications

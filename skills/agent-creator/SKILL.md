@@ -7,7 +7,7 @@ description: Creates and manages Goose custom agent definitions for reusable rol
 
 ## Offline runtime
 
-Released distributions include compiled scripts and production dependencies under `vendor/node_modules`. Run scripts from `dist/`; consumer machines need Node.js but must not run `npm install` or require network access. A missing vendor dependency is a packaging defect: report it and rebuild with the repository's `scripts/prepare-offline-bundle.mjs`.
+Use the released `agent-creator` executable for user workflows. A source checkout needs Node.js 22+ to build, but tagged native archives do not require Node.js or installed dependencies. An incomplete archive is a packaging defect.
 
 
 Create focused Goose custom agents that define **who Goose should be** for a task. Keep generated files under `.agents/agents/` for project scope or `~/.agents/agents/` for user scope.
@@ -45,7 +45,7 @@ When changing this creator, compare that reference with the current Goose docume
 
 ## Unified CLI
 
-Prefer the bundled **agent-creator** executable (or node <agent-creator>/dist/scripts/cli.js) for automation. It provides init, validate, evaluate, grade, aggregate, and install while preserving the legacy script entrypoints. Common flags are --format text|json, --quiet, and --help; exit statuses are 0 success, 1 failure, 2 usage, and 3 blocked operation.
+Prefer the bundled **agent-creator** executable for automation. It provides init, validate, evaluate, grade, aggregate, install, and privacy commands. Legacy internal-script entrypoints are not part of the released interface. Common flags are --format text|json, --quiet, and --help; exit statuses are 0 success, 1 failure, 2 usage, and 3 blocked operation.
 
 ## Workflow
 
@@ -94,14 +94,14 @@ Prefer the bundled **agent-creator** executable (or node <agent-creator>/dist/sc
 7. Validate with:
 
    ```bash
-   node <agent-creator>/dist/scripts/validate_agent.js <path/to/agent.md>
+   agent-creator validate <path/to/agent.md>
    ```
 
 8. When installing or copying an agent, use:
 
    ```bash
-   node <agent-creator>/dist/scripts/install_agent.js <path/to/agent.md> --project <project-root>
-   node <agent-creator>/dist/scripts/install_agent.js <path/to/agent.md> --global
+   agent-creator install <path/to/agent.md> --project <project-root>
+   agent-creator install <path/to/agent.md> --global
    ```
 
    Refuse to overwrite an existing agent unless the user explicitly requests it and `--force` is provided.
@@ -163,7 +163,7 @@ Evaluate the custom agent as a reusable role, not as a skill trigger. The key qu
 3. Run paired evaluations in isolated temporary projects:
 
    ```bash
-   node <agent-creator>/dist/scripts/run_agent_eval.js \
+   agent-creator evaluate \
      --agent <path/to/agent.md> \
      --eval-set <path/to/evals.json> \
      --workspace <agent-name>-workspace/iteration-1
@@ -178,7 +178,7 @@ Evaluate the custom agent as a reusable role, not as a skill trigger. The key qu
 4. Classify and version every assertion before running. Prefer objects with `id`, positive `version`, `classification` (`deterministic` or `semantic`), and `criterion`; deterministic assertions also declare a reproducible `checker` (`contains`, `not-contains`, or `regex`). Legacy prefixed strings remain supported. Semantic criteria require multiple independently identified blinded graders, contained output quotations, and a bounded call budget. Graders receive the published criterion and an opaque variant alias, never hidden criteria, true variant identity, or other grades. Disagreement or invalid/missing evidence remains inconclusive for human review; never average it into pass/fail:
 
    ```bash
-   node <agent-creator>/dist/scripts/grade_agent_eval.js \
+   agent-creator grade \
      <workspace>/iteration-1 \
      --llm-grader \
      --grader reviewer-a=model-a \
@@ -189,22 +189,13 @@ Evaluate the custom agent as a reusable role, not as a skill trigger. The key qu
 5. Aggregate results:
 
    ```bash
-   node <agent-creator>/dist/scripts/aggregate_benchmark.js \
+   agent-creator aggregate \
      <workspace>/iteration-1 \
      --agent-name <name> \
      --agent-path <path/to/agent.md>
    ```
 
-6. Generate the review viewer before revising the agent:
-
-   ```bash
-   node <agent-creator>/dist/eval-viewer/generate_review.js \
-     <workspace>/iteration-1 \
-     --agent-name <name> \
-     --benchmark <workspace>/iteration-1/benchmark.json
-   ```
-
-   Use `--static <output.html>` in a headless environment.
+6. Review the generated evidence before revising the agent. The review-viewer helper is a source-only API and is not a released CLI; do not invoke an internal dist path. Use the benchmark and response artifacts directly in a release workflow.
 
 7. Review qualitative output, assertion pass rates, time, token use, and variance. An agent may be better even when it costs more, but the trade-off must be visible.
 8. Revise durable role instructions rather than overfitting to test prompts. Repeat in `iteration-2`, passing `--previous-workspace` to the viewer.
@@ -269,14 +260,7 @@ An agent is ready only when:
 - `references/UPSTREAM.md`: source and refresh instructions for the reference snapshot.
 - `references/manual-external-evidence.md`: secure host-neutral evidence export/import contract, schema, trust, and diagnostics.
 - `references/privacy-retention.md`: versioned data classification, central redaction, transcript retention, protected references, deletion, and local/CI guidance.
-- `dist/scripts/init_agent.js`: create a minimal agent definition.
-- `dist/scripts/validate_agent.js`: validate agent frontmatter and body.
-- `dist/scripts/install_agent.js`: install an agent at project or user scope.
-- `dist/scripts/run_agent_eval.js`: run paired isolated agent and baseline evaluations.
-- `dist/scripts/evidence_exchange.js`: export immutable host-neutral jobs and securely import closed-schema evidence runs.
-- `dist/scripts/privacy_policy.js`: apply central redaction and manage expiring content-addressed protected artifacts and tombstones.
-- `dist/scripts/grade_agent_eval.js`: grade deterministic and semantic assertions.
-- `dist/scripts/aggregate_benchmark.js`: aggregate pass rate, timing, and token metrics.
-- `dist/eval-viewer/generate_review.js`: review qualitative outputs and benchmark results.
+- `scripts/agent-creator` (`scripts/agent-creator.exe` on Windows): native unified CLI injected only into release staging; it is not present in the portable source Skill.
+- The TypeScript implementation and source-only modules live in `apps/agent-creator-cli/` in the repository, outside this independently installable Skill.
 - `evals/evals.json`: autonomous, target-backed creation, validation, routing, and paired-role scenarios.
 - `assets/evaluation-fixtures/`: immutable valid, invalid, current, baseline, and task fixtures used by those scenarios.

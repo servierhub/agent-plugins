@@ -12,7 +12,7 @@ This distribution provides four guided creators for [Agent Skills](https://agent
 | Portable plugin target | Agent Plugins `1.0.0` |
 | Portable skill target | Agent Skills |
 | Verified host integration | Goose `1.47.0` |
-| Creator runtime | Node.js `22+` |
+| Creator runtime | Native Bun release executables; Node.js `22+` only for source development |
 | License | [CeCILL-C](LICENSE) |
 
 ## What you can do
@@ -64,6 +64,7 @@ A complete report does not guarantee improvement: results remain `pass`, `fail`,
 - [Quick start](#quick-start)
 - [How-to guides](#how-to-guides)
 - [Installation and updates](#installation-and-updates)
+- [Standalone Bun release assets](#standalone-bun-release-assets)
 - [Validation and evaluation](#validation-and-evaluation)
 - [Troubleshooting](#troubleshooting)
 - [Formats, portability, and security](#formats-portability-and-security)
@@ -94,7 +95,7 @@ Use the unqualified names—such as `skill-creator`—when a creator is installe
 
 ### 1. Check the requirements
 
-The creator utilities require Node.js 22 or later. To load them through an agent, use a host that implements the relevant Agent Skills or Agent Plugins specification. The distribution includes compiled scripts and vendored runtime dependencies; consumers must not run `npm install` inside an installed release.
+Source development lives under `apps/<creator>-cli/` and requires Node.js 22 or later. The directories under `skills/<name>/` are portable Skill content: they do not contain the TypeScript application source or generated executables. Tagged release staging injects one native executable at `skills/<name>/scripts/<name>` (`<name>.exe` on Windows), so an installed release does not require Node.js or `npm install`. To load the Skills through an agent, use a host that implements the relevant Agent Skills or Agent Plugins specification.
 
 Host discovery and installation commands differ. This repository verifies the complete integration with Goose. Other hosts may load the portable outputs when they implement the corresponding specification, but this repository does not claim untested host compatibility.
 
@@ -164,11 +165,12 @@ Each guide identifies the request and the evidence of success. Exact supporting 
 
 **Success:** portable and host-specific resources are classified separately; strict validation passes; requested behavioral evidence and archive checks exist; missing evidence blocks rather than weakens a release gate.
 
-From a source checkout of this repository, direct validation is also available:
+From a source checkout of this repository, build the app first, then invoke its generated entrypoint directly:
 
 ```bash
-node skills/plugin-creator/dist/scripts/cli.js validate <plugin-directory> --mode portable-load --format json
-node skills/plugin-creator/dist/scripts/cli.js validate <plugin-directory> --mode strict-authoring --format json
+(cd apps/plugin-creator-cli && npm install && npm run build)
+node apps/plugin-creator-cli/dist/scripts/cli.js validate <plugin-directory> --mode portable-load --format json
+node apps/plugin-creator-cli/dist/scripts/cli.js validate <plugin-directory> --mode strict-authoring --format json
 ```
 
 ## Installation and updates
@@ -206,6 +208,10 @@ test -f ~/.agents/skills/skill-creator/SKILL.md
 
 The `.agents/skills` location is an emerging interoperability convention used by Goose and other compatible agents; confirm discovery rules in your host.
 
+## Standalone Bun release assets
+
+Tagged GitHub releases also provide native, runtime-only creator executables for supported Linux, macOS, and Windows architectures. See [Bun release assets](RELEASES.md) for the exact OS/architecture filename mapping and SHA-256 verification commands. Always verify the selected archive against the release's `SHA256SUMS` before extraction. The same guide covers PATH and direct invocation, avoiding mixed archives, and removing legacy Node/dist wrappers.
+
 ## Validation and evaluation
 
 Validation answers “does the artifact conform?” Evaluation answers “does it improve behavior?”
@@ -226,7 +232,7 @@ scenarios → paired isolated runs → grading → benchmark → review → rele
 |---|---|
 | A creator is not found | Start a new host session after installation; try the qualified name for a plugin install and the plain name for a standalone install. |
 | Goose cannot start a creator | Confirm Goose has a configured model provider and the plugin installation completed without errors. |
-| Node.js errors appear | Run `node --version`; creator scripts require Node.js 22 or later. |
+| An old Node or `dist/` wrapper runs | Remove that legacy wrapper from `PATH`, then install the matching archive described in [RELEASES.md](RELEASES.md). |
 | An installed release reports a missing dependency | Treat it as an incomplete package; do not repair it with `npm install`. Reinstall a complete release and report the defect. |
 | Validation fails | Read the structured diagnostics and correct the referenced path or field; do not bypass strict-authoring errors. |
 | Evaluation reports `blocked` | Supply the requested model run, grading, timing, test, or human-review evidence, then resume the workflow. |
@@ -268,14 +274,19 @@ See [portable conformance](skills/plugin-creator/references/portable-conformance
 
 ## Contributing
 
-Contributor dependency installation is separate from end-user installation. From the repository root, these copy/paste-safe subshell commands preserve the working directory:
+Contributor dependency installation is separate from end-user installation. Creator application source, tests, and build output live in `apps/<creator>-cli/`; the portable `skills/<name>/` trees must remain free of generated JavaScript, TypeScript source, and binaries. From the repository root, these copy/paste-safe subshell commands preserve the working directory:
 
 ```bash
 (cd contracts/capability-contract && npm install && npm run build && npm test) # capability, evaluation-plan, result-state, and host-adapter contracts
-(cd skills/agent-creator && npm install && npm run build && npm test)
-(cd skills/hook-creator && npm install && npm run build && npm test)
-(cd skills/plugin-creator && npm install && npm run build && npm test)
-(cd skills/skill-creator && npm install && npm run build && npm test)
+for app in apps/*-creator-cli; do (cd "$app" && npm install && npm run build && npm test) || exit; done
+```
+
+Release assembly is a separate root operation. It copies the configured portable entries, compiles the app entrypoints, and atomically publishes an immutable target tree under `release-staging/<os>-<arch>/`; do not edit that tree by hand. Bun must match the version pinned in `bun-release.json`.
+
+```bash
+npm run stage:release -- --target=bun-linux-x64-baseline
+npm run test:executables
+node scripts/package-bun-release-assets.mjs /path/to/matrix-artifacts /path/to/release-assets
 ```
 
 Verify the complete offline distribution from the repository root:

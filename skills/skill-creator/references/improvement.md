@@ -27,7 +27,7 @@ Confirm that paired runs used equivalent models, tools, inputs, budgets, and cap
 Run:
 
 ```bash
-node dist/scripts/cli.js analyze <evaluation-workspace> \
+skill-creator analyze <evaluation-workspace> \
   --skill-path <skill-directory> \
   --format json
 ```
@@ -52,19 +52,19 @@ Use the immutable loop ledger after `analyze` has complete repeated-run evidence
 
 ```bash
 # Classify evidence into mechanisms and emit the proposal contract.
-node dist/scripts/cli.js evidence-loop <evaluation-workspace> \
+skill-creator evidence-loop <evaluation-workspace> \
   --skill-path <user-owned-skill> --loop <separate-ledger>
 
 # Preview a challenged proposal. This does not mutate the Skill.
-node dist/scripts/cli.js evidence-loop <evaluation-workspace> \
+skill-creator evidence-loop <evaluation-workspace> \
   --skill-path <user-owned-skill> --loop <separate-ledger> --proposal proposal.json
 
 # Apply exactly the previewed proposal to an isolated revision only.
-node dist/scripts/cli.js evidence-loop <evaluation-workspace> \
+skill-creator evidence-loop <evaluation-workspace> \
   --skill-path <user-owned-skill> --loop <separate-ledger> --approve <complete-plan-integrity-sha256>
 
 # After executing the isolated revision, attach complete results.
-node dist/scripts/cli.js evidence-loop <evaluation-workspace> \
+skill-creator evidence-loop <evaluation-workspace> \
   --skill-path <user-owned-skill> --loop <separate-ledger> --results <new-workspace>
 ```
 
