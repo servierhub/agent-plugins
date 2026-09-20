@@ -111,6 +111,14 @@ test("Goose persists stream-json events on success", async () => {
 });
 
 
+test("Goose accepts current host streams with text in message events and usage on complete", async () => {
+  const host = new URL("fixtures/current-goose-stream.mjs", import.meta.url).pathname;
+  const result = await new GooseRunner(process.execPath + " " + host).executePaired(validPlan());
+  assert.equal(result.output, "current host response");
+  assert.equal(result.tokens, 23);
+  assert.deepEqual(result.events.map((event:any) => event.type), ["message", "message", "complete"]);
+});
+
 test("Goose buffers stream-json lines split across stdout chunks and flushes the trailing line", async () => {
   const result=await new GooseRunner(`${process.execPath} ${fake} --fake-mode split-terminal`).executePaired(validPlan());
   assert.equal(result.output,"deterministic paired output works and completes the requested demo workflow");

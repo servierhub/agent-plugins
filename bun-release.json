@@ -24,6 +24,13 @@
     "references",
     "schemas"
   ],
+  "skills": [
+    "agent-creator",
+    "hook-creator",
+    "plugin-creator",
+    "plugin-script-packaging",
+    "skill-creator"
+  ],
   "executables": {
     "skill-creator": "apps/skill-creator-cli/scripts/bun-entry.ts",
     "agent-creator": "apps/agent-creator-cli/scripts/bun-entry.ts",

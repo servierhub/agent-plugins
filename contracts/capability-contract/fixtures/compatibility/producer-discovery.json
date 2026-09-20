@@ -5134,7 +5134,7 @@
       "role": "producer-consumer",
       "canonicalArtifactId": "plugin.mcp.v1",
       "sourceEvidence": "mcp.json",
-      "evidenceOccurrences": 5
+      "evidenceOccurrences": 14
     },
     {
       "siteId": "apps/plugin-creator-cli/scripts/mcp_compatibility.ts::plugin.json",
@@ -6151,7 +6151,7 @@
       "sourceFieldOrArtifact": ".mcp.json",
       "sourceEvidence": ".mcp.json",
       "rationale": "Structural, package, legacy-layout, or documentation member; not an independent compatibility result surface.",
-      "evidenceOccurrences": 2
+      "evidenceOccurrences": 8
     },
     {
       "site": "apps/plugin-creator-cli/scripts/migrate_plugin.ts::.mcp.json",

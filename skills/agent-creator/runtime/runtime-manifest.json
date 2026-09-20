@@ -43,8 +43,8 @@
     },
     {
       "path": "dist/scripts/agent_format.js",
-      "sha256": "5f10168cc772e19df4f102ce448acf9ab41cbb7eb0082f712b65d28f1cde902e",
-      "size": 3591
+      "sha256": "31b3156f3fea5c44aa2547974cd81050fa678ddbc0bb30ad56fad7a957e656a1",
+      "size": 4028
     },
     {
       "path": "dist/scripts/aggregate_benchmark.js",

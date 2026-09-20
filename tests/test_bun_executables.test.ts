@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { chmodSync, copyFileSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const config = JSON.parse(readFileSync(join(ROOT, "bun-release.json"), "utf8"));
 const expectedNames = ["skill-creator", "agent-creator", "hook-creator", "plugin-creator"];
+const expectedSkills = ["agent-creator", "hook-creator", "plugin-creator", "plugin-script-packaging", "skill-creator"];
 const stageRoot = join(ROOT, config.stagingRoot, platformKey(), "skills");
 const stagedExecutable = (name: string, extension: string) => join(stageRoot, name, "scripts", name + extension);
 
@@ -27,6 +28,7 @@ test("Bun compiler version, release targets, and executable names are pinned", (
     "win32-x64": "bun-windows-x64-baseline",
   });
   assert.deepEqual(Object.keys(config.executables), expectedNames);
+  assert.deepEqual(config.skills, expectedSkills);
   assert.equal(config.runtimeProfiles.source.mode, "node-bundled");
   assert.deepEqual(config.runtimeProfiles.source.requiredSkillEntries, ["scripts", "runtime"]);
   assert.equal(config.runtimeProfiles.native.mode, "native-bun");
@@ -200,7 +202,7 @@ test("release assembly is a clean deterministic projection and never mutates sou
     visit(directory);
     return rows;
   };
-  const sourcesBefore = expectedNames.map((name) => [name, snapshot(join(ROOT, "skills", name))]);
+  const sourcesBefore = expectedSkills.map((name) => [name, snapshot(join(ROOT, "skills", name))]);
   const assemble = () => spawnSync(process.execPath, [join(ROOT, "scripts", "build-bun-executables.mjs"), "--target=" + target, "--output=" + output], { cwd: ROOT, encoding: "utf8", timeout: 60_000 });
   try {
     const first = assemble();
@@ -210,12 +212,14 @@ test("release assembly is a clean deterministic projection and never mutates sou
     const releasePlugin = JSON.parse(readFileSync(join(stage, "plugin.json"), "utf8"));
     assert.equal(releaseManifest.runtimeMode, "native-bun");
     assert.equal(releasePlugin.extensions?.["io.github.bioinfornatics.agent-plugins.runtime"]?.mode, "native-bun");
+    assert.deepEqual(releasePlugin.extensions?.["io.github.bioinfornatics.agent-plugins.runtime"]?.commands, expectedNames);
     const firstInventory = snapshot(stage);
     writeFileSync(join(stage, "obsolete-file"), "must be removed");
     const second = assemble();
     assert.equal(second.status, 0, second.stderr || second.stdout);
     assert.deepEqual(snapshot(stage), firstInventory, "clean rebuild must have the same paths, bytes, and modes");
-    assert.deepEqual(expectedNames.map((name) => [name, snapshot(join(ROOT, "skills", name))]), sourcesBefore);
+    assert.deepEqual(expectedSkills.map((name) => [name, snapshot(join(ROOT, "skills", name))]), sourcesBefore);
+    assert.deepEqual(readdirSync(join(stage, "skills")).sort(), expectedSkills.slice().sort());
     for (const name of expectedNames) {
       const skill = join(stage, "skills", name);
       assert.deepEqual(readdirSync(join(skill, "scripts")), [name]);
@@ -223,6 +227,10 @@ test("release assembly is a clean deterministic projection and never mutates sou
       for (const forbidden of ["dist", "package.json", "tests", "tsconfig.json", "vendor", "runtime", "node_modules"]) assert.equal(statSync(join(skill, forbidden), { throwIfNoEntry: false }), undefined, name + ": " + forbidden);
       assert.equal(readdirSync(join(skill, "scripts")).some((entry) => entry.endsWith(".mjs")), false);
     }
+    const guidance = join(stage, "skills", "plugin-script-packaging");
+    assert.equal(existsSync(join(guidance, "SKILL.md")), true);
+    assert.equal(existsSync(join(guidance, "scripts")), false);
+    assert.equal(existsSync(join(guidance, "runtime")), false);
     assert.doesNotMatch(readFileSync(join(ROOT, "bun-release.json"), "utf8"), /skills\/[^/]+\/(?:scripts|dist)/);
   } finally { rmSync(output, { recursive: true, force: true }); }
 });

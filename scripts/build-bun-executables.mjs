@@ -99,7 +99,9 @@ if (!target) fail(`no pinned Bun target for ${platformKey}; pass --target=<pinne
 const releaseKey = Object.entries(config.targets).find(([, value]) => value === target)?.[0];
 if (!releaseKey) fail(`target ${target} is not pinned in bun-release.json`);
 const outputRoot = path.resolve(option("--output") || path.join(root, config.stagingRoot));
-const sourceSkills = Object.keys(config.executables).map((name) => path.join(root, "skills", name));
+const skillNames = config.skills;
+if (!Array.isArray(skillNames) || !skillNames.length || skillNames.some((name) => typeof name !== "string") || new Set(skillNames).size !== skillNames.length || Object.keys(config.executables).some((name) => !skillNames.includes(name))) fail("bun-release.json must declare every unique packaged Skill and every executable Skill");
+const sourceSkills = skillNames.map((name) => path.join(root, "skills", name));
 if (sourceSkills.some((directory) => outputRoot === directory || outputRoot.startsWith(directory + path.sep))) {
   fail("release staging must be outside source skill directories");
 }
@@ -115,11 +117,12 @@ for (const entry of config.portablePluginEntries) copyTree(path.join(root, entry
 const stagedPluginPath = path.join(temporaryStage, "plugin.json");
 const stagedPlugin = JSON.parse(readFileSync(stagedPluginPath, "utf8"));
 stagedPlugin.extensions ??= {};
-stagedPlugin.extensions["io.github.bioinfornatics.agent-plugins.runtime"] = { schemaVersion: 1, mode: nativeProfile.mode, executables: "skills/<name>/scripts/<name>[.exe]" };
+stagedPlugin.extensions["io.github.bioinfornatics.agent-plugins.runtime"] = { schemaVersion: 1, mode: nativeProfile.mode, executables: "skills/<creator>/scripts/<creator>[.exe]", commands: Object.keys(config.executables) };
 writeFileSync(stagedPluginPath, JSON.stringify(stagedPlugin, null, 2) + "\n", { mode: 0o644 });
 chmodSync(temporaryStage, 0o755);
 chmodSync(path.join(temporaryStage, "skills"), 0o755);
 try {
+  for (const name of skillNames) copyPortable(path.join(root, "skills", name), path.join(temporaryStage, "skills", name));
   let creatorIndex = 0;
   for (const [name, relativeEntry] of Object.entries(config.executables)) {
     creatorIndex += 1;
@@ -127,7 +130,6 @@ try {
     cli.write(progress);
     if (cli.progress === "creators" || cli.progress === "auto") console.log(progress);
     const skillStage = path.join(temporaryStage, "skills", name);
-    copyPortable(path.join(root, "skills", name), skillStage);
     const scripts = path.join(skillStage, "scripts"); mkdirSync(scripts, { recursive: true, mode: 0o755 }); chmodSync(scripts, 0o755);
     const output = path.join(scripts, name + (target.startsWith("bun-windows-") ? ".exe" : ""));
     const buildArgs = ["build", "--compile", `--target=${target}`, `--outfile=${output}`, path.join(root, relativeEntry)];

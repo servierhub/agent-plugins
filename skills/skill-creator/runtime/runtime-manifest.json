@@ -98,8 +98,8 @@
     },
     {
       "path": "dist/scripts/evaluator_grading.js",
-      "sha256": "bb8c9aeaf3b403f65f5e62317ad35da372009131c1145adc55326cabfe33f9f5",
-      "size": 17389
+      "sha256": "ccfd2056fbd954ece8cae8e74aca27d68109fee5a5d781dd722fac704fc041ca",
+      "size": 17949
     },
     {
       "path": "dist/scripts/evidence_improvement.js",
@@ -168,8 +168,8 @@
     },
     {
       "path": "dist/scripts/runners/goose.js",
-      "sha256": "bde367c0b6906b5a23d190c3097b7c81a0a3f379c0ff4de383195412b9f6b91b",
-      "size": 14501
+      "sha256": "aa8517cbbb5e8b1d4cbb4e8b10dbb9ea31a104b3cdcf48be70251f8e4a02817d",
+      "size": 14739
     },
     {
       "path": "dist/scripts/runners/index.js",

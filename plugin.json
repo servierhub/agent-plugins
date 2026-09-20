@@ -8,8 +8,14 @@
       "schemaVersion": 1,
       "mode": "node-bundled",
       "node": ">=22.0.0",
-      "launchers": "skills/<name>/scripts/<name>.mjs",
-      "runtime": "skills/<name>/runtime/"
+      "launchers": "skills/<creator>/scripts/<creator>.mjs",
+      "runtime": "skills/<creator>/runtime/",
+      "commands": [
+        "agent-creator",
+        "hook-creator",
+        "plugin-creator",
+        "skill-creator"
+      ]
     }
   }
 }

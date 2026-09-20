@@ -110,10 +110,12 @@ export function deterministicCheck(assertion, output) {
 function responseText(value) {
     if (typeof value === "string")
         return value;
+    if (Array.isArray(value))
+        return value.map(responseText).filter(Boolean).join("");
     if (!value || typeof value !== "object")
         return "";
     const item = value;
-    return responseText(item.output ?? item.response ?? item.message ?? item.result ?? item.text ?? "");
+    return responseText(item.output ?? item.response ?? item.message ?? item.result ?? item.text ?? item.content ?? "");
 }
 function streamResponse(stdout) {
     const events = stdout.trim().split(/\r?\n/).filter(Boolean).map(line => { try {
@@ -125,7 +127,11 @@ function streamResponse(stdout) {
     const terminal = [...events].reverse().find((item) => item.type === "complete") ?? events.at(-1);
     if (!terminal)
         return { raw: stdout, usage: null };
-    return { raw: responseText(terminal.output ?? terminal.response ?? terminal), usage: terminal.usage && typeof terminal.usage === "object" ? terminal.usage : null };
+    let raw = responseText(terminal.output ?? terminal.response ?? "");
+    if (!raw.trim())
+        raw = events.filter((item) => item.type === "message").map((item) => responseText(item.message ?? item.output ?? item.response ?? "")).join("");
+    const usage = terminal.usage && typeof terminal.usage === "object" ? terminal.usage : Object.fromEntries(["total_tokens", "input_tokens", "output_tokens", "cache_read_input_tokens", "cache_write_input_tokens"].filter(key => Number.isFinite(Number(terminal[key]))).map(key => [key, terminal[key]]));
+    return { raw, usage: Object.keys(usage).length ? usage : null };
 }
 export class CommandGraderAdapter {
     command;

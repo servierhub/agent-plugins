@@ -1,0 +1,210 @@
+{
+  "skill_name": "plugin-script-packaging",
+  "coverage_dimensions": {
+    "mode": [
+      "source-runtime",
+      "native-release",
+      "mixed-runtime-rejection",
+      "scope-routing"
+    ],
+    "language": [
+      "en",
+      "fr"
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "name": "design-contained-source-runtime",
+      "subject": "source-runtime-design",
+      "language": "en",
+      "prompt": "Design the installed layout and verification plan for a TypeScript CLI named report-builder that ships inside an Agent Plugin installed from Git. The installed Skill must run offline with Node 22, must not execute TypeScript, and must not reach back into the repository application directory.",
+      "target": {
+        "kind": "runtime-design",
+        "execution": "explain",
+        "mode": "node-bundled"
+      },
+      "preconditions": [
+        "The editable CLI source uses TypeScript and has a lockfile",
+        "End-user installation cannot run a package manager"
+      ],
+      "files": [],
+      "assertions": [
+        "Separates editable application source from the independently copied Skill",
+        "Uses a contained mjs launcher generated runtime emitted JavaScript and exact production dependency closure",
+        "Requires path containment symlink rejection offline execution and an isolated-copy smoke test",
+        "Provides a namespaced vendor runtime manifest without changing portable manifest fields"
+      ],
+      "expected_output": "A source-runtime layout and evidence plan that can run after Git installation without repository coupling.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": []
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/dual-runtime-architecture.md",
+          "references/verification-matrix.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:source-runtime",
+        "language:en"
+      ],
+      "budget": {
+        "max_turns": 10,
+        "timeout_seconds": 480
+      }
+    },
+    {
+      "id": 2,
+      "name": "project-native-release-matrix",
+      "subject": "native-release-design",
+      "language": "en",
+      "prompt": "Prepare the release projection for report-builder on Linux x64 and arm64, macOS x64 and arm64, and Windows x64. Explain the staged Skill layout, target-specific evidence, checksums, and how behavior remains aligned with the Git/source command.",
+      "target": {
+        "kind": "runtime-design",
+        "execution": "explain",
+        "mode": "native-bun"
+      },
+      "preconditions": [
+        "A validated source CLI entrypoint already exists",
+        "Only native CI execution can prove target runtime behavior"
+      ],
+      "files": [],
+      "assertions": [
+        "Places exactly one target executable under the Skill scripts directory",
+        "Excludes mjs runtime node_modules TypeScript and repository application files",
+        "Pins compiler targets and records a complete hashed release inventory",
+        "Requires native smoke tests and parity checks without claiming cross-compilation proves execution"
+      ],
+      "expected_output": "A deterministic cross-platform native projection and verification matrix.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": []
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/dual-runtime-architecture.md",
+          "references/verification-matrix.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:native-release",
+        "language:en"
+      ],
+      "budget": {
+        "max_turns": 10,
+        "timeout_seconds": 480
+      }
+    },
+    {
+      "id": 3,
+      "name": "reject-mixed-installed-runtime",
+      "subject": "runtime-safety-audit",
+      "language": "en",
+      "prompt": "Audit an installed Skill whose scripts directory contains both tool.mjs and a native tool binary while runtime/node_modules is also present, although plugin.json declares native-bun. State the verdict, the minimal correction, and tests required before installation.",
+      "target": {
+        "kind": "runtime-audit",
+        "execution": "explain",
+        "mode": "mixed"
+      },
+      "preconditions": [
+        "Treat the described package as untrusted",
+        "Do not execute either ambiguous entrypoint"
+      ],
+      "files": [],
+      "assertions": [
+        "Fails closed because declared native mode contains mixed runtime material",
+        "Does not choose an entrypoint by precedence or execute TypeScript",
+        "Requires a clean regenerated native stage rather than deleting arbitrary installed files",
+        "Names tamper checksum wrong-target and clean-environment regression tests"
+      ],
+      "expected_output": "A blocked verdict and safe regeneration plan with no invented precedence.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": []
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/verification-matrix.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:mixed-runtime-rejection",
+        "language:en"
+      ],
+      "budget": {
+        "max_turns": 6,
+        "timeout_seconds": 480
+      }
+    },
+    {
+      "id": 4,
+      "name": "route-whole-plugin-release",
+      "subject": "scope-routing",
+      "language": "fr",
+      "prompt": "Le runtime du script est déjà conçu et testé. L’utilisateur demande maintenant de valider le manifeste complet, installer le plugin dans Goose et publier les archives. Explique le transfert de responsabilité et les preuves à remettre, sans prétendre effectuer la publication.",
+      "target": {
+        "kind": "plugin-handoff",
+        "execution": "explain"
+      },
+      "preconditions": [
+        "Runtime component evidence already exists",
+        "No release authorization is available in this scenario"
+      ],
+      "files": [],
+      "assertions": [
+        "Routes whole-plugin validation installation packaging and release to plugin-creator",
+        "Hands off the command contract and both runtime layouts",
+        "Hands off artifact hashes and test results",
+        "Identifies every untested platform cell",
+        "Keeps Skill authoring responsibility separate from plugin release responsibility",
+        "Does not claim installation or publication occurred"
+      ],
+      "expected_output": "A precise evidence-bearing handoff to plugin-creator.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": []
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:scope-routing",
+        "language:fr"
+      ],
+      "budget": {
+        "max_turns": 5,
+        "timeout_seconds": 480
+      }
+    }
+  ]
+}

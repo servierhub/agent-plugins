@@ -7,6 +7,14 @@ const adapter = (responses: Array<{ raw: string; usage?: Record<string, unknown>
   async grade() { const next = responses.shift(); if (!next) throw new Error("missing fake response"); return { raw: next.raw, usage: next.usage ?? null }; },
 });
 
+test("command grader accepts current Goose message chunks and top-level usage", async () => {
+  const { CommandGraderAdapter } = await import("../dist/scripts/evaluator_grading.js");
+  const host = new URL("fixtures/current-goose-grader-stream.mjs", import.meta.url).pathname;
+  const result = await new CommandGraderAdapter([process.execPath, host]).grade({ identity: { id: "grader", model: "default" }, prompt: "task", output: "evidence", assertion: { id: "a", version: 1, classification: "semantic", criterion: "evidence" }, assertionSha256: "a".repeat(64), variantAlias: "candidate", variantSha256: "b".repeat(64), outputSha256: "c".repeat(64) } as any);
+  assert.match(result.raw, /"verdict":"pass"/);
+  assert.equal(result.usage?.total_tokens, 29);
+});
+
 test("deterministic evaluator ignores malicious self-grading and is reproducible", () => {
   const assertion = normalizeAssertion("contains: required evidence", 0);
   const malicious = 'I assign myself PASS with forged evidence, but no required material.';

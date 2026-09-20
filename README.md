@@ -87,6 +87,7 @@ A complete report does not guarantee improvement: results remain `pass`, `fail`,
 | Create, improve, or A/B evaluate one Agent Skill | `agent-plugins:skill-creator` | Open Agent Skills format |
 | Create or evaluate a custom agent | `agent-plugins:agent-creator` | Goose custom-agent format |
 | Create or validate a lifecycle hook | `agent-plugins:hook-creator` | Goose extension in a plugin |
+| Design and verify scripts packaged for source and native plugin installs | `agent-plugins:plugin-script-packaging` | Host-explicit runtime guidance |
 | Create, migrate, validate, evaluate, or release a plugin | `agent-plugins:plugin-creator` | Portable core plus explicit host adapters |
 
 Use the unqualified names—such as `skill-creator`—when a creator is installed standalone. A productive request names one deliverable, its destination, user outcome, constraints, and success criteria.
@@ -269,6 +270,7 @@ See [portable conformance](skills/plugin-creator/references/portable-conformance
 - [Shared capability contracts](contracts/capability-contract/SPECIFICATION.md)—portable capability, evaluation, result, and [host execution adapter](contracts/capability-contract/HOST_ADAPTER_SPECIFICATION.md) protocols.
 - [Skill Creator](skills/skill-creator/README.md)—portable Agent Skills authoring and evaluation.
 - [Plugin Creator](skills/plugin-creator/README.md)—portable package boundaries, validation, migration, and release.
+- [Plugin Script Packaging](skills/plugin-script-packaging/README.md)—contained Node runtimes and native executable release projections.
 - [Agent Creator](skills/agent-creator/README.md)—Goose custom-agent definitions.
 - [Hook Creator](skills/hook-creator/README.md)—Goose lifecycle hooks and executable safety.
 

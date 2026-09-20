@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 const root=join(import.meta.dirname,".."), config=JSON.parse(readFileSync(join(root,"bun-release.json"),"utf8"));
-const keys=Object.keys(config.targets), skills=Object.keys(config.executables), work=mkdtempSync(join(tmpdir(),"release-package-test-")), staging=join(work,"staging"), input=join(work,"input");
+const keys=Object.keys(config.targets), skills=config.skills, work=mkdtempSync(join(tmpdir(),"release-package-test-")), staging=join(work,"staging"), input=join(work,"input");
 const run=(command:string,args:string[],cwd=root)=>spawnSync(command,args,{cwd,encoding:"utf8",timeout:180000});
 before(()=>{for(const key of keys){const built=run(process.execPath,[join(root,"scripts","build-bun-executables.mjs"),"--target="+config.targets[key],"--output="+staging]);assert.equal(built.status,0,built.stderr||built.stdout);cpSync(join(staging,key),join(input,"creators-"+key+"-commit-1"),{recursive:true});}});
 after(()=>rmSync(work,{recursive:true,force:true}));

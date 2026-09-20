@@ -253,6 +253,6 @@ test("non-current status vocabularies remain absent from exact emitting fields a
   assert.equal(/status\s*[:=]\s*\"packaged\"/.test(packaging), false);
   assert.equal(/(?:return|status\s*:)\s*\"policy-failed\"/.test(validation), false);
   const keys = new Set(LEGACY_STATUS_MAPPINGS.map((item) => item.creator + "/" + item.context + "/" + item.token));
-  for (const key of ["plugin-creator/plugin-validation-outcome/skipped","plugin-creator/plugin-validation-outcome/runtime-failed","plugin-creator/plugin-validation-outcome/policy-failed","plugin-creator/plugin-component-outcome-status/rejected","plugin-creator/plugin-component-outcome-status/policy-failed","plugin-creator/plugin-mcp-compatibility/legacy-compatible","plugin-creator/plugin-package-status/packaged"]) assert.equal(keys.has(key), false, key);
+  for (const key of ["plugin-creator/plugin-validation-outcome/skipped","plugin-creator/plugin-validation-outcome/runtime-failed","plugin-creator/plugin-validation-outcome/policy-failed","plugin-creator/plugin-component-outcome-status/rejected","plugin-creator/plugin-component-outcome-status/policy-failed","plugin-creator/plugin-package-status/packaged"]) assert.equal(keys.has(key), false, key);
   assert.equal(keys.has("plugin-creator/plugin-migration-classification/legacy-compatible"), true);
 });

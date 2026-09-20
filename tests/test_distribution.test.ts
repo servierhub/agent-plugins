@@ -9,12 +9,14 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PLUGIN_NAME = "agent-plugins";
 const SKILLS = join(ROOT, "skills");
 const APPS = join(ROOT, "apps");
-const EXPECTED_SKILLS = new Set(["skill-creator", "agent-creator", "hook-creator", "plugin-creator"]);
+const EXPECTED_SKILLS = new Set(["skill-creator", "agent-creator", "hook-creator", "plugin-creator", "plugin-script-packaging"]);
+const EXECUTABLE_CREATORS = new Set(["skill-creator", "agent-creator", "hook-creator", "plugin-creator"]);
 
 test("open plugins manifest", () => {
   const manifest = JSON.parse(readFileSync(join(ROOT, "plugin.json"), "utf-8"));
   assert.equal(manifest.name, PLUGIN_NAME);
   assert.equal(manifest.extensions?.["io.github.bioinfornatics.agent-plugins.runtime"]?.mode, "node-bundled");
+  assert.deepEqual(new Set(manifest.extensions?.["io.github.bioinfornatics.agent-plugins.runtime"]?.commands), EXECUTABLE_CREATORS);
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
   assert.ok(manifest.description.trim());
 });
@@ -103,8 +105,8 @@ test("explicit plugin evaluation requests require behavioral skill and integrati
 });
 
 test("creator implementation and build ownership is exclusively under apps", () => {
-  assert.deepEqual(new Set(readdirSync(APPS).filter((entry) => entry.endsWith("-creator-cli"))), new Set([...EXPECTED_SKILLS].map((name) => `${name}-cli`)));
-  for (const name of EXPECTED_SKILLS) {
+  assert.deepEqual(new Set(readdirSync(APPS).filter((entry) => entry.endsWith("-creator-cli"))), new Set([...EXECUTABLE_CREATORS].map((name) => `${name}-cli`)));
+  for (const name of EXECUTABLE_CREATORS) {
     const skill = join(SKILLS, name);
     const app = join(APPS, `${name}-cli`);
     for (const required of ["package.json", "package-lock.json", "tsconfig.json", "scripts", "tests", "dist", "vendor"]) {
@@ -131,7 +133,7 @@ test("creator implementation and build ownership is exclusively under apps", () 
 });
 
 test("every creator application ships a complete offline runtime bundle", () => {
-  for (const name of EXPECTED_SKILLS) {
+  for (const name of EXECUTABLE_CREATORS) {
     const app = join(APPS, `${name}-cli`);
     const pkg = JSON.parse(readFileSync(join(app, "package.json"), "utf-8"));
     assert.equal(pkg.offlineBundle, true, `${name}: offlineBundle`);
@@ -184,7 +186,7 @@ test("root offline smoke uses app authoring code and staged release executables"
 });
 
 test("application offline vendors contain production dependencies only", () => {
-  for (const name of EXPECTED_SKILLS) {
+  for (const name of EXECUTABLE_CREATORS) {
     const app = join(APPS, `${name}-cli`);
     const pkg = JSON.parse(readFileSync(join(app, "package.json"), "utf-8"));
     const manifest = JSON.parse(readFileSync(join(app, "vendor", "manifest.json"), "utf-8"));

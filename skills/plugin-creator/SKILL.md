@@ -28,6 +28,7 @@ Read [goose-plugin-format.md](references/goose-plugin-format.md) and [portable-c
 | `agent-plugins:skill-creator` (fallback `skill-creator`) | Any bundled Skill is new or modified | Valid frontmatter, name/path consistency, focused instructions, and requested evaluation evidence |
 | `agent-plugins:hook-creator` (fallback `hook-creator`) | Any Goose hook rule or command changes | Hook validation, executable checks, and blocking-behavior review |
 | `agent-plugins:agent-creator` (fallback `agent-creator`) | Only for an explicit, separately supported custom-agent target | Valid agent and confirmed project/user installation path |
+| `agent-plugins:plugin-script-packaging` (fallback `plugin-script-packaging`) | A plugin command needs a contained source runtime, a native release projection, or both | Command contract, dual-layout design, dependency closure, and mode-specific verification evidence |
 
 Current Goose custom agents live under `.agents/agents/`; do not claim a plugin `agents/` directory is portable or auto-installed. Load specialist instructions in the current context when possible. Delegate only disjoint files. If a specialist is unavailable, state the limitation and follow its recorded source rather than inventing a schema.
 

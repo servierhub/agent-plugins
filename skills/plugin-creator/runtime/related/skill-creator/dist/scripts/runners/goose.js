@@ -72,7 +72,8 @@ function classify(stderr, code) { const value = stderr.toLowerCase(); if (/model
     return { code: "model-rejected", reason: "model-rejected" }; if (/tool/.test(value) && /(not found|unavailable|unknown|not configured)/.test(value))
     return { code: "tool-unavailable", reason: "tool-unavailable" }; if (/tool/.test(value) && /(reject|denied|forbidden|unauthori[sz]ed|not allowed)/.test(value))
     return { code: "tool-rejected", reason: "tool-rejected" }; return { code: "host-exit", reason: `exit:${code ?? "unknown"}` }; }
-function parseResponse(events) { const terminal = [...events].reverse().find(e => e.type === "complete") ?? events.at(-1) ?? {}; let output = text(terminal.output ?? terminal.response ?? terminal.message ?? terminal.result ?? terminal); let payload = terminal; try {
+function parseResponse(events) { const terminal = [...events].reverse().find(e => e.type === "complete") ?? events.at(-1) ?? {}, messages = events.filter(e => e.type === "message"); let output = text(terminal.output ?? terminal.response ?? terminal.message ?? terminal.result ?? ""); if (!output.trim())
+    output = messages.map(event => text(event.message ?? event.output ?? event.response ?? event.result ?? "")).join(""); let payload = terminal; try {
     const nested = JSON.parse(output);
     if (nested && typeof nested === "object" && typeof nested.output === "string") {
         payload = nested;
@@ -80,7 +81,7 @@ function parseResponse(events) { const terminal = [...events].reverse().find(e =
     }
 }
 catch { } if (!output.trim())
-    throw new PairedExecutionError("invalid-response", "Goose stream contained no output", "invalid-response"); const usage = terminal.usage ?? payload.usage ?? {}; const tokenCandidate = terminal.tokens ?? payload.tokens ?? usage.total_tokens ?? usage.totalTokens ?? null; return { output, tokens: Number.isFinite(Number(tokenCandidate)) ? Number(tokenCandidate) : null }; }
+    throw new PairedExecutionError("invalid-response", "Goose stream contained no output", "invalid-response"); const usage = terminal.usage ?? payload.usage ?? {}; const tokenCandidate = terminal.total_tokens ?? terminal.tokens ?? payload.total_tokens ?? payload.tokens ?? usage.total_tokens ?? usage.totalTokens ?? null; return { output, tokens: Number.isFinite(Number(tokenCandidate)) ? Number(tokenCandidate) : null }; }
 export class GooseRunner {
     command;
     constructor(command) { this.command = configuredGooseArgv(command); }
