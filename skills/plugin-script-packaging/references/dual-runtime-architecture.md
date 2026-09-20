@@ -4,32 +4,34 @@
 
 Agent Plugins describes the portable package surface. It does not standardize this distribution's executable runtime profile. Keep runtime selection in a versioned reverse-domain extension and document the host integration separately.
 
+## Language-specific details
+
+This reference defines shared boundaries only. Select one language reference directly from `SKILL.md`: TypeScript by default, Rust when Cargo/Rust is requested, or Python when Python packaging is requested. Do not assume that Node launchers, `node_modules`, or Bun compilation apply to every language.
+
 ## Recommended repository layout
 
 ~~~text
 plugin.json
-apps/<command>-cli/
-  package.json
-  package-lock.json
-  scripts/*.ts
+<application-source>/
+  <language manifest and lockfile>
+  <editable implementation>
   tests/
 skills/<skill>/
   SKILL.md
   references/
-  scripts/<command>.mjs
+  scripts/<language-specific entrypoint>
   runtime/
     runtime-manifest.json
-    dist/**/*.js
-    node_modules/<production-closure>/
+    <language-specific runtime closure>
 ~~~
 
 The application directory owns editable source, build configuration, tests, and dependency metadata. The Skill owns only instructions and generated runtime material needed after an isolated copy.
 
 ## Git/source projection
 
-Use a small launcher that verifies the minimum Node version, resolves the Skill root from its own module URL, reads a closed versioned runtime manifest, rejects unsafe mappings or symlinks, starts emitted JavaScript with an argument array, and forwards exit status or signal.
+Use the selected language branch's launcher, interpreter artifact, or exact target selector. It resolves the Skill root from its own location, reads a closed versioned runtime manifest, rejects unsafe mappings and symlinks, invokes without shell interpolation, and forwards exit status or signal.
 
-Generate `runtime/` atomically. Include emitted JavaScript, required resources, notices, and exactly the transitive production dependencies pinned by the lockfile. Exclude TypeScript, tests, package-manager shims, optional/dev dependencies, native addons unless governed, and packages with unreviewed install scripts. Installation must not contact the network.
+Generate `runtime/` atomically when the language profile requires it. Include only the built runtime artifact, required resources, exact locked production closure, and notices. Exclude editable source, tests, build-only dependencies, and ungoverned lifecycle/build scripts or native libraries. Installation must not contact the network.
 
 ## Native release projection
 
@@ -39,20 +41,20 @@ A native profile excludes the source launcher, `runtime/`, `node_modules`, sourc
 
 ## Vendor extension examples
 
-Source installation:
+Source installation uses the exact language profile and entrypoint selected from `SKILL.md`:
 
 ~~~json
-{"extensions":{"io.example.plugin.runtime":{"schemaVersion":1,"mode":"node-bundled","node":">=22.0.0","launchers":"skills/<name>/scripts/<command>.mjs","runtime":"skills/<name>/runtime/"}}}
+{"extensions":{"io.example.plugin.runtime":{"schemaVersion":1,"mode":"source-contained","language":"<selected-language>","entrypoint":"skills/<name>/<language-specific-path>","runtimeManifest":"skills/<name>/runtime/runtime-manifest.json"}}}
 ~~~
 
-Native release:
+Native release records its build strategy and target-specific executable:
 
 ~~~json
-{"extensions":{"io.example.plugin.runtime":{"schemaVersion":1,"mode":"native-bun","executables":"skills/<name>/scripts/<command>[.exe]"}}}
+{"extensions":{"io.example.plugin.runtime":{"schemaVersion":1,"mode":"native","language":"<selected-language>","target":"<os-architecture-or-target-triple>","executable":"skills/<name>/scripts/<command>[.exe]"}}}
 ~~~
 
 Replace the example namespace with one controlled by the distributor. These are host/vendor contracts, not portable Agent Plugins fields.
 
 ## Related commands
 
-Avoid PATH lookup and sibling-script spawning. In the source profile, generate a contained related-command map and copy required emitted runtime under the caller. In a compiled profile, dispatch in-process through imported handlers.
+Avoid PATH lookup and undeclared sibling-script spawning. In a source profile, generate a contained related-command map and package the exact runtime component needed by the caller. In a native profile, prefer in-process dispatch when the selected toolchain can link or embed the handler; otherwise package and address a target-specific sibling explicitly in the closed manifest.

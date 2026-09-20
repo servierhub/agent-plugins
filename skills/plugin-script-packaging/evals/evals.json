@@ -10,6 +10,13 @@
     "language": [
       "en",
       "fr"
+    ],
+    "runtime-language": [
+      "typescript-default",
+      "typescript-explicit",
+      "rust",
+      "python",
+      "language-neutral"
     ]
   },
   "evals": [
@@ -49,13 +56,18 @@
         ],
         "read_when_relevant": [
           "references/dual-runtime-architecture.md",
-          "references/verification-matrix.md"
+          "references/verification-matrix.md",
+          "references/language-typescript.md"
         ],
-        "must_not_read": []
+        "must_not_read": [
+          "references/language-rust.md",
+          "references/language-python.md"
+        ]
       },
       "coverage_tags": [
         "mode:source-runtime",
-        "language:en"
+        "language:en",
+        "runtime-language:typescript-explicit"
       ],
       "budget": {
         "max_turns": 10,
@@ -67,21 +79,22 @@
       "name": "project-native-release-matrix",
       "subject": "native-release-design",
       "language": "en",
-      "prompt": "Prepare the release projection for report-builder on Linux x64 and arm64, macOS x64 and arm64, and Windows x64. Explain the staged Skill layout, target-specific evidence, checksums, and how behavior remains aligned with the Git/source command.",
+      "prompt": "No implementation language has been selected for report-builder. Prepare its native release projection on Linux x64 and arm64, macOS x64 and arm64, and Windows x64. Explain the staged Skill layout, target-specific evidence, checksums, and alignment with the source command.",
       "target": {
         "kind": "runtime-design",
         "execution": "explain",
         "mode": "native-bun"
       },
       "preconditions": [
-        "A validated source CLI entrypoint already exists",
+        "No implementation language or toolchain is specified",
+        "TypeScript is the documented default branch",
         "Only native CI execution can prove target runtime behavior"
       ],
       "files": [],
       "assertions": [
+        "Selects the TypeScript default branch without asking the user to repeat absent language information",
         "Places exactly one target executable under the Skill scripts directory",
-        "Excludes mjs runtime node_modules TypeScript and repository application files",
-        "Pins compiler targets and records a complete hashed release inventory",
+        "Excludes source runtime TypeScript and repository application files",
         "Requires native smoke tests and parity checks without claiming cross-compilation proves execution"
       ],
       "expected_output": "A deterministic cross-platform native projection and verification matrix.",
@@ -98,13 +111,18 @@
         ],
         "read_when_relevant": [
           "references/dual-runtime-architecture.md",
-          "references/verification-matrix.md"
+          "references/verification-matrix.md",
+          "references/language-typescript.md"
         ],
-        "must_not_read": []
+        "must_not_read": [
+          "references/language-rust.md",
+          "references/language-python.md"
+        ]
       },
       "coverage_tags": [
         "mode:native-release",
-        "language:en"
+        "language:en",
+        "runtime-language:typescript-default"
       ],
       "budget": {
         "max_turns": 10,
@@ -146,13 +164,19 @@
           "SKILL.md"
         ],
         "read_when_relevant": [
+          "references/dual-runtime-architecture.md",
           "references/verification-matrix.md"
         ],
-        "must_not_read": []
+        "must_not_read": [
+          "references/language-typescript.md",
+          "references/language-rust.md",
+          "references/language-python.md"
+        ]
       },
       "coverage_tags": [
         "mode:mixed-runtime-rejection",
-        "language:en"
+        "language:en",
+        "runtime-language:language-neutral"
       ],
       "budget": {
         "max_turns": 6,
@@ -194,15 +218,134 @@
         "must_read": [
           "SKILL.md"
         ],
-        "read_when_relevant": [],
-        "must_not_read": []
+        "read_when_relevant": [
+          "references/dual-runtime-architecture.md",
+          "references/verification-matrix.md"
+        ],
+        "must_not_read": [
+          "references/language-typescript.md",
+          "references/language-rust.md",
+          "references/language-python.md"
+        ]
       },
       "coverage_tags": [
         "mode:scope-routing",
-        "language:fr"
+        "language:fr",
+        "runtime-language:language-neutral"
       ],
       "budget": {
         "max_turns": 5,
+        "timeout_seconds": 480
+      }
+    },
+    {
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": []
+      },
+      "files": [],
+      "language": "en",
+      "id": 5,
+      "name": "design-rust-target-specific-packaging",
+      "subject": "rust-runtime-design",
+      "prompt": "Design source-install and tagged native packaging for a Rust CLI named index-builder using Cargo and a committed Cargo.lock. Cover Linux GNU x64, macOS arm64, and Windows MSVC x64 without compiling during end-user installation.",
+      "target": {
+        "kind": "runtime-design",
+        "execution": "explain",
+        "implementation_language": "rust"
+      },
+      "preconditions": [
+        "Cargo.lock is committed",
+        "Every supported target requires runtime evidence",
+        "The host may not compile during installation"
+      ],
+      "assertions": [
+        "Keeps Cargo source and build metadata outside the installed Skill",
+        "Uses exact target-specific prebuilt artifacts or marks Git installation unsupported",
+        "Records Rust toolchain target triple lock hash features and dynamic linkage",
+        "Does not apply Node launchers node_modules Python zipapps or online installation"
+      ],
+      "expected_output": "A Rust-specific target and evidence plan with honest unsupported cells.",
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/dual-runtime-architecture.md",
+          "references/verification-matrix.md",
+          "references/language-rust.md"
+        ],
+        "must_not_read": [
+          "references/language-typescript.md",
+          "references/language-python.md"
+        ]
+      },
+      "coverage_tags": [
+        "mode:source-runtime",
+        "language:en",
+        "runtime-language:rust"
+      ],
+      "budget": {
+        "max_turns": 8,
+        "timeout_seconds": 480
+      }
+    },
+    {
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": true,
+        "browser": false,
+        "network": false,
+        "tools": []
+      },
+      "files": [],
+      "language": "en",
+      "id": 6,
+      "name": "design-python-zipapp-and-native-packaging",
+      "subject": "python-runtime-design",
+      "prompt": "Design source-install and native-release packaging for a Python CLI named dataset-checker. Its pure-Python dependencies are hash-locked, but explain how the plan changes if a compiled wheel appears.",
+      "target": {
+        "kind": "runtime-design",
+        "execution": "explain",
+        "implementation_language": "python"
+      },
+      "preconditions": [
+        "Python version is pinned",
+        "Pure-Python dependencies are hash-locked",
+        "Native extensions must fail closed or become target-specific"
+      ],
+      "assertions": [
+        "Uses a deterministic contained Python source artifact without pip at installation",
+        "Disables user and project package fallback",
+        "Records explicit interpreter constraints",
+        "Routes compiled wheels to target-specific artifacts or an unsupported verdict",
+        "Keeps Python source runtime and frozen native executable profiles mutually exclusive"
+      ],
+      "expected_output": "A Python-specific zipapp and frozen-binary plan with native-extension boundaries.",
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/dual-runtime-architecture.md",
+          "references/verification-matrix.md",
+          "references/language-python.md"
+        ],
+        "must_not_read": [
+          "references/language-typescript.md",
+          "references/language-rust.md"
+        ]
+      },
+      "coverage_tags": [
+        "mode:native-release",
+        "language:en",
+        "runtime-language:python"
+      ],
+      "budget": {
+        "max_turns": 8,
         "timeout_seconds": 480
       }
     }
