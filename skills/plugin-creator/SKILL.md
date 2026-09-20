@@ -19,7 +19,7 @@ Read [goose-plugin-format.md](references/goose-plugin-format.md) and [portable-c
 - Emit canonical 1.0.0 schema identifiers in `plugin.json` and `mcp.json`.
 - Treat vendored **1.1.0 as an inactive Working Draft**. Do not generate or validate it as supported based on schema similarity.
 - Put new Goose hooks under `plugin.json.extensions["io.github.bioinfornatics.agent-plugins.goose"]`, pointing to `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json`.
-- Treat root `hooks/hooks.json`, root `.mcp.json`, and inline `plugin.json.mcpServers` as legacy Goose inputs. Migrate explicitly; never emit legacy and canonical forms together.
+- Keep portable and host contracts separate. Portable Agent Plugins 1.0.0 uses root `mcp.json`. Current Goose defaults its plugin MCP loader to root `.mcp.json`, or accepts inline/path-based `plugin.json.mcpServers`; it can explicitly point that path configuration to `./mcp.json`. Do not claim Goose auto-discovers `mcp.json`.
 
 ## Specialist routing
 
@@ -72,14 +72,17 @@ Current Goose custom agents live under `.agents/agents/`; do not claim a plugin 
 
 ## Portable MCP rules
 
-Use only root `mcp.json`, with canonical 1.0.0 MCP schema and an `mcpServers` object. Servers use explicit closed variants such as `stdio`, `streamable-http`, or legacy HTTP+SSE `sse`. Keep paths contained and do not package credentials in `env` or `headers`.
+For the portable artifact, use only root `mcp.json`, with the canonical 1.0.0 MCP schema and an `mcpServers` object. Portable entries use the schema's closed `stdio`, `streamable-http`, or `sse` variants. Keep paths contained and do not package credentials in `env` or `headers`.
 
-When `.mcp.json` or inline `plugin.json.mcpServers` exists:
+For current Goose host execution, the default filename is root `.mcp.json`; root `mcp.json` is not auto-discovered. `plugin.json.mcpServers` may instead be inline or a path declaration. An explicit `./mcp.json` selection can load a portable stdio-only document: Goose serde ignores unknown fields such as server `type` and top-level `$schema`, while `command` remains required. Portable `streamable-http` and `sse` entries therefore fail this loader because they omit `command` and Goose has no remote transport mapping—not because `type` or `$schema` is present.
 
-1. identify it as legacy and nonportable;
-2. block when multiple MCP sources coexist because precedence is undefined;
-3. propose migration only when it maps safely to closed portable variants;
-4. require approval before replacing it with `mcp.json`.
+When `.mcp.json` or inline/path-based `plugin.json.mcpServers` exists:
+
+1. identify it as Goose host configuration rather than the portable artifact;
+2. permit one canonical `mcp.json` to serve both contracts only when Goose explicitly selects it and every selected entry is stdio with `command`;
+3. permit a separate `.mcp.json` compatibility artifact to coexist with portable `mcp.json` only when Goose has one governed activation path: its default `.mcp.json`, or an approved `exclusive: true` path;
+4. block ambiguous duplicate activation, including a non-exclusive `./mcp.json` selection beside `.mcp.json`, rather than unconditionally blocking co-shipping;
+5. propose portable migration only when it maps safely to closed portable variants and require approval before changing the selected path.
 
 ## Goose hook rules
 

@@ -54,6 +54,40 @@ test("rejects unsupported frontmatter", () => {
   }
 });
 
+test("rejects MCP declarations as strict agent-authoring policy", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "agent-mcp-test-"));
+  try {
+    for (const field of ["mcpServers", "mcp", "extensions"]) {
+      const path = join(tmp, `${field}.md`);
+      writeFileSync(path, `---\nname: reviewer\n${field}: {}\n---\n\nReview code.\n`, "utf-8");
+      assert.throws(() => parseAgent(path), (error: unknown) =>
+        error instanceof AgentFormatError &&
+        /Unsupported MCP frontmatter fields/.test(error.message) &&
+        /session-enabled MCP/.test(error.message) &&
+        /plugin-creator/.test(error.message) &&
+        /strict authoring policy/.test(error.message));
+    }
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("agent contract keeps MCP files outside the agent directory", () => {
+  const skillRoot = join(ROOT, "..", "..", "skills", "agent-creator");
+  const fixtureRoot = join(skillRoot, "assets", "evaluation-fixtures");
+  const fixture = readFileSync(join(fixtureRoot, "invalid-mcp-agent.md"), "utf-8");
+  assert.match(fixture, /mcpServers:/);
+  assert.match(fixture, /mcp:/);
+  assert.match(fixture, /extensions:/);
+  assert.equal(existsSync(join(fixtureRoot, "mcp.json")), false);
+  assert.equal(existsSync(join(fixtureRoot, ".mcp.json")), false);
+  const guidance = readFileSync(join(skillRoot, "SKILL.md"), "utf-8");
+  assert.match(guidance, /never put `mcp\.json` or `\.mcp\.json` in an agent directory/i);
+  assert.match(guidance, /session-enabled MCP/);
+  assert.match(guidance, /agent-plugins:plugin-creator/);
+  assert.match(guidance, /recipe tooling/);
+});
+
 test("rejects empty body", () => {
   const tmp = mkdtempSync(join(tmpdir(), "agent-test-"));
   try {

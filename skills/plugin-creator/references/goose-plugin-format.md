@@ -62,7 +62,11 @@ Portable MCP exists only at root `mcp.json`:
 
 Manifest and MCP schema versions must match. An empty `mcpServers` object is valid. Entries use an explicit closed `stdio`, `streamable-http`, or legacy HTTP+SSE `sse` variant. Do not package credentials in `env` or `headers`; keep paths contained. A declaration does not sandbox a process.
 
-Root `.mcp.json` and inline `plugin.json.mcpServers` are legacy Goose inputs. Migrate to `mcp.json` only when every server maps safely, and require approval. If portable and legacy forms coexist, or both legacy forms coexist, fail as ambiguous; never merge or choose precedence.
+### Current Goose host compatibility
+
+At Goose commit `dd8de0196716db393fa1cd146d92a5f46e05d1a1`, the plugin MCP loader defaults to root `.mcp.json`; it does not auto-discover root `mcp.json`. The host also accepts inline `plugin.json.mcpServers` or path configuration, which may explicitly select `./mcp.json`. Each loaded server requires `command` and Goose converts it to a stdio extension. Its serde structs do not deny unknown fields, so server `type` and top-level `$schema` are ignored: an explicitly selected portable stdio-only `mcp.json` can load unchanged. Portable `streamable-http` and `sse` entries fail because `command` is required and the loader has no remote transport mapping, not because their `type` field exists.
+
+One portable `mcp.json` may therefore serve both contracts when Goose selects it explicitly and all selected entries are stdio with `command`. A separate `.mcp.json` host compatibility artifact may instead coexist: portable clients discover `mcp.json`, while Goose defaults to `.mcp.json` (or selects one approved path with `exclusive: true`). Block configurations that can activate duplicate servers, such as non-exclusive `./mcp.json` beside `.mcp.json`; do not impose an unconditional no-co-ship rule. Validate the portable and Goose contracts separately and never invent precedence.
 
 ## Goose hooks
 
@@ -135,7 +139,7 @@ Installed plugins live under `~/.agents/plugins/<name>/`; project-local plugins 
 |---|---|
 | Agent Skill | `skills/<name>/SKILL.md` |
 | portable MCP | root `mcp.json` with explicit transport |
-| `.mcp.json` or inline MCP | reviewed migration to `mcp.json` |
+| Goose `.mcp.json` or inline/path MCP | separate host compatibility file or reviewed portable migration; explicit `./mcp.json` path only for a Goose-compatible stdio shape |
 | Goose hook | namespaced manifest envelope and canonical hook path |
 | root `hooks/hooks.json` | legacy input; validate and migrate, never co-ship |
 | custom agent | separate Goose custom-agent installation when requested |

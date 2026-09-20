@@ -19,11 +19,11 @@ Do not confuse these concepts:
 - **Recipe**: repeatable workflow with prompts, settings, parameters, extensions, or scheduling.
 - **Ad-hoc subagent**: one isolated delegated task that does not need a persistent agent file.
 
-A custom agent does not define extensions, MCP servers, scheduled jobs, recipe parameters, or a multi-step orchestration graph. If those are required, recommend a recipe or plugin instead of overloading the agent file.
+A custom agent does not define extensions, MCP servers, scheduled jobs, recipe parameters, or a multi-step orchestration graph. Never add `mcpServers`, `mcp`, or `extensions` to agent frontmatter, and never put `mcp.json` or `.mcp.json` in an agent directory. Agents may use MCP extensions already enabled for their session; that availability is not declared by the agent file. Route MCP declaration, transport, environment, packaging, or migration work to `agent-plugins:plugin-creator` (fallback: standalone `plugin-creator`). Use recipe tooling when a repeatable workflow must select or enable a known extension set.
 
 ## Plugin Dependency
 
-`agent-creator` works standalone for its normal case: an agent under `.agents/agents/` (project) or `~/.agents/agents/` (user). Current Goose custom agents are discovered from `.agents/agents`, not from inside a plugin — most requests never need `plugin-creator` at all.
+`agent-creator` works standalone for its normal case: an agent under `.agents/agents/` (project) or `~/.agents/agents/` (user). Current Goose custom agents are discovered from the documented project, user, and compatibility agent paths, not from inside a plugin. For the audited Goose revision, a plugin `agents/` marker does not install or auto-discover custom agents — most agent-only requests never need `plugin-creator` at all.
 
 Depend on `agent-plugins:plugin-creator` (fallback: standalone `plugin-creator`) only when:
 
@@ -59,7 +59,7 @@ Prefer the bundled **agent-creator** executable for automation. It provides init
    - use a recipe for repeatable steps, extensions, parameters, or scheduling;
    - use a plugin for packaged runtime components.
 
-3. Inspect nearby agent definitions when adapting an existing repository. Preserve useful local conventions without introducing unsupported frontmatter.
+3. Inspect nearby agent definitions when adapting an existing repository. Preserve useful local conventions without introducing unsupported frontmatter. If MCP configuration is requested, stop agent authoring at this boundary and route it as described above; do not silently invent plugin configuration.
 
 4. Create one Markdown file:
    - project: `<project>/.agents/agents/<name>.md`;
@@ -115,7 +115,8 @@ Prefer the bundled **agent-creator** executable for automation. It provides init
 
 ## Request routing
 
-- For creation or audit, use the official validator before installation and report supported frontmatter explicitly.
+- For creation or audit, use the creator validator before installation and report supported frontmatter explicitly. Its closed-field, kebab-case, length, non-empty-body, and unresolved-placeholder checks are strict authoring policy; Goose may deserialize some files more permissively, so do not misreport these policies as proof of upstream runtime rejection.
+- For MCP requests, keep the agent file free of MCP fields and files, explain that session-enabled MCP remains usable, and route declaration/transport/environment/migration to `agent-plugins:plugin-creator`; route repeatable extension selection to recipe tooling.
 - For evaluation or comparison, require paired current and baseline runs, grading for every run, aggregated benchmark JSON/Markdown, a review artifact, and a traceable conclusion. Static validation alone never proves behavioral improvement.
 
 ## Agent evaluation

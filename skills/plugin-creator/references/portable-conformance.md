@@ -24,7 +24,7 @@ The portable core is root `plugin.json`, optional `skills/`, and optional root `
 - Invalid MCP disables MCP, not valid Skills.
 - An unsupported MCP transport skips that server; runtime failure remains scoped to that server.
 
-The portable loader gives no meaning to `.mcp.json`, inline `plugin.json.mcpServers`, root `hooks/`, or custom-agent directories.
+The portable loader gives no meaning to Goose host `.mcp.json`, inline/path-based `plugin.json.mcpServers`, root `hooks/`, or custom-agent directories. Current Goose may use those MCP forms, but that host compatibility is separate from portable loading.
 
 ```bash
 plugin-creator validate <plugin-directory> --mode portable-load --format json
@@ -50,11 +50,11 @@ Release builds use strict authoring and may additionally require specialist comp
 
 | Legacy input | Canonical target | Rule |
 |---|---|---|
-| root `.mcp.json` | root `mcp.json` | Propose only when every server maps safely |
-| inline `plugin.json.mcpServers` | root `mcp.json` | Remove inline data after approved migration |
+| Goose root `.mcp.json` | portable root `mcp.json` | Propose a portable artifact only when every server maps safely; a separate host artifact may coexist under the governed selection rule below |
+| Goose inline/path-based `plugin.json.mcpServers` | portable root `mcp.json` | Review explicitly; an explicit `./mcp.json` path can select a portable stdio-only document because Goose ignores unknown `type` and `$schema` fields |
 | root `hooks/hooks.json` | `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json` plus manifest envelope | Validate for the selected Goose target before translating |
 
-When canonical and legacy forms coexist, or multiple legacy MCP forms coexist, fail as ambiguous. Never merge, select precedence, or ship both.
+Coexistence is allowed only with one governed Goose activation path. Either Goose explicitly selects the canonical stdio-only `mcp.json`, or portable `mcp.json` coexists with a separate host `.mcp.json` that Goose alone selects by default or through an approved `exclusive: true` path. Fail ambiguous duplicate activation—for example, non-exclusive `./mcp.json` beside `.mcp.json`, or inline servers beside another active source. Never merge or invent precedence.
 
 ## Goose boundary
 

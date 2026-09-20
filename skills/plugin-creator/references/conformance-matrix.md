@@ -16,7 +16,7 @@ This matrix is the complete acceptance contract for `assets/conformance-fixtures
 | Agent Plugins 1.0.0 sections | Fixture | Explicit concern | Portable load | Strict authoring | Goose extension | Release |
 |---|---|---|---|---|---|---|
 | §§5.1, 5.2, 8.1 | `manifest-exceptions` | Root manifest authority; unknown fields and non-object `extensions` are reported and ignored only while loading. | accepted, two named warnings | partial | not-applicable | fail |
-| §§6.1, 6.2, 7.1, 7.2.1 | `fixed-discovery` | Only immediate `skills/*/SKILL.md` and root `mcp.json` count; nested skills and `.mcp.json` are not portable sources. | accepted; only `skill:good` | accepted | not-applicable | fail (legacy `.mcp.json`) |
+| §§6.1, 6.2, 7.1, 7.2.1 | `fixed-discovery` | Only immediate `skills/*/SKILL.md` and root `mcp.json` count; nested skills and Goose host `.mcp.json` are not portable sources. | accepted; only `skill:good` | accepted | not-applicable | fail (nonportable Goose `.mcp.json`) |
 | §§7.1, 7.2.2, 11.3 | `invalid-siblings` | Invalid skill and MCP entries are isolated from valid siblings. | partial; good siblings accepted | partial | not-applicable | fail |
 | §§7.2.1–7.2.2 | `mcp-variants` | Closed stdio, Streamable HTTP, and legacy SSE variants. | accepted with declared support | accepted | not-applicable | blocked |
 | §§7.2.1, 9.1–9.2 | `env-expansion` | One-pass expansion only in args/env/cwd; unknown placeholders stay literal; clients overwrite reserved runtime variables. | accepted | accepted | not-applicable | blocked |

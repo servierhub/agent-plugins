@@ -25,7 +25,7 @@ Project agents are available when goose is working in that project:
 ```
 
 :::note Compatibility paths
-Legacy host-specific agent directories may also be discovered by some runtimes. New shared agents use `.agents/agents/` for project agents or `~/.agents/agents/` for global agents.
+goose also discovers agents from `.goose/agents/`, `.claude/agents/`, `~/.goose/agents/`, `~/.claude/agents/`, goose's platform-specific config agents directory, and project-local `.agents/agents/`. New shared agents should use `.agents/agents/` for project agents or `~/.agents/agents/` for global agents.
 :::
 
 Create the directory if it does not already exist, then add a Markdown file for your agent:

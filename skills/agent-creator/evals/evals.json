@@ -5,7 +5,8 @@
       "static-validation",
       "new-agent",
       "paired-role-evaluation",
-      "scope-routing"
+      "scope-routing",
+      "mcp-routing"
     ],
     "language": [
       "en",
@@ -223,6 +224,58 @@
       "budget": {
         "max_turns": 4,
         "timeout_seconds": 180
+      }
+    },
+    {
+      "id": 5,
+      "name": "agent-mcp-boundary",
+      "subject": "scope-routing",
+      "language": "en",
+      "prompt": "Explain how to create an agent using a local MCP server without creating files. Route every concern and do not invent configuration.",
+      "target": {
+        "kind": "abstraction-decision",
+        "execution": "explain"
+      },
+      "preconditions": [
+        "No filesystem mutation is requested"
+      ],
+      "files": [
+        "assets/evaluation-fixtures/invalid-mcp-agent.md"
+      ],
+      "assertions": [
+        "Rejects mcpServers mcp and extensions fields in agent frontmatter",
+        "Rejects MCP files under the agent directory",
+        "Explains session-enabled MCP remains usable",
+        "Routes MCP configuration to agent-plugins:plugin-creator",
+        "Routes repeatable extension selection to recipe tooling",
+        "Does not invent plugin configuration"
+      ],
+      "expected_output": "An explicit agent MCP boundary and routing decision.",
+      "capabilities": {
+        "filesystem": true,
+        "agent_runner": false,
+        "browser": false,
+        "network": false,
+        "tools": [
+          "developer"
+        ]
+      },
+      "navigation_expectations": {
+        "must_read": [
+          "SKILL.md"
+        ],
+        "read_when_relevant": [
+          "references/custom-agents.md"
+        ],
+        "must_not_read": []
+      },
+      "coverage_tags": [
+        "mode:mcp-routing",
+        "language:en"
+      ],
+      "budget": {
+        "max_turns": 6,
+        "timeout_seconds": 240
       }
     }
   ]

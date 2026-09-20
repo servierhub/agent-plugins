@@ -25,6 +25,22 @@ components. This does not make the project a general-purpose skill creator.
 
 The current Goose custom-agent contract uses `.agents/agents`; do not package an
 `agents/` directory unless the selected target format explicitly supports it.
+For the audited Goose revision, plugin `agents/` is not auto-installed or
+auto-discovered as custom agents.
+
+## MCP: portable artifact versus Goose host
+
+Portable Agent Plugins 1.0.0 defines root `mcp.json` with `$schema` and
+`mcpServers`; this is the public artifact and supports the recorded closed
+`stdio`, `streamable-http`, and `sse` variants. Current Goose does **not**
+auto-discover that filename. Its plugin loader defaults to root `.mcp.json`,
+accepts inline or path-based `plugin.json.mcpServers`, and can be pointed
+explicitly to `./mcp.json`. Goose currently converts only stdio declarations (`command`, optional `args`,
+`env`, and `cwd`) into extensions. Its serde model ignores unknown fields, so an
+explicitly selected portable stdio-only `mcp.json` can load even with `type` and
+top-level `$schema`. Portable `streamable-http` and `sse` entries fail because
+`command` is required and this loader has no remote transport mapping. Validate
+portability and Goose runtime compatibility separately.
 
 ## Unified CLI
 
@@ -55,7 +71,8 @@ The validators check:
 - `plugin.json` and component declarations;
 - bundled `SKILL.md` files;
 - hook events, matchers, actions, and referenced files;
-- `.mcp.json` and MCP server definitions;
+- portable root `mcp.json` and its Agent Plugins 1.0.0 schema;
+- Goose host `.mcp.json` / `plugin.json.mcpServers` compatibility and stdio runtime limits;
 - plugin-relative paths and unresolved placeholders.
 
 ## Evaluate a complete plugin

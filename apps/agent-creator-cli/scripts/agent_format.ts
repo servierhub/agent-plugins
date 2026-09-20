@@ -56,7 +56,14 @@ export function parseAgent(path: string): AgentDocument {
 
   const unknown = Object.keys(meta).filter((key) => !ALLOWED_FIELDS.has(key));
   if (unknown.length) {
-    throw new AgentFormatError(`Unsupported frontmatter fields: ${unknown.sort().join(", ")}`);
+    const sorted = unknown.sort();
+    const mcpFields = sorted.filter((key) => ["mcpServers", "mcp", "extensions"].includes(key));
+    if (mcpFields.length) {
+      throw new AgentFormatError(
+        `Unsupported MCP frontmatter fields: ${mcpFields.join(", ")}. Custom agents may use session-enabled MCP but cannot declare it; route MCP configuration to plugin-creator (strict authoring policy)`
+      );
+    }
+    throw new AgentFormatError(`Unsupported frontmatter fields: ${sorted.join(", ")} (strict authoring policy)`);
   }
 
   const rawName = meta.name;

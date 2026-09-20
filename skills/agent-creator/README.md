@@ -29,7 +29,23 @@ You are a senior code reviewer...
 ```
 
 Only `name` is required. `description` and `model` are optional. The
-instruction body must be non-empty.
+instruction body must be non-empty. These and the creator's name/body checks are
+strict authoring policy; Goose runtime parsing can be more permissive.
+
+## MCP boundary
+
+Do not put `mcpServers`, `mcp`, or `extensions` in agent frontmatter, and do not
+place `mcp.json` or `.mcp.json` under an agent directory. A custom agent may use
+MCP extensions already enabled in its Goose session, but it cannot declare their
+transport, command, environment, or credentials. Route MCP declaration,
+transport, environment, packaging, and migration to
+`agent-plugins:plugin-creator` (or standalone `plugin-creator`). Use recipe
+tooling for a repeatable workflow that selects a known extension set. Never
+silently manufacture plugin configuration from an Agent Creator request.
+
+For the audited Goose revision, plugin `agents/` is a format marker only; custom
+agents inside it are not installed or auto-discovered. Install custom agents in
+a documented project, user, or compatibility agent path instead.
 
 ## Unified CLI
 
