@@ -24,7 +24,7 @@ Then select exactly one language branch before designing files or commands:
 |---|---|
 | Language is absent, TypeScript, JavaScript, Node.js, Bun, or npm-based | Read [TypeScript packaging](references/language-typescript.md). TypeScript is the default. |
 | Language or toolchain is Rust or Cargo | Read [Rust packaging](references/language-rust.md). |
-| Language or toolchain is Python, pip, PyPI, zipapp, PyInstaller, or Nuitka | Read [Python packaging](references/language-python.md). |
+| Language or toolchain is Python, uv, pip, PyPI, zipapp, PyInstaller, or Nuitka | Read [Python packaging](references/language-python.md). |
 | Another language | Do not load an unrelated language reference. Derive a named branch from its locked dependency graph, source artifact, runtime/interpreter contract, native target model, and reproducible packaging tools; state that the language is not yet covered by a bundled specialist reference. |
 
 Do not read all language references “for completeness.” Load another branch only when comparing languages or when the implementation genuinely contains multiple language runtimes. For a polyglot command, select one primary entrypoint language and load each additional reference only for the runtime component it governs.
@@ -51,7 +51,7 @@ Return the logical command contract, source/native layout table, namespaced runt
 ## Prohibitions
 
 - Do not place editable implementation source (`.ts`, `.rs`, `.py`, or equivalent) in an installed runtime profile.
-- Do not run npm, Cargo, pip, or another dependency installer during end-user installation.
+- Do not run npm, Cargo, uv, pip, or another dependency installer during end-user installation.
 - Do not let a source launcher, interpreter entrypoint, or target selector fall back to repository paths or undeclared system packages.
 - Do not ship source-profile runtime material beside a native executable in one profile.
 - Do not claim a native binary is portable across operating systems or CPU architectures.

@@ -306,7 +306,7 @@
       "id": 6,
       "name": "design-python-zipapp-and-native-packaging",
       "subject": "python-runtime-design",
-      "prompt": "Design source-install and native-release packaging for a Python CLI named dataset-checker. Its pure-Python dependencies are hash-locked, but explain how the plan changes if a compiled wheel appears.",
+      "prompt": "Design source-install and native-release packaging for a Python CLI named dataset-checker managed by uv with a committed uv.lock. Its dependencies are currently pure Python, but explain how the plan changes if a compiled wheel appears.",
       "target": {
         "kind": "runtime-design",
         "execution": "explain",
@@ -318,7 +318,8 @@
         "Native extensions must fail closed or become target-specific"
       ],
       "assertions": [
-        "Uses a deterministic contained Python source artifact without pip at installation",
+        "Uses committed uv.lock and a pinned uv version to derive the locked build closure",
+        "Uses a deterministic contained Python source artifact without uv or pip at installation",
         "Disables user and project package fallback",
         "Records explicit interpreter constraints",
         "Routes compiled wheels to target-specific artifacts or an unsupported verdict",
