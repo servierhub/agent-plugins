@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /** Unified command-line interface for skill-creator workflows. */
 import { runEmbedded, type EmbeddedResult } from "./runtime-dispatch.js";
+import { AGGREGATE_HELP, FULL_EVAL_HELP } from "./cli_help.js";
 
 type Format = "text" | "json";
-type Command = "candidate" | "validate" | "audit" | "design-evals" | "freeze-evals" | "analyze" | "evidence-loop" | "trigger-eval" | "aggregate" | "review" | "verify" | "package" | "full-eval" | "usability-study" | "screen-reader-acceptance";
+type Command = "candidate" | "validate" | "audit" | "design-evals" | "freeze-evals" | "analyze" | "evidence-loop" | "trigger-eval" | "aggregate" | "review" | "verify" | "package" | "full-eval" | "migrate-evaluation" | "usability-study" | "screen-reader-acceptance" | "prepare-grading" | "grading-status";
 
 const commands: Record<Command, { entry: string; usage: string; required: (args: string[]) => boolean }> = {
   candidate: { entry: "idea_to_candidate.js", usage: "candidate <workspace> [--idea <plain-language idea>] [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
@@ -13,7 +14,8 @@ const commands: Record<Command, { entry: string; usage: string; required: (args:
   "freeze-evals": { entry: "freeze_eval_scenarios.js", usage: "freeze-evals <elicitation.json> [--draft] -o <frozen-plan.json>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   analyze: { entry: "analyze_evaluation.js", usage: "analyze <evaluation-workspace> --skill-path <dir> [-o analysis.json]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) && hasValue(a, "--skill-path") },
   "evidence-loop": { entry: "evidence_improvement.js", usage: "evidence-loop <evaluation-workspace> --skill-path <dir> --loop <ledger-dir> [--proposal <json>|--approve <complete-plan-sha256>|--results <workspace>|--cancel] [budgets]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) && hasValue(a, "--skill-path") && hasValue(a, "--loop") },
-  "full-eval": { entry: "full_eval.js", usage: "full-eval <skill-directory> [--workspace <dir>] [--eval-set <file>] [--execute] [--model <id>] [--run-profile fast|standard|release] [--baseline-skill <dir>] [--dry-run] [--resume|--retry|--cancel] [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+  "full-eval": { entry: "full_eval.js", usage: "full-eval <skill-directory> [--workspace <dir>] [--eval-set <file>] [--execute] [--concurrency <n>] [--provider-concurrency <n>] [--provider-rpm <n>] [--provider-max-attempts <n>] [--max-cost-usd <n>] [--max-tokens <n>] [--max-provider-seconds <n>] [--cache-dir <dir>|--no-cache] [--progress auto|terminal|jsonl|none] [--progress-interval <ms>] [--model <id>] [--run-profile fast|standard|release] [--baseline-skill <dir>] [--dry-run] [--resume|--retry|--cancel] [--finalize-release] [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+  "migrate-evaluation": { entry: "evaluation_workspace_migration.js", usage: "migrate-evaluation <workspace> [--dry-run|--preview] | migrate-evaluation <workspace> --rollback --expected-original-sha256 <sha256>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   "trigger-eval": { entry: "run_eval.js", usage: "trigger-eval --eval-set <file> --skill-path <dir> [options]", required: (a) => hasValue(a, "--eval-set") && hasValue(a, "--skill-path") },
   aggregate: { entry: "aggregate_benchmark.js", usage: "aggregate <benchmark-directory> [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   review: { entry: "../eval-viewer/generate_review.js", usage: "review <workspace> [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
@@ -21,6 +23,8 @@ const commands: Record<Command, { entry: string; usage: string; required: (args:
   package: { entry: "package_skill.js", usage: "package <skill-directory> [output-directory]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   "usability-study": { entry: "usability_study.js", usage: "usability-study [--validate] <session.json|sessions-directory|sessions.json> [-o report.json]", required: (a) => a.some((value) => !value.startsWith("-")) },
   "screen-reader-acceptance": { entry: "screen_reader_acceptance.js", usage: "screen-reader-acceptance <records> [--attestations <receipts>] | --create-attestation-request <record> --issued-at <UTC> --expires-at <UTC> | --verify-attestation <receipt> --record <record> | --create-policy-signing-request <proposed-policy>", required: (a) => a.some((value) => !value.startsWith("-")) },
+  "prepare-grading": { entry: "prepare_grading.js", usage: "prepare-grading <workspace>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+  "grading-status": { entry: "prepare_grading.js", usage: "grading-status <workspace>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
 };
 
 function hasValue(args: string[], option: string): boolean {
@@ -29,6 +33,8 @@ function hasValue(args: string[], option: string): boolean {
 }
 
 function help(command?: Command): string {
+  if(command==="full-eval")return FULL_EVAL_HELP;
+  if(command==="aggregate")return AGGREGATE_HELP;
   if (command) return `Usage: skill-creator ${commands[command].usage}
 
 Common options:
@@ -46,6 +52,7 @@ Commands:
   analyze       Map evaluation evidence to authoring patterns
   evidence-loop Plan, challenge, approve, and measure isolated improvements
   full-eval     Orchestrate resumable behavioral evaluation
+  migrate-evaluation  Preview, migrate, or roll back a historical fixed workspace
   trigger-eval  Run trigger-description evaluation
   aggregate     Aggregate behavioral benchmark runs
   review        Generate or serve the evaluation review viewer
@@ -53,6 +60,8 @@ Commands:
   package       Build a distributable .skill archive
   usability-study Validate or analyze governed anonymous study sessions
   screen-reader-acceptance Validate or analyze manual screen-reader records
+  prepare-grading Prepare blinded host-delegated semantic grading requests
+  grading-status  Report pending/completed/stale delegated grading requests
 
 Run "skill-creator <command> --help" for command usage.`;
 }
@@ -89,7 +98,8 @@ async function embedded(command: Command, args: string[]): Promise<EmbeddedResul
     case "freeze-evals": return runEmbedded((await import("./freeze_eval_scenarios.js")).main, args);
     case "analyze": return runEmbedded((await import("./analyze_evaluation.js")).main, args);
     case "evidence-loop": return runEmbedded((await import("./evidence_improvement.js")).main, args);
-    case "full-eval": return runEmbedded((await import("./full_eval.js")).main, args);
+    case "full-eval": return runEmbedded((await import("./full_eval.js")).main, args, {passthroughStderr:true});
+    case "migrate-evaluation": return runEmbedded((await import("./evaluation_workspace_migration.js")).main, args);
     case "trigger-eval": return runEmbedded((await import("./run_eval.js")).main, args);
     case "aggregate": return runEmbedded((await import("./aggregate_benchmark.js")).main, args);
     case "verify": return runEmbedded((await import("./verify_skill_gates.js")).main, args);
@@ -97,6 +107,8 @@ async function embedded(command: Command, args: string[]): Promise<EmbeddedResul
     case "usability-study": { const m=await import("./usability_study.js"); return runEmbedded(() => m.main(args), []); }
     case "screen-reader-acceptance": { const m=await import("./screen_reader_acceptance.js"); return runEmbedded(() => m.main(args), []); }
     case "review": return runEmbedded((await import("../eval-viewer/generate_review.js")).main, args);
+    case "prepare-grading": return runEmbedded((await import("./prepare_grading.js")).mainPrepare, args);
+    case "grading-status": return runEmbedded((await import("./prepare_grading.js")).mainStatus, args);
   }
 }
 
@@ -137,9 +149,9 @@ ${help(name)}`);
   let code = rawCode === 0 ? 0 : rawCode === 2 ? 2 : 1;
   let payload = maybeJson(stdout);
 
-  if ((name === "verify" || name === "full-eval" || name === "audit" || name === "design-evals" || name === "freeze-evals" || name === "analyze" || name === "evidence-loop") && payload && typeof payload === "object" && "status" in payload) {
+  if ((name === "verify" || name === "full-eval" || name === "audit" || name === "design-evals" || name === "freeze-evals" || name === "analyze" || name === "evidence-loop" || name === "migrate-evaluation") && payload && typeof payload === "object" && "status" in payload) {
     const status = (payload as { status?: string }).status;
-    code = status === "pass" || status === "warning" || status === "complete" || status === "success" || status === "planned" || status === "draft" || status === "frozen" || status === "planning" || status === "proposal" || status === "preview" || status === "approval" || status === "results" || status === "awaiting-approval" || status === "awaiting-results" || status === "stopped" ? 0 : status === "blocked" ? 3 : 1;
+    code = status === "pass" || status === "warning" || status === "complete" || status === "success" || status === "planned" || status === "partial" || status === "draft" || status === "frozen" || status === "planning" || status === "proposal" || status === "preview" || status === "approval" || status === "results" || status === "awaiting-approval" || status === "awaiting-results" || status === "stopped" ? 0 : status === "blocked" ? 3 : 1;
   } else if (name === "trigger-eval" && rawCode !== 0 && /(command not found|unsupported runner|exited \d+|timed? out)/i.test(stderr)) {
     // A valid evaluation that cannot use its configured execution backend is blocked.
     code = 3;
@@ -148,14 +160,14 @@ ${help(name)}`);
   if (name === "candidate" && parsed.format === "json" && payload && typeof payload === "object") {
     if (!parsed.quiet || code !== 0) console.log(JSON.stringify(payload, null, 2));
     if (stderr) console.error(stderr);
-  } else if (name === "full-eval" && payload && typeof payload === "object") {
+  } else if ((name === "full-eval") && payload && typeof payload === "object") {
     if (parsed.format === "json") {
       if (!parsed.quiet || code !== 0) console.log(JSON.stringify(payload, null, 2));
     } else if (!parsed.quiet || code !== 0) {
       const result = payload as { status?: string; checkpoint?: { kind?: string; status?: string }; phases?: Array<{ name: string; status: string; detail?: string }>; next_actions?: string[]; executable_actions?: Array<{ order: number; command: string }> };
-      console.log([`full-eval: ${result.status}`, ...(result.phases ?? []).map((phase) => `[${phase.status}] ${phase.name}${phase.detail ? `: ${phase.detail}` : ""}`), ...(result.checkpoint ? [`checkpoint: ${result.checkpoint.kind} (${result.checkpoint.status})`] : []), ...(result.next_actions ?? []).map((action) => `NEXT: ${action}`), ...(result.executable_actions ?? []).map((action) => `RUN ${action.order}: ${action.command}`)].join("\n"));
+      console.log([`${name}: ${result.status}`, ...(result.phases ?? []).map((phase) => `[${phase.status}] ${phase.name}${phase.detail ? `: ${phase.detail}` : ""}`), ...(result.checkpoint ? [`checkpoint: ${result.checkpoint.kind} (${result.checkpoint.status})`] : []), ...(result.next_actions ?? []).map((action) => `NEXT: ${action}`), ...(result.executable_actions ?? []).map((action) => `RUN ${action.order}: ${action.command}`)].join("\n"));
     }
-    if (stderr) console.error(stderr);
+    // full-eval streams progress live on stderr through the embedded boundary.
   } else if (parsed.format === "json") {
     console.log(JSON.stringify({ command: name, status: code === 0 ? "success" : code === 3 ? "blocked" : code === 2 ? "usage" : "failure", exit_code: code, output: payload, stderr: stderr || null }, null, 2));
   } else {
