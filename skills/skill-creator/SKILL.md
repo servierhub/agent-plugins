@@ -28,6 +28,7 @@ Read only the references required by the current request:
 | Audit quality without changing behavior | [Audit checklist](references/audit.md) |
 | Design or review evaluation scenarios | [Evaluation design](references/evaluation-design.md) and [schemas](references/schemas.md) |
 | Evaluate behavioral quality or compare versions | [Behavioral evaluation](references/evaluation-workflow.md) |
+| Grade pending semantic assertions after a `full-eval` run reports `awaiting-grading` | [Delegated semantic grading workflow](references/delegated-grading-workflow.md) |
 | Test or optimize activation | [Trigger evaluation](references/trigger-evaluation.md) and [description optimization](references/description-optimization.md) |
 | Prepare or analyze governed intake usability sessions | [Governed usability study kit](references/usability-study-kit.md) |
 | Prepare or analyze manual screen-reader acceptance | [Manual screen-reader acceptance kit](references/screen-reader-acceptance-kit.md) |
