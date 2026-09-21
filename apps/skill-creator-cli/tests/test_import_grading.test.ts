@@ -8,6 +8,14 @@ import { prepareGrading } from "../dist/scripts/prepare_grading.js";
 import { importGrading } from "../dist/scripts/import_grading.js";
 import { buildGradingJudgment } from "../dist/scripts/delegated_grading_contracts.js";
 
+// Azure AI Foundry (Model-as-a-Service) is configured once in Goose and serves
+// multiple model families through that single provider; two graders using
+// different models still share the same provider identity here.
+const PLANNED_GRADERS = [
+  { id: "grader-a", model: "gpt-5.6-sol", provider: "azure-foundry" },
+  { id: "grader-b", model: "claude-sonnet-5", provider: "azure-foundry" },
+];
+
 function fixtureWorkspace(criterion = "Cites verified sources") {
   const root = mkdtempSync(join(tmpdir(), "import-grading-"));
   const evalDir = join(root, "eval-one");
@@ -19,6 +27,7 @@ function fixtureWorkspace(criterion = "Cites verified sources") {
     execution_binding: binding, baseline_configuration: "without_skill",
     prompt: "Prepare a report", model: "test-model",
     assertions: [{ id: "a1", version: 1, classification: "semantic", criterion }],
+    grading_plan: { schema_version: 1, evidence: "grader-evidence", graders: PLANNED_GRADERS },
   };
   mkdirSync(evalDir, { recursive: true });
   writeFileSync(join(evalDir, "eval_metadata.json"), JSON.stringify(metadata));
@@ -41,12 +50,18 @@ function requestFor(root: string, index = 0) {
   return { name, request: JSON.parse(readFileSync(join(dir, name), "utf8")) };
 }
 
+/** Resolves which planned grader identity a request's invocation_id was prepared for. */
+function plannedGraderFor(invocationId: string) {
+  return PLANNED_GRADERS.find((g) => invocationId.endsWith("-" + g.id)) ?? PLANNED_GRADERS[0];
+}
+
 function writeJudgment(root: string, name: string, request: any, overrides: Partial<Parameters<typeof buildGradingJudgment>[0]> = {}) {
+  const planned = plannedGraderFor(request.invocation_id);
   const judgment = buildGradingJudgment({
     invocationId: request.invocation_id,
     requestSha256: request.request_sha256,
     bindings: request.bindings,
-    grader: { id: "grader-a", model: "test-model", provider: "unspecified" },
+    grader: { id: planned.id, model: planned.model, provider: planned.provider },
     verdict: "pass",
     evidenceQuote: "cites verified sources thoroughly",
     rationale: "supported",
@@ -105,9 +120,10 @@ test("importGrading rejects a forged/stale request_sha256 and wrong invocation b
     prepareGrading(root);
     const { name, request } = requestFor(root);
     // Judgment claims a request_sha256 that does not match the actual request file.
+    const grader1 = plannedGraderFor(request.invocation_id);
     const forged = buildGradingJudgment({
       invocationId: request.invocation_id, requestSha256: "f".repeat(64), bindings: request.bindings,
-      grader: { id: "grader-a", model: "test-model", provider: "unspecified" }, verdict: "pass",
+      grader: { id: grader1.id, model: grader1.model, provider: grader1.provider }, verdict: "pass",
       evidenceQuote: "cites verified sources thoroughly", rationale: "ok",
     });
     mkdirSync(join(root, "grading-judgments"), { recursive: true });
@@ -120,23 +136,29 @@ test("importGrading rejects a forged/stale request_sha256 and wrong invocation b
   }
 });
 
-test("importGrading rejects a second judgment from the same grader identity on the same assertion (duplicate grader slot)", () => {
+test("importGrading accepts each planned grader's own slot but rejects one grader impersonating another grader's slot", () => {
   const { root } = fixtureWorkspace();
   try {
     prepareGrading(root);
     const dir = join(root, "grading-requests");
     const files = readdirSync(dir).filter((n: string) => n.endsWith(".json") && n !== "manifest.json").sort();
-    // Both slot1 and slot2 for the same (run, assertion) exist; judge both with the identical grader-a identity.
     const withSkillSlots = files.filter((n: string) => n.includes("with_skill") && !n.includes("without_skill"));
-    assert.equal(withSkillSlots.length, 2);
+    assert.equal(withSkillSlots.length, 2); // one slot per planned grader (grader-a, grader-b)
     const request1 = JSON.parse(readFileSync(join(dir, withSkillSlots[0]), "utf8"));
     const request2 = JSON.parse(readFileSync(join(dir, withSkillSlots[1]), "utf8"));
-    writeJudgment(root, withSkillSlots[0], request1); // grader-a claims slot 1
-    writeJudgment(root, withSkillSlots[1], request2); // grader-a (same identity) also claims slot 2
+    writeJudgment(root, withSkillSlots[0], request1); // grader-a judges its own slot
+    // grader-a's identity is used to answer grader-b's slot (impersonation).
+    const impersonating = buildGradingJudgment({
+      invocationId: request2.invocation_id, requestSha256: request2.request_sha256, bindings: request2.bindings,
+      grader: { id: PLANNED_GRADERS[0].id, model: PLANNED_GRADERS[0].model, provider: PLANNED_GRADERS[0].provider },
+      verdict: "pass", evidenceQuote: "cites verified sources thoroughly", rationale: "ok",
+    });
+    mkdirSync(join(root, "grading-judgments"), { recursive: true });
+    writeFileSync(join(root, "grading-judgments", withSkillSlots[1]), JSON.stringify(impersonating));
     const result = importGrading(root);
     const rejectedForSlot2 = result.rejected.find((r) => r.invocation_id === request2.invocation_id);
-    assert.ok(rejectedForSlot2, "second slot from the same grader identity must be rejected");
-    assert.match(rejectedForSlot2!.reason, /already has an imported judgment/);
+    assert.ok(rejectedForSlot2, "a judgment claiming a different grader identity than its planned slot must be rejected");
+    assert.match(rejectedForSlot2!.reason, /does not match the planned grader/);
     assert.ok(result.imported.some((i) => i.invocation_id === request1.invocation_id));
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -226,9 +248,10 @@ test("importGrading refuses a symlinked judgment file (no-follow trusted read)",
     const { name, request } = requestFor(root, 0);
     const outsideDir = mkdtempSync(join(tmpdir(), "import-grading-outside-"));
     const outsideJudgment = join(outsideDir, "forged.json");
+    const grader2 = plannedGraderFor(request.invocation_id);
     const judgment = buildGradingJudgment({
       invocationId: request.invocation_id, requestSha256: request.request_sha256, bindings: request.bindings,
-      grader: { id: "grader-a", model: "test-model", provider: "unspecified" }, verdict: "pass",
+      grader: { id: grader2.id, model: grader2.model, provider: grader2.provider }, verdict: "pass",
       evidenceQuote: "cites verified sources thoroughly", rationale: "ok",
     });
     writeFileSync(outsideJudgment, JSON.stringify(judgment));

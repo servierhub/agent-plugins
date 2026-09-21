@@ -200,6 +200,18 @@ export function importGrading(workspaceArg: string, options: { budgetLimit?: num
         continue;
       }
 
+      // The judgment's grader identity must exactly match the identity
+      // prepare-grading assigned to this invocation_id's slot (from the
+      // scenario's immutable grading_plan). A judgment claiming a
+      // different id, model, or provider than the one this slot was
+      // prepared for is rejected outright: it cannot silently substitute
+      // one planned grader's evidence for another's, and it cannot forge
+      // a model identity the plan never declared.
+      if (judgment.grader.id !== manifestEntry.grader_id || judgment.grader.model !== manifestEntry.grader_model || judgment.grader.provider !== manifestEntry.grader_provider) {
+        rejected.push({ invocation_id: invocationId, reason: `Judgment grader identity does not match the planned grader (${manifestEntry.grader_id}/${manifestEntry.grader_model}) for this invocation` });
+        continue;
+      }
+
       const assertionKey = `${manifestEntry.run_directory}|${manifestEntry.assertion_id}|${manifestEntry.assertion_version}`;
       const claimed = claimedByAssertion.get(assertionKey) ?? new Set<string>();
       if (claimed.has(judgment.grader.id)) { rejected.push({ invocation_id: invocationId, reason: `Grader ${judgment.grader.id} already has an imported judgment for this assertion` }); continue; }

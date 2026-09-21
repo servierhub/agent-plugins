@@ -26,7 +26,6 @@ import {
 const REQUEST_DIR_NAME = "grading-requests";
 const JUDGMENT_DIR_NAME = "grading-judgments";
 const MANIFEST_NAME = "manifest.json";
-const REQUIRED_GRADER_SLOTS = 2;
 
 export interface PendingGradingUnit {
   runDir: string;
@@ -51,6 +50,9 @@ export interface GradingManifestEntry {
   run_directory: string;
   assertion_id: string;
   assertion_version: number;
+  grader_id: string;
+  grader_model: string;
+  grader_provider: string;
 }
 export type GradingManifest = Record<string, GradingManifestEntry>;
 
@@ -100,6 +102,46 @@ function semanticAssertions(metadata: any): AssertionSpec[] {
   return normalizeAssertions(raw).filter((assertion) => assertion.classification === "semantic");
 }
 
+export interface PlannedGrader {
+  id: string;
+  model: string;
+  provider: string;
+}
+
+/**
+ * Reads the scaffold's immutable per-scenario grading_plan (written once by
+ * `full-eval`'s scaffold phase from `--grader id=model` at plan time) and
+ * returns its distinct grader identities in declared order. This is the
+ * only source of grader model/provider identity: prepare-grading must never
+ * substitute the candidate's own `metadata.model` for a grader's model, and
+ * must never invent an identity a human did not declare at plan time.
+ *
+ * A plan may declare a single development grader (fast iteration, no
+ * independence claim possible) or two-or-more independent standard/release
+ * graders; `aggregateJudgments` already resolves a single-grader plan to
+ * `inconclusive` rather than a trusted pass/fail, so this function does not
+ * itself enforce a minimum grader count. It does require at least one
+ * declared grader and rejects a duplicate grader id — the same invariant
+ * `evaluation_provenance.ts` already enforces when independently
+ * re-deriving grading evidence.
+ */
+export function plannedGraders(metadata: any): PlannedGrader[] {
+  const plan = metadata?.grading_plan;
+  const graders = Array.isArray(plan?.graders) ? plan.graders : [];
+  if (graders.length < 1) throw new TypeError("eval_metadata.json grading_plan must declare at least one grader");
+  const seen = new Set<string>();
+  const result: PlannedGrader[] = [];
+  for (const grader of graders) {
+    const id = String(grader?.id ?? "");
+    const model = String(grader?.model ?? "");
+    if (!id || !model) throw new TypeError("eval_metadata.json grading_plan graders must each have a non-empty id and model");
+    if (seen.has(id)) throw new TypeError(`eval_metadata.json grading_plan declares duplicate grader id: ${id}`);
+    seen.add(id);
+    result.push({ id, model, provider: String(grader?.provider ?? "unspecified") });
+  }
+  return result;
+}
+
 function requestBaseName(runDir: string, workspace: string): string {
   return runDir.slice(resolve(workspace).length + 1).split(/[\\/]/).join("-");
 }
@@ -110,14 +152,15 @@ function relativeRunPath(runDir: string, workspace: string): string {
 }
 
 /**
- * Deterministically derives the request/judgment invocation IDs for one
- * (run, assertion) pair. IDs are stable across repeated prepare-grading
- * invocations for the same evidence so the operation is idempotent, and
- * distinct per grader slot so independence is expressible.
+ * Deterministically derives one request/judgment invocation_id per planned
+ * grader for one (run, assertion) pair. IDs are stable across repeated
+ * prepare-grading invocations for the same evidence so the operation is
+ * idempotent, and are keyed by the grader's own declared id (not a generic
+ * slot number) so a request is traceable to exactly the grader identity the
+ * scenario's grading_plan assigned to it.
  */
-function invocationIdsFor(runDir: string, workspace: string, assertion: AssertionSpec, bindings: GradingRequestBindings, slots: number): string[] {
-  const base = requestBaseName(runDir, workspace) + "-" + assertion.id + "-v" + assertion.version + "-" + bindings.output_sha256.slice(0, 16);
-  return Array.from({ length: slots }, (_, index) => `${base}-slot${index + 1}`);
+function invocationIdFor(runDir: string, workspace: string, assertion: AssertionSpec, bindings: GradingRequestBindings, graderId: string): string {
+  return requestBaseName(runDir, workspace) + "-" + assertion.id + "-v" + assertion.version + "-" + bindings.output_sha256.slice(0, 16) + "-" + graderId;
 }
 
 /**
@@ -160,6 +203,11 @@ export function prepareGrading(workspaceArg: string): PrepareGradingResult {
       const assertions = semanticAssertions(metadata);
       if (!assertions.length) { skipped++; continue; }
 
+      let graders: PlannedGrader[];
+      try {
+        graders = plannedGraders(metadata);
+      } catch (error) { errors.push({ run: runDir, message: (error as Error).message }); continue; }
+
       const deterministicPath = join(runDir, "deterministic-evidence.json");
       const deterministic = loadJson(runDir, deterministicPath, "deterministic-evidence.json");
       const outputText = loadText(runDir, join(runDir, "outputs", "result.txt"), "outputs/result.txt", 256 * 1024);
@@ -177,10 +225,10 @@ export function prepareGrading(workspaceArg: string): PrepareGradingResult {
         const assertionSha256 = assertionHash(assertion);
         const bindings: GradingRequestBindings = { assertion_sha256: assertionSha256, variant_sha256: variantSha256, output_sha256: outputSha256 };
         const alias = candidateAlias(bindings);
-        const invocationIds = invocationIdsFor(runDir, workspace, assertion, bindings, REQUIRED_GRADER_SLOTS);
-        for (const invocationId of invocationIds) {
+        for (const grader of graders) {
+          const invocationId = invocationIdFor(runDir, workspace, assertion, bindings, grader.id);
           requestIds.push(invocationId);
-          manifest[invocationId] = { run_directory: relativeRunPath(runDir, workspace), assertion_id: assertion.id, assertion_version: assertion.version };
+          manifest[invocationId] = { run_directory: relativeRunPath(runDir, workspace), assertion_id: assertion.id, assertion_version: assertion.version, grader_id: grader.id, grader_model: grader.model, grader_provider: grader.provider };
           const requestPath = join(requestDir, invocationId + ".json");
           const judgmentPath = join(judgmentDir, invocationId + ".json");
           if (existsSync(judgmentPath)) continue; // already judged; no new request needed
@@ -197,7 +245,7 @@ export function prepareGrading(workspaceArg: string): PrepareGradingResult {
               "You are not shown other variants, hidden criteria, or other grades. " +
               "Return a verdict of pass, fail, or inconclusive with an exact evidence quote copied from the candidate output.",
             bindings,
-            grader: { model: String(metadata.model ?? "default"), provider: "unspecified" },
+            grader: { model: grader.model, provider: grader.provider },
           });
           atomic(requestPath, request);
           prepared++;
