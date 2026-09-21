@@ -1,10 +1,14 @@
-# Delegated semantic grading workflow
+# Delegated semantic grading workflow (optional path)
 
-Read this reference when a `full-eval` run reports `awaiting-grading` (see [ADR 0001](adr/0001-host-delegated-semantic-grading.md)) and needs semantic assertions graded, or when explicitly asked to grade pending requests.
+This is an **optional** grading path, not the default. The default path is the subprocess grader (`--grader id=model`, `CommandGraderAdapter`) documented in [evaluation-workflow.md](evaluation-workflow.md); it spawns its own `goose run` invocation per grader call with an explicit `--model`, exactly like candidate execution already does, and needs no interactive session. Use this delegation-based path instead when a Goose session is already running `full-eval` interactively and you would rather avoid spawning a second `goose run` process per grader call for a task (grading a fixed text) that needs no tools, filesystem, or isolated cwd — only a model call.
 
-## What this is not
+Read this reference when a `full-eval` run reports `awaiting-grading` (see [ADR 0001](adr/0001-host-delegated-semantic-grading.md)) and you have chosen to grade the pending requests via delegation rather than the subprocess grader.
 
-This workflow requires **no ACP transport**, **no MCP sampling capability**, and **no nested `goose run` subprocess**. Skill Creator's CLI never calls a model provider directly for grading; it only prepares deterministic requests and imports deterministic-looking JSON verdicts. The parent Goose session — the one currently running this Skill — is the sole place any model is invoked, using its native subagent delegation tool. If your host has no delegation tool available, use the documented subprocess fallback instead (see "No delegation tool available" below).
+## What this path avoids, and what it does not avoid
+
+This workflow requires **no ACP transport** and **no MCP sampling capability** — Skill Creator's CLI is a plain process with no sampling capability of its own, so it cannot borrow a parent session's model implicitly; the delegation call is made explicitly by the session, not by the CLI. It also avoids spawning a **second** `goose run` subprocess for grading, reusing the parent session's own model invocation instead.
+
+It does **not** avoid subprocess invocation of Goose in general: candidate execution already spawns `goose run` per paired run today, and that is unaffected by this document. The subprocess grader is not "nested" in any deeper sense than candidate execution already is — nesting depth is not the reason to prefer this path. Prefer it only when you want to avoid a second parallel model-invocation mechanism for a tool-free judgment task, or when the session's own budget/cost accounting should include grading calls directly instead of capturing them from a subprocess's usage report.
 
 ## The loop
 
