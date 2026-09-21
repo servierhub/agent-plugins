@@ -2,7 +2,12 @@
 
 This is an **optional** grading path, not the default. The default path is the subprocess grader (`--grader id=model`, `CommandGraderAdapter`) documented in [evaluation-workflow.md](evaluation-workflow.md); it spawns its own `goose run` invocation per grader call with an explicit `--model`, exactly like candidate execution already does, and needs no interactive session. Use this delegation-based path instead when a Goose session is already running `full-eval` interactively and you would rather avoid spawning a second `goose run` process per grader call for a task (grading a fixed text) that needs no tools, filesystem, or isolated cwd — only a model call.
 
-Read this reference when a `full-eval` run reports `awaiting-grading` (see [ADR 0001](adr/0001-host-delegated-semantic-grading.md)) and you have chosen to grade the pending requests via delegation rather than the subprocess grader.
+Read this reference when a `full-eval --grading-mode delegated` run reports `awaiting-grading` (see [ADR 0001](adr/0001-host-delegated-semantic-grading.md)) and you have chosen to grade the pending requests via delegation rather than the subprocess grader. `--grading-mode delegated` must be passed explicitly on every invocation (scaffold and resume); the default (`--grading-mode subprocess`, or the flag omitted) never produces an `awaiting-grading` checkpoint.
+
+```bash
+skill-creator full-eval <skill-directory> --workspace <workspace> --execute \
+  --grading-mode delegated --grader grader-a=<model-a> --grader grader-b=<model-b>
+```
 
 ## What this path avoids, and what it does not avoid
 
@@ -67,10 +72,11 @@ Every judgment is re-validated end to end: schema, request binding, planned-grad
 ### 5. Resume
 
 ```bash
-skill-creator full-eval <skill-directory> --workspace <workspace> --resume
+skill-creator full-eval <skill-directory> --workspace <workspace> --execute \
+  --grading-mode delegated --grader grader-a=<model-a> --grader grader-b=<model-b> --resume
 ```
 
-Once `import-grading` reports `ready_to_resume: true`, `--resume` continues aggregation, static review, receipt, pattern review, and verification exactly as it would after any other phase completes.
+`--resume` must repeat the same `--grading-mode delegated` and `--grader` values used at scaffold time; these are hashed into the phase's input binding, so a resume with different values is rejected rather than silently mixed. Once `import-grading` reports `ready_to_resume: true`, this call regenerates canonical `grading.json`/`execution-evidence.json` from the imported evidence (skipping any candidate re-execution — completed runs are never repeated) and continues aggregation, static review, receipt, pattern review, and verification exactly as it would after any other phase completes.
 
 ## Grader plan shapes
 
@@ -79,4 +85,14 @@ Once `import-grading` reports `ready_to_resume: true`, `--resume` continues aggr
 
 ## No delegation tool available
 
-If the current host has no subagent delegation capability (a non-interactive CI runner, for example), use the documented subprocess compatibility fallback instead of this workflow — see [evaluation-workflow.md](evaluation-workflow.md) and the `--grader-command` fallback flag. That path is explicit, opt-in, and never the default for a Goose session capable of delegation.
+If the current host has no subagent delegation capability (a non-interactive CI runner, for example), use the default subprocess grading path instead of this workflow — omit `--grading-mode` (or pass `--grading-mode subprocess` explicitly) and declare `--grader id=model` as usual. That path needs no interactive session and is equally supported; it is not deprecated by the existence of this optional delegated path.
+
+## Migrating an existing workspace
+
+An evaluation workspace scaffolded before this optional path existed (or scaffolded with `--grading-mode subprocess`/no flag) already has `evidence_mode.planned` fixed to `goose-evaluator` for its runs; that binding is immutable once scaffolded (`grading_plan_sha256` and `evidence_mode_sha256` are hashed into `execution_binding`). To use delegated grading for a scenario, scaffold a fresh workspace with `--grading-mode delegated` rather than trying to convert an in-place `goose-evaluator` workspace — `full-eval` will reject a resume whose grading mode drifted from what the scaffold phase originally recorded (see `phaseInput`'s `paired-runs-and-grading` hash), rather than silently mixing subprocess-graded and delegated-graded evidence in the same run.
+
+There is no separate `SKILL_CREATOR_GRADER_COMMAND`-to-delegated migration step: that environment variable only ever configured the subprocess path's `goose` binary/argv (still honored by `--grading-mode subprocess`, the default) and has no equivalent in delegated mode, which never spawns a grader process at all.
+
+## Profile semantics
+
+`--run-profile fast|standard|release` governs the number of counterbalanced pairs and statistical rigor of the *comparison*, independent of grading mode. Delegated grading does not relax or strengthen `fast`/`standard`/`release` semantics: a run with a single development grader still resolves semantic evidence to `inconclusive` (per `aggregateJudgments`/`finalizeDelegatedRun`'s unanimous-verdict rule) exactly as a subprocess run with one grader would, regardless of profile — a lone grader never on its own produces a trusted pass/fail, in either grading mode.

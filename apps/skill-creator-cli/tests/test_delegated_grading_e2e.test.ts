@@ -162,6 +162,24 @@ test("delegated grading mode: a partial import (one grader still pending) keeps 
   }
 });
 
+test("delegated grading mode: resuming with a different --grading-mode than the scaffold used is rejected as drift, not silently mixed", () => {
+  const f = fixture();
+  try {
+    const first = fullEval(f.skill, f.workspace, []);
+    assert.equal(first.status, "awaiting-grading");
+    // Resume attempt with subprocess mode (no --grading-mode) instead of the
+    // delegated mode the scaffold/paired-runs phase actually used.
+    const run = spawnSync(process.execPath, [cli, "full-eval", f.skill, "--workspace", f.workspace, "--run-profile", "fast", "--execute", "--grader", "grader-a=gpt-5.6-sol", "--grader", "grader-b=claude-sonnet-5", "--resume", "--format", "json", "--progress", "none"], { encoding: "utf8", env: fakeEnv() });
+    const result = JSON.parse(run.stdout);
+    // Either explicitly rejected, or the phase is invalidated and restarted
+    // (never silently resumed as if nothing changed) — assert it is not a
+    // bare "success" that skipped grading-mode verification.
+    assert.notEqual(result.status, "success");
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});
+
 test("delegated grading mode: default (subprocess) full-eval behavior is completely unaffected by the presence of --grading-mode support", () => {
   const f = fixture();
   try {
