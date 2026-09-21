@@ -176,3 +176,76 @@ test("delegated grading mode: default (subprocess) full-eval behavior is complet
 function readdirsyncFiles(dir: string): string[] {
   return readdirSync(dir).filter((n) => n.endsWith(".json") && n !== "manifest.json");
 }
+
+test("delegated grading mode: a malformed judgment response leaves its invocation pending with an actionable reason, without blocking sibling judgments", () => {
+  const f = fixture();
+  try {
+    fullEval(f.skill, f.workspace, []);
+    prepareGradingCli(f.workspace);
+    const dir = join(f.workspace, "grading-requests");
+    const files = readdirsyncFiles(dir);
+    mkdirSync(join(f.workspace, "grading-judgments"), { recursive: true });
+    // First request: a malformed (non-JSON) response, simulating a subagent
+    // that failed to return the requested JSON-only verdict.
+    writeFileSync(join(f.workspace, "grading-judgments", files[0]), "not valid json at all");
+    // Remaining requests: delegate normally.
+    const manifest = loadGradingManifest(f.workspace) as Record<string, { grader_id: string; grader_model: string; grader_provider: string }>;
+    for (const name of files.slice(1)) {
+      const request = JSON.parse(readFileSync(join(dir, name), "utf8"));
+      const entry = manifest[request.invocation_id];
+      const judgment = buildGradingJudgment({
+        invocationId: request.invocation_id, requestSha256: request.request_sha256, bindings: request.bindings,
+        grader: { id: entry.grader_id, model: entry.grader_model, provider: entry.grader_provider },
+        verdict: "pass", evidenceQuote: "cites verified sources thoroughly", rationale: "supported",
+      });
+      writeFileSync(join(f.workspace, "grading-judgments", name), JSON.stringify(judgment));
+    }
+    const result = importGradingCli(f.workspace);
+    assert.equal(result.rejected.length, 1, "the malformed judgment must be rejected, not silently dropped or treated as valid evidence");
+    assert.ok(result.rejected[0].reason.length > 0, "the rejection must carry an actionable reason");
+    assert.equal(result.imported.length, files.length - 1, "sibling judgments must still import despite one malformed response");
+
+    // Repair: write a valid judgment for the previously malformed request.
+    const badRequest = JSON.parse(readFileSync(join(dir, files[0]), "utf8"));
+    const badEntry = manifest[badRequest.invocation_id];
+    const repaired = buildGradingJudgment({
+      invocationId: badRequest.invocation_id, requestSha256: badRequest.request_sha256, bindings: badRequest.bindings,
+      grader: { id: badEntry.grader_id, model: badEntry.grader_model, provider: badEntry.grader_provider },
+      verdict: "pass", evidenceQuote: "cites verified sources thoroughly", rationale: "supported",
+    });
+    writeFileSync(join(f.workspace, "grading-judgments", files[0]), JSON.stringify(repaired));
+    const repairedResult = importGradingCli(f.workspace);
+    assert.equal(repairedResult.imported.length, 1);
+    assert.equal(repairedResult.ready_to_resume, true);
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});
+
+test("delegated grading mode: concurrent import-grading invocations over the same pending set complete without corrupting or double-counting evidence", () => {
+  const f = fixture();
+  try {
+    fullEval(f.skill, f.workspace, []);
+    prepareGradingCli(f.workspace);
+    delegateAllPending(f.workspace);
+    const [first, second] = [
+      spawnSync(process.execPath, [cli, "import-grading", f.workspace], { encoding: "utf8" }),
+      spawnSync(process.execPath, [cli, "import-grading", f.workspace], { encoding: "utf8" }),
+    ].map((run) => JSON.parse(run.stdout));
+    // Between both concurrent-ish invocations, every request must be
+    // accounted for exactly once as imported or already_imported — never
+    // duplicated, never lost, never double-counted against the budget.
+    const totalDir = readdirsyncFiles(join(f.workspace, "grading-requests")).length;
+    const accountedFirst = first.imported.length + first.already_imported.length;
+    const accountedSecond = second.imported.length + second.already_imported.length;
+    assert.equal(accountedSecond, totalDir, "the second pass must see every request as imported or already_imported");
+    assert.ok(accountedFirst <= totalDir);
+    assert.equal(first.rejected.length, 0);
+    assert.equal(second.rejected.length, 0);
+    const evidenceCount = readdirSync(join(f.workspace, "eval-1", "with_skill", "run-1", "grader-evidence")).length
+      + readdirSync(join(f.workspace, "eval-1", "without_skill", "run-1", "grader-evidence")).length;
+    assert.equal(evidenceCount, totalDir, "each invocation must produce exactly one canonical evidence file, never duplicated");
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});
