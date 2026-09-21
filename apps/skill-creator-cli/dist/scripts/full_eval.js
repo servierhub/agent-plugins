@@ -85,6 +85,38 @@ function reconcileScenarioDirs(workspace, evals, evalPlanHash) {
     }
     return archived;
 }
+/**
+ * Detects delegated-grading-mode runs whose candidate output and
+ * deterministic evidence are complete, but whose grading.json still
+ * reports the "no adapter invoked" pending state for one or more semantic
+ * assertions (gradeOutput's own judgments:[] / reason: "At least two
+ * independent graders are required" — produced when paired_execution.ts
+ * runs with graderAdapter:null). Distinguishes this deliberately-pending
+ * state from a genuinely missing/corrupt grading.json (still reported by
+ * missingRuns) so full-eval can report awaiting-grading instead of a bare
+ * incomplete-evidence block, without weakening validateExecutionEvidence's
+ * unrelated completeness checks.
+ */
+function pendingDelegatedGrading(workspace) {
+    const runs = [];
+    for (const dir of requiredRunDirs(workspace)) {
+        const gradingPath = join(dir, "grading.json");
+        if (!existsSync(gradingPath))
+            continue;
+        let grading;
+        try {
+            grading = loadJson(gradingPath);
+        }
+        catch {
+            continue;
+        }
+        const expectations = Array.isArray(grading?.expectations) ? grading.expectations : [];
+        const pendingSemantic = expectations.some((e) => e?.classification === "semantic" && Array.isArray(e?.judgments) && e.judgments.length === 0 && e?.reason === "At least two independent graders are required");
+        if (pendingSemantic)
+            runs.push(dir);
+    }
+    return { pending: runs.length > 0, runs };
+}
 function missingRuns(workspace) {
     const missing = { outputs: [], gradings: [], timings: [] };
     for (const dir of requiredRunDirs(workspace)) {
@@ -154,7 +186,7 @@ function executableActions(job, options, status) { if (status !== "blocked" && s
     return []; const human = job.phases.find(p => p.name === "verify")?.status === "blocked" && job.phases.find(p => p.name === "static-review")?.status === "succeeded"; const executionBlocked = options.execute && job.phases.find(p => p.name === "paired-runs-and-grading")?.status === "blocked"; const actions = []; if (executionBlocked)
     actions.push(action(1, "preflight", "Verify that the configured Goose host is now available.", [...configuredGooseArgv(), "--version"])); if (human)
     actions.push(action(actions.length + 1, "review", "Open the generated review checkpoint.", ["xdg-open", join(job.workspace, "review.html")])); actions.push(action(actions.length + 1, "resume", human ? "Record the human decision and resume at verification." : "Resume at the first incomplete phase after satisfying the reported requirements.", resumeArgv(job, options, human ? ["--human-review", "pass", "--tests-status", String(options.testsStatus ?? "pass")] : []))); return actions; }
-function envelope(options, job, status, next_actions, extra = {}) { const exit_code = status === "success" || status === "planned" ? 0 : status === "blocked" ? 3 : 1; const checkpoint = status === "blocked" && job.phases.find(p => p.name === "verify")?.status === "blocked" && job.phases.find(p => p.name === "static-review")?.status === "succeeded" ? { kind: "human-review", status: "decision-required", failure: false, review: join(job.workspace, "review.html") } : null; return { schema_version: "1.1", command: "full-eval", status, exit_code, skill: job.skill, workspace: job.workspace, eval_set: job.eval_set, resume: Boolean(options.resume), dry_run: Boolean(options.dryRun), phases: publicPhases(job, Boolean(options.dryRun)), job: { schema_version: job.schema_version, id: job.job_id, revision: job.revision, status: job.status, state_file: join(job.workspace, STATE_FILE), phases: job.phases }, checkpoint, ...extra, next_actions, executable_actions: executableActions(job, options, status) }; }
+function envelope(options, job, status, next_actions, extra = {}) { const exit_code = status === "success" || status === "planned" ? 0 : status === "blocked" || status === "awaiting-grading" ? 3 : 1; const checkpoint = status === "blocked" && job.phases.find(p => p.name === "verify")?.status === "blocked" && job.phases.find(p => p.name === "static-review")?.status === "succeeded" ? { kind: "human-review", status: "decision-required", failure: false, review: join(job.workspace, "review.html") } : null; return { schema_version: "1.1", command: "full-eval", status, exit_code, skill: job.skill, workspace: job.workspace, eval_set: job.eval_set, resume: Boolean(options.resume), dry_run: Boolean(options.dryRun), phases: publicPhases(job, Boolean(options.dryRun)), job: { schema_version: job.schema_version, id: job.job_id, revision: job.revision, status: job.status, state_file: join(job.workspace, STATE_FILE), phases: job.phases }, checkpoint, ...extra, next_actions, executable_actions: executableActions(job, options, status) }; }
 function artifactExists(path) { return isDir(path) || existsSync(path); }
 function captureArtifactHashes(phase) { phase.artifact_hashes = Object.fromEntries(phase.artifacts.map(path => [path, artifactHash(path)])); }
 function artifactsMatch(phase) { return Boolean(phase.artifact_hashes) && phase.artifacts.every(path => artifactExists(path) && phase.artifact_hashes?.[path] === artifactHash(path)); }
@@ -405,7 +437,7 @@ async function fullEvalUnlocked(options) {
                     const scenario = { eval_id: rawId, eval_name: item.name ?? slug(item.prompt), subject: item.subject ?? "", language: item.language ?? "", target: item.target ?? {}, preconditions: item.preconditions ?? [], budget: item.budget ?? {}, model: item.model ?? null, reasoning: options.reasoning ?? null, prompt: item.prompt ?? item.query ?? "", expected_output: item.expected_output ?? "", assertions: item.assertions ?? [], files: item.files ?? [], capabilities: item.capabilities ?? { filesystem: true, agent_runner: true, browser: false, network: false, tools: [] }, coverage_tags: item.coverage_tags ?? [], navigation_expectations: item.navigation_expectations ?? { must_read: [], read_when_relevant: [], must_not_read: [] }, quality_requirement: { minimum_candidate_pass_rate: options.minPassRate ?? 0.8, minimum_delta: options.minDelta ?? 0 } };
                     const executionBinding = { skill_source_sha256: source, eval_plan_sha256: evalPlan, scenario_sha256: digest([JSON.stringify(scenario)]), reasoning: options.reasoning ?? null, matrix_binding: options.matrixBinding ?? null, decision_policy: job.decision_policy, initial_policy_hash: job.initial_policy_hash, ...(adaptivePolicy ? { family_manifest_hash: job.family_manifest_hash, comparison_claim: job.comparison_claim, sampling_protocol_hash: job.sampling_protocol_hash, sampling_protocol: job.sampling_protocol } : {}) };
                     const executionSchedule = schedulePairs(executionBinding, requestedPairs);
-                    const evidence_mode = { schema_version: 1, planned: options.execute ? "goose-evaluator" : "manual-governed-import" };
+                    const evidence_mode = { schema_version: 1, planned: options.execute ? (options.gradingMode === "delegated" ? "delegated-grading" : "goose-evaluator") : "manual-governed-import" };
                     // A scenario with semantic assertions must have an explicit grader
                     // plan: no implicit "default" model, and never two graders
                     // silently sharing the candidate's own model (that provides no
@@ -441,9 +473,18 @@ async function fullEvalUnlocked(options) {
                 progress.setTotal(expectedRunDirs(workspace).length);
             }
             else if (phase.name === "paired-runs-and-grading") {
-                if (options.execute) {
+                const delegated = options.gradingMode === "delegated";
+                // In delegated mode, once every scheduled run already has completed
+                // candidate output and its grading has been finalized by
+                // import-grading (delegated-evaluator authority, no longer the
+                // pending no-adapter state), skip executePairedRuns entirely: a
+                // resume must never re-run candidate execution or clobber
+                // already-imported delegated grading evidence with a fresh
+                // no-adapter grading.json.
+                const alreadyFinalizedDelegated = delegated && !pendingDelegatedGrading(workspace).pending && requiredRunDirs(workspace).every(dir => existsSync(join(dir, "grading.json")));
+                if (options.execute && !alreadyFinalizedDelegated) {
                     progress.setTotal(expectedRunDirs(workspace).length);
-                    const execution = await executePairedRuns({ skillPath: skill, workspace, baseline, baselineSkillPath: options.baselineSkillPath, runner: options.runner, model: options.model ?? null, reasoning: options.reasoning, graders: options.graders, graderCommand: options.graderCommand, maxGraderCalls: options.maxGraderCalls, concurrency: options.concurrency, providerConstraints: options.providerConstraints, providerIdentity: options.matrixBinding ? { provider: options.matrixBinding.provider, model: options.model ?? "default" } : undefined, cacheDir: options.cacheDir, onProgress: report, adaptivePolicy, maxPairRounds: options.maxPairRounds });
+                    const execution = await executePairedRuns({ skillPath: skill, workspace, baseline, baselineSkillPath: options.baselineSkillPath, runner: options.runner, model: options.model ?? null, reasoning: options.reasoning, graders: options.graders, graderCommand: options.graderCommand, maxGraderCalls: options.maxGraderCalls, concurrency: options.concurrency, providerConstraints: options.providerConstraints, providerIdentity: options.matrixBinding ? { provider: options.matrixBinding.provider, model: options.model ?? "default" } : undefined, cacheDir: options.cacheDir, onProgress: report, adaptivePolicy, maxPairRounds: options.maxPairRounds, ...(delegated ? { graderAdapter: null } : {}) });
                     cacheAccounting = execution.cache;
                     if (execution.status !== "complete") {
                         phase.status = execution.status === "blocked" ? "blocked" : "failed";
@@ -459,6 +500,24 @@ async function fullEvalUnlocked(options) {
                 const missing = missingRuns(workspace), { source, evalPlan } = planHashes(job), requiredRuns = requiredRunDirs(workspace);
                 phase.artifacts = requiredRuns;
                 const binding = validateExecutionEvidence(workspace, { skill_source_sha256: source, eval_plan_sha256: evalPlan });
+                if (options.gradingMode === "delegated" && !missing.outputs.length && !missing.gradings.length && !missing.timings.length && binding.status !== "complete") {
+                    const pending = pendingDelegatedGrading(workspace);
+                    if (pending.pending) {
+                        phase.status = "blocked";
+                        phase.detail = "awaiting delegated semantic grading";
+                        const awaitingActions = [
+                            "Run 'skill-creator prepare-grading " + workspace + "' to write pending blinded grading requests.",
+                            "Delegate each pending request to an isolated Goose subagent using the request's own grader.model/provider (see skills/skill-creator/references/delegated-grading-workflow.md), and write each verdict to a matching file under " + join(workspace, "grading-judgments") + ".",
+                            "Run 'skill-creator import-grading " + workspace + "' to validate and import the judgments.",
+                            "Rerun 'skill-creator full-eval " + skill + " --workspace " + workspace + " --resume' once import-grading reports ready_to_resume.",
+                        ];
+                        job.status = "blocked";
+                        checkpoint(job);
+                        report({ type: "phase-transition", phase: phase.name, status: "blocked", detail: "awaiting-grading" });
+                        progress.close();
+                        return envelope(options, job, "awaiting-grading", awaitingActions, { incomplete: { code: "awaiting-delegated-grading", requested_pairs: requestedPairs, completed_runs: requiredRuns.length - pending.runs.length, required_runs: requiredRuns.length, pending_runs: pending.runs.map(run => rel(workspace, run)) } });
+                    }
+                }
                 if (missing.outputs.length || missing.gradings.length || missing.timings.length || binding.status !== "complete") {
                     phase.status = "blocked";
                     phase.detail = "full-eval does not run or impersonate an LLM";
@@ -654,7 +713,7 @@ export async function main() {
             console.log(FULL_EVAL_HELP);
             return 0;
         }
-        const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: { workspace: { type: "string" }, "eval-set": { type: "string" }, baseline: { type: "string", default: "without_skill" }, "baseline-skill": { type: "string" }, execute: { type: "boolean", default: false }, runner: { type: "string" }, model: { type: "string" }, grader: { type: "string", multiple: true }, "grader-command": { type: "string" }, "max-grader-calls": { type: "string", default: "100" }, concurrency: { type: "string", default: "2" }, "provider-concurrency": { type: "string" }, "provider-rpm": { type: "string" }, "provider-max-attempts": { type: "string" }, "provider-backoff-base-ms": { type: "string" }, "provider-backoff-max-ms": { type: "string" }, "provider-active-lease-ms": { type: "string" }, "max-cost-usd": { type: "string" }, "max-tokens": { type: "string" }, "max-provider-seconds": { type: "string" }, "reserve-cost-usd": { type: "string" }, "reserve-tokens": { type: "string" }, "reserve-provider-seconds": { type: "string" }, "cache-dir": { type: "string" }, "no-cache": { type: "boolean", default: false }, progress: { type: "string", default: "auto" }, "progress-interval": { type: "string", default: "1000" }, "run-profile": { type: "string", default: "fast" }, "decision-policy": { type: "string", default: "fixed" }, "adaptive-policy": { type: "string" }, "family-workspace": { type: "string" }, "dry-run": { type: "boolean", default: false }, resume: { type: "boolean", default: false }, retry: { type: "boolean", default: false }, cancel: { type: "boolean", default: false }, "finalize-release": { type: "boolean", default: false }, "human-review": { type: "string" }, "tests-status": { type: "string" }, "triggering-status": { type: "string" }, "triggering-reason": { type: "string" }, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" } } });
+        const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: { workspace: { type: "string" }, "eval-set": { type: "string" }, baseline: { type: "string", default: "without_skill" }, "baseline-skill": { type: "string" }, execute: { type: "boolean", default: false }, runner: { type: "string" }, model: { type: "string" }, grader: { type: "string", multiple: true }, "grader-command": { type: "string" }, "grading-mode": { type: "string", default: "subprocess" }, "max-grader-calls": { type: "string", default: "100" }, concurrency: { type: "string", default: "2" }, "provider-concurrency": { type: "string" }, "provider-rpm": { type: "string" }, "provider-max-attempts": { type: "string" }, "provider-backoff-base-ms": { type: "string" }, "provider-backoff-max-ms": { type: "string" }, "provider-active-lease-ms": { type: "string" }, "max-cost-usd": { type: "string" }, "max-tokens": { type: "string" }, "max-provider-seconds": { type: "string" }, "reserve-cost-usd": { type: "string" }, "reserve-tokens": { type: "string" }, "reserve-provider-seconds": { type: "string" }, "cache-dir": { type: "string" }, "no-cache": { type: "boolean", default: false }, progress: { type: "string", default: "auto" }, "progress-interval": { type: "string", default: "1000" }, "run-profile": { type: "string", default: "fast" }, "decision-policy": { type: "string", default: "fixed" }, "adaptive-policy": { type: "string" }, "family-workspace": { type: "string" }, "dry-run": { type: "boolean", default: false }, resume: { type: "boolean", default: false }, retry: { type: "boolean", default: false }, cancel: { type: "boolean", default: false }, "finalize-release": { type: "boolean", default: false }, "human-review": { type: "string" }, "tests-status": { type: "string" }, "triggering-status": { type: "string" }, "triggering-reason": { type: "string" }, "min-pass-rate": { type: "string", default: "0.8" }, "min-delta": { type: "string", default: "0" } } });
         if (!positionals[0])
             throw new TypeError("skill directory is required");
         if (values.baseline !== "old_skill" && values.baseline !== "without_skill")
@@ -667,6 +726,8 @@ export async function main() {
         const graders = graderValues.map((value, index) => { const split = value.indexOf("="); return split < 0 ? { id: `grader-${index + 1}`, model: value } : { id: value.slice(0, split), model: value.slice(split + 1) }; });
         if (graders.some(item => !item.id || !item.model) || new Set(graders.map(item => item.id)).size !== graders.length)
             throw new TypeError("--grader requires unique non-empty id=model values");
+        if (values["grading-mode"] !== "subprocess" && values["grading-mode"] !== "delegated")
+            throw new TypeError("--grading-mode must be subprocess or delegated");
         const maxGraderCalls = Number(values["max-grader-calls"]);
         if (!Number.isInteger(maxGraderCalls) || maxGraderCalls < 0)
             throw new TypeError("--max-grader-calls must be a non-negative integer");
@@ -686,7 +747,7 @@ export async function main() {
         if (!Number.isFinite(progressIntervalMs) || progressIntervalMs < 0)
             throw new TypeError("--progress-interval must be a non-negative number of milliseconds");
         const cacheDir = values["no-cache"] ? null : values["cache-dir"] ? resolve(values["cache-dir"]) : undefined;
-        const result = await fullEval({ skillPath: positionals[0], workspace: values.workspace, evalSet: values["eval-set"], baseline: values.baseline, baselineSkillPath: values["baseline-skill"], execute: values.execute, runner: values.runner, model: values.model, graders: graders.length ? graders : undefined, graderCommand: values["grader-command"], maxGraderCalls, concurrency, providerConstraints: configuredProviderConstraints, cacheDir, progress: values.progress, progressIntervalMs, runProfile: parseRunProfile(values["run-profile"]), decisionPolicy: values["decision-policy"], adaptivePolicy: values["adaptive-policy"] ? JSON.parse(values["adaptive-policy"]) : undefined, familyWorkspace: values["family-workspace"], dryRun: values["dry-run"], resume: values.resume, retry: values.retry, cancel: values.cancel, finalizeRelease: values["finalize-release"], humanReview: values["human-review"], testsStatus: values["tests-status"], triggeringStatus: values["triggering-status"], triggeringReason: values["triggering-reason"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]) });
+        const result = await fullEval({ skillPath: positionals[0], workspace: values.workspace, evalSet: values["eval-set"], baseline: values.baseline, baselineSkillPath: values["baseline-skill"], execute: values.execute, runner: values.runner, model: values.model, graders: graders.length ? graders : undefined, graderCommand: values["grader-command"], gradingMode: values["grading-mode"], maxGraderCalls, concurrency, providerConstraints: configuredProviderConstraints, cacheDir, progress: values.progress, progressIntervalMs, runProfile: parseRunProfile(values["run-profile"]), decisionPolicy: values["decision-policy"], adaptivePolicy: values["adaptive-policy"] ? JSON.parse(values["adaptive-policy"]) : undefined, familyWorkspace: values["family-workspace"], dryRun: values["dry-run"], resume: values.resume, retry: values.retry, cancel: values.cancel, finalizeRelease: values["finalize-release"], humanReview: values["human-review"], testsStatus: values["tests-status"], triggeringStatus: values["triggering-status"], triggeringReason: values["triggering-reason"], minPassRate: Number(values["min-pass-rate"]), minDelta: Number(values["min-delta"]) });
         console.log(JSON.stringify(result, null, 2));
         return result.exit_code;
     }

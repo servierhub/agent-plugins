@@ -19,13 +19,16 @@
 import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
-import { substantiveOverlap, META_GRADE } from "./evaluator_grading.js";
+import { substantiveOverlap, META_GRADE, normalizeAssertions, assertionHash, canonical as gradingCanonical, sha256 as gradingSha256 } from "./evaluator_grading.js";
 import { readTrustedJson, readTrustedSnapshot } from "./trusted_snapshot.js";
 import {
   validateGradingRequest, validateGradingJudgment, bindJudgmentToRequest,
   type GradingRequest, type GradingJudgment,
 } from "./delegated_grading_contracts.js";
 import { loadGradingManifest, REQUEST_DIR_NAME, JUDGMENT_DIR_NAME } from "./prepare_grading.js";
+import { artifactHash } from "./evaluation_provenance.js";
+
+export const DELEGATED_GRADING_AUTHORITY = "delegated-evaluator" as const;
 
 export const DEFAULT_GRADER_BUDGET = 200;
 
@@ -249,8 +252,109 @@ export function importGrading(workspaceArg: string, options: { budgetLimit?: num
     }
   }
 
+  // Finalize any run whose grader-evidence/ now contains exactly one valid
+  // judgment per planned grader for every semantic assertion: regenerate a
+  // canonical grading.json/deterministic-evidence.json and complete
+  // execution-evidence.json's grading_binding, so a subsequent
+  // validateExecutionEvidence pass (and full-eval --resume) sees the same
+  // shape it already trusts for evaluator-owned grading, just authored by
+  // delegated-evaluator rather than a subprocess grader.
+  const touchedRunDirs = new Set<string>([...imported.map((i) => i.run_directory), ...alreadyImported.map((invocationId) => manifest[invocationId]?.run_directory).filter((x): x is string => Boolean(x))]);
+  for (const relativeRunDir of touchedRunDirs) {
+    try {
+      finalizeDelegatedRun(workspace, relativeRunDir);
+    } catch (error) {
+      errors.push({ invocation_id: "*", message: `finalizing ${relativeRunDir}: ${(error as Error).message}` });
+    }
+  }
+
   const readyToResume = imported.length + alreadyImported.length > 0 && rejected.length === 0 && errors.length === 0;
   return { schema_version: "1.0", workspace, imported, rejected, already_imported: alreadyImported, budget: { used: budgetUsed, limit: budgetLimit }, ready_to_resume: readyToResume, errors };
+}
+
+/**
+ * If every semantic assertion for this run now has exactly one valid
+ * judgment from each of its scenario's planned graders, regenerates
+ * grading.json/deterministic-evidence.json (preserving already-resolved
+ * deterministic expectations) and completes execution-evidence.json's
+ * grading_binding, mirroring the shape evaluator-owned grading already
+ * produces so validateExecutionEvidence's delegated-grading branch can
+ * verify it uniformly. Otherwise leaves every artifact untouched — a run
+ * with any still-pending or invalid judgment is not finalized.
+ */
+function finalizeDelegatedRun(workspace: string, relativeRunDir: string): void {
+  const runDir = resolve(workspace, relativeRunDir);
+  const evalDir = dirname(dirname(runDir));
+  const metadata = loadJson(evalDir, join(evalDir, "eval_metadata.json"), "eval_metadata.json");
+  if (!metadata || metadata.evidence_mode?.planned !== "delegated-grading") return;
+  const assertions = normalizeAssertions(Array.isArray(metadata.assertions) ? metadata.assertions : []);
+  const semantic = assertions.filter((a) => a.classification === "semantic");
+  if (!semantic.length) return;
+  const plan = metadata.grading_plan;
+  const planned: Array<{ id: string; model: string; provider: string }> = Array.isArray(plan?.graders) ? plan.graders : [];
+  if (!planned.length) return;
+
+  const deterministicPath = join(runDir, "deterministic-evidence.json");
+  const deterministic = loadJson(runDir, deterministicPath, "deterministic-evidence.json");
+  const outputText = loadText(runDir, join(runDir, "outputs", "result.txt"), "outputs/result.txt", 256 * 1024);
+  if (!deterministic || outputText === null) return;
+  const variantSha256 = String(deterministic.variant_sha256 ?? ""), outputSha256 = String(deterministic.output_sha256 ?? "");
+  const evidenceDir = join(runDir, "grader-evidence");
+  const evidenceFiles = existsSync(evidenceDir) ? readdirSync(evidenceDir).filter((n) => n.endsWith(".json")) : [];
+  const evidenceByAssertion = new Map<string, any[]>();
+  for (const name of evidenceFiles) {
+    let item: any;
+    try { item = loadJson(evidenceDir, join(evidenceDir, name), name); } catch { continue; }
+    if (!item || item.variant_sha256 !== variantSha256 || item.output_sha256 !== outputSha256) continue;
+    const list = evidenceByAssertion.get(item.assertion_sha256) ?? [];
+    list.push(item);
+    evidenceByAssertion.set(item.assertion_sha256, list);
+  }
+
+  const semanticExpectations: any[] = [];
+  for (const assertion of semantic) {
+    const ah = assertionHash(assertion);
+    const items = evidenceByAssertion.get(ah) ?? [];
+    const plannedIds = new Set(planned.map((g) => g.id));
+    const byGrader = new Map<string, any>();
+    for (const item of items) if (plannedIds.has(item.grader_id) && !byGrader.has(item.grader_id)) byGrader.set(item.grader_id, item);
+    if (byGrader.size !== planned.length) return; // still awaiting one or more planned graders for this assertion
+    const judgments = planned.map((g) => byGrader.get(g.id));
+    const valid = judgments.filter((j) => j.valid_evidence === true);
+    const decisions = new Set(valid.filter((j) => j.verdict !== "inconclusive").map((j) => j.verdict));
+    const unanimous = judgments.length >= 1 && valid.length === judgments.length && !valid.some((j) => j.verdict === "inconclusive") && decisions.size === 1;
+    const verdict = unanimous ? valid[0].verdict : "inconclusive";
+    semanticExpectations.push({
+      id: assertion.id, version: assertion.version, classification: "semantic", text: assertion.criterion, criterion: assertion.criterion,
+      assertion_sha256: ah, variant_sha256: variantSha256, output_sha256: outputSha256,
+      verdict, human_review: !unanimous, passed: verdict === "pass",
+      agreement: { grader_count: judgments.length, valid_evidence_count: valid.length, disagreement: !unanimous, verdicts: Object.fromEntries((["pass", "fail", "inconclusive"] as const).map((v) => [v, judgments.filter((j) => j.verdict === v).length])) },
+      evidence: judgments.map((j) => j.evidence_quote), judgments: judgments.map((j) => ({ grader_id: j.grader_id, model: j.model, invocation_id: j.invocation_id, verdict: j.verdict, evidence_quote: j.evidence_quote, rationale: j.rationale, valid_evidence: j.valid_evidence, usage: j.usage })),
+    });
+  }
+
+  // Deterministic expectations already exist in a prior grading.json (if
+  // any); preserve them verbatim rather than re-deriving, since finalization
+  // only concerns semantic evidence completeness.
+  const priorGrading = loadJson(runDir, join(runDir, "grading.json"), "grading.json");
+  const deterministicExpectations = Array.isArray(priorGrading?.expectations) ? priorGrading.expectations.filter((e: any) => e.classification === "deterministic") : [];
+  const expectations = [...deterministicExpectations, ...semanticExpectations];
+  const passed = expectations.filter((e) => e.verdict === "pass").length, failed = expectations.filter((e) => e.verdict === "fail").length, inconclusive = expectations.length - passed - failed;
+  const assertionSetHash = gradingSha256(gradingCanonical(assertions));
+  const grading = {
+    schema_version: 2, authority: DELEGATED_GRADING_AUTHORITY, assertion_set_sha256: assertionSetHash, variant_sha256: variantSha256, output_sha256: outputSha256,
+    expectations, summary: { passed, failed, inconclusive, total: expectations.length, pass_rate: expectations.length ? passed / expectations.length : 0, human_review: inconclusive > 0 },
+    grading_budget: { used: evidenceFiles.length, limit: evidenceFiles.length },
+  };
+  atomic(join(runDir, "grading.json"), grading);
+
+  const executionEvidencePath = join(runDir, "execution-evidence.json");
+  const executionEvidence = loadJson(runDir, executionEvidencePath, "execution-evidence.json");
+  if (executionEvidence) {
+    executionEvidence.grading_binding = { authority: DELEGATED_GRADING_AUTHORITY, assertion_set_sha256: assertionSetHash, variant_sha256: variantSha256, output_sha256: outputSha256, grader_identities: planned };
+    executionEvidence.artifact_sha256 = { ...executionEvidence.artifact_sha256, "grading.json": artifactHash(join(runDir, "grading.json")), "grader-evidence": artifactHash(evidenceDir) };
+    atomic(executionEvidencePath, executionEvidence);
+  }
 }
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
