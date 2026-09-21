@@ -46,6 +46,14 @@ export interface PrepareGradingResult {
   errors: Array<{ run: string; message: string }>;
 }
 
+/** Deterministic invocation_id -> evidence-placement metadata, regenerated on every prepare-grading call. */
+export interface GradingManifestEntry {
+  run_directory: string;
+  assertion_id: string;
+  assertion_version: number;
+}
+export type GradingManifest = Record<string, GradingManifestEntry>;
+
 export interface GradingStatusResult {
   schema_version: "1.0";
   workspace: string;
@@ -96,6 +104,11 @@ function requestBaseName(runDir: string, workspace: string): string {
   return runDir.slice(resolve(workspace).length + 1).split(/[\\/]/).join("-");
 }
 
+/** The real workspace-relative path (forward-slash separated), preserved for manifest use. */
+function relativeRunPath(runDir: string, workspace: string): string {
+  return runDir.slice(resolve(workspace).length + 1).split(/[\\/]/).join("/");
+}
+
 /**
  * Deterministically derives the request/judgment invocation IDs for one
  * (run, assertion) pair. IDs are stable across repeated prepare-grading
@@ -124,6 +137,7 @@ export function prepareGrading(workspaceArg: string): PrepareGradingResult {
   const judgmentDir = join(workspace, JUDGMENT_DIR_NAME);
   const errors: PrepareGradingResult["errors"] = [];
   const pendingUnits: PendingGradingUnit[] = [];
+  const manifest: GradingManifest = {};
   let prepared = 0, alreadyPrepared = 0, skipped = 0;
 
   let runDirs: string[];
@@ -166,6 +180,7 @@ export function prepareGrading(workspaceArg: string): PrepareGradingResult {
         const invocationIds = invocationIdsFor(runDir, workspace, assertion, bindings, REQUIRED_GRADER_SLOTS);
         for (const invocationId of invocationIds) {
           requestIds.push(invocationId);
+          manifest[invocationId] = { run_directory: relativeRunPath(runDir, workspace), assertion_id: assertion.id, assertion_version: assertion.version };
           const requestPath = join(requestDir, invocationId + ".json");
           const judgmentPath = join(judgmentDir, invocationId + ".json");
           if (existsSync(judgmentPath)) continue; // already judged; no new request needed
@@ -213,6 +228,8 @@ export function prepareGrading(workspaceArg: string): PrepareGradingResult {
     }
   }
 
+  if (Object.keys(manifest).length) atomic(join(requestDir, MANIFEST_NAME), manifest);
+
   return {
     schema_version: "1.0", workspace, request_directory: requestDir,
     prepared, already_prepared: alreadyPrepared, skipped_no_semantic_assertions: skipped,
@@ -254,6 +271,15 @@ export function gradingStatus(workspaceArg: string): GradingStatusResult {
 
   return { schema_version: "1.0", workspace, pending, completed, stale, ready_to_resume: readyToResume, next_actions: nextActions };
 }
+
+/** Loads the invocation_id -> run-directory/assertion manifest written by prepareGrading. */
+export function loadGradingManifest(workspaceArg: string): GradingManifest {
+  const workspace = resolve(workspaceArg);
+  const manifestPath = join(workspace, REQUEST_DIR_NAME, MANIFEST_NAME);
+  return (loadJson(join(workspace, REQUEST_DIR_NAME), manifestPath, MANIFEST_NAME) as GradingManifest | null) ?? {};
+}
+
+export { REQUEST_DIR_NAME, JUDGMENT_DIR_NAME };
 
 /** CLI entry for `skill-creator prepare-grading <workspace>`. */
 export async function mainPrepare(argv: string[] = process.argv.slice(2)): Promise<number> {

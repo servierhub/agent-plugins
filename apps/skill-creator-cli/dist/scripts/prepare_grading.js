@@ -61,6 +61,10 @@ function semanticAssertions(metadata) {
 function requestBaseName(runDir, workspace) {
     return runDir.slice(resolve(workspace).length + 1).split(/[\\/]/).join("-");
 }
+/** The real workspace-relative path (forward-slash separated), preserved for manifest use. */
+function relativeRunPath(runDir, workspace) {
+    return runDir.slice(resolve(workspace).length + 1).split(/[\\/]/).join("/");
+}
 /**
  * Deterministically derives the request/judgment invocation IDs for one
  * (run, assertion) pair. IDs are stable across repeated prepare-grading
@@ -88,6 +92,7 @@ export function prepareGrading(workspaceArg) {
     const judgmentDir = join(workspace, JUDGMENT_DIR_NAME);
     const errors = [];
     const pendingUnits = [];
+    const manifest = {};
     let prepared = 0, alreadyPrepared = 0, skipped = 0;
     let runDirs;
     try {
@@ -136,6 +141,7 @@ export function prepareGrading(workspaceArg) {
                 const invocationIds = invocationIdsFor(runDir, workspace, assertion, bindings, REQUIRED_GRADER_SLOTS);
                 for (const invocationId of invocationIds) {
                     requestIds.push(invocationId);
+                    manifest[invocationId] = { run_directory: relativeRunPath(runDir, workspace), assertion_id: assertion.id, assertion_version: assertion.version };
                     const requestPath = join(requestDir, invocationId + ".json");
                     const judgmentPath = join(judgmentDir, invocationId + ".json");
                     if (existsSync(judgmentPath))
@@ -186,6 +192,8 @@ export function prepareGrading(workspaceArg) {
             errors.push({ run: "*", message: `request directory failed bundle validation: ${error.message}` });
         }
     }
+    if (Object.keys(manifest).length)
+        atomic(join(requestDir, MANIFEST_NAME), manifest);
     return {
         schema_version: "1.0", workspace, request_directory: requestDir,
         prepared, already_prepared: alreadyPrepared, skipped_no_semantic_assertions: skipped,
@@ -233,6 +241,13 @@ export function gradingStatus(workspaceArg) {
         nextActions.push("Run prepare-grading to generate blinded grading requests for pending semantic assertions.");
     return { schema_version: "1.0", workspace, pending, completed, stale, ready_to_resume: readyToResume, next_actions: nextActions };
 }
+/** Loads the invocation_id -> run-directory/assertion manifest written by prepareGrading. */
+export function loadGradingManifest(workspaceArg) {
+    const workspace = resolve(workspaceArg);
+    const manifestPath = join(workspace, REQUEST_DIR_NAME, MANIFEST_NAME);
+    return loadJson(join(workspace, REQUEST_DIR_NAME), manifestPath, MANIFEST_NAME) ?? {};
+}
+export { REQUEST_DIR_NAME, JUDGMENT_DIR_NAME };
 /** CLI entry for `skill-creator prepare-grading <workspace>`. */
 export async function mainPrepare(argv = process.argv.slice(2)) {
     const workspace = argv[0];

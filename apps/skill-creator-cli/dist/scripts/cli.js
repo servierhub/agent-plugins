@@ -21,6 +21,7 @@ const commands = {
     "screen-reader-acceptance": { entry: "screen_reader_acceptance.js", usage: "screen-reader-acceptance <records> [--attestations <receipts>] | --create-attestation-request <record> --issued-at <UTC> --expires-at <UTC> | --verify-attestation <receipt> --record <record> | --create-policy-signing-request <proposed-policy>", required: (a) => a.some((value) => !value.startsWith("-")) },
     "prepare-grading": { entry: "prepare_grading.js", usage: "prepare-grading <workspace>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
     "grading-status": { entry: "prepare_grading.js", usage: "grading-status <workspace>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+    "import-grading": { entry: "import_grading.js", usage: "import-grading <workspace> [--budget <n>]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
 };
 function hasValue(args, option) {
     const index = args.indexOf(option);
@@ -59,6 +60,7 @@ Commands:
   screen-reader-acceptance Validate or analyze manual screen-reader records
   prepare-grading Prepare blinded host-delegated semantic grading requests
   grading-status  Report pending/completed/stale delegated grading requests
+  import-grading  Import and verify delegated grader judgment envelopes
 
 Run "skill-creator <command> --help" for command usage.`;
 }
@@ -120,6 +122,7 @@ async function embedded(command, args) {
         case "review": return runEmbedded((await import("../eval-viewer/generate_review.js")).main, args);
         case "prepare-grading": return runEmbedded((await import("./prepare_grading.js")).mainPrepare, args);
         case "grading-status": return runEmbedded((await import("./prepare_grading.js")).mainStatus, args);
+        case "import-grading": return runEmbedded((await import("./import_grading.js")).main, args);
     }
 }
 export async function runCli(argv = process.argv.slice(2)) {

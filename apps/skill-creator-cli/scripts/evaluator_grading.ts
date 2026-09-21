@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 
 export type Verdict = "pass" | "fail" | "inconclusive";
 export interface AssertionSpec {
-  id: string; version: number; classification: "deterministic" | "semantic"; criterion: string;
+  id: string; version: number; classification: "deterministic" | "semantic"; criterion: string; critical?:boolean;
   checker?: { kind: string; value?: unknown; flags?: string; pointer?: string; expected?: unknown };
 }
 export interface GraderIdentity { id: string; model: string; provider?: string; command?: string[]; config?: Record<string, unknown>; invocation_id?: string; blinded?: boolean }
@@ -17,6 +17,7 @@ export interface GraderJudgment {
   grader_invocation_sha256: string;
 }
 export interface GraderAdapter {
+  readonly retryBehavior?: "none" | "internal";
   grade(input: { prompt: string; output: string; assertion: AssertionSpec; variantAlias: string;
     identity: GraderIdentity; assertionSha256: string; variantSha256: string; outputSha256: string;
     signal?: AbortSignal }): Promise<{ raw: string; usage: Record<string, unknown> | null }>;
@@ -37,19 +38,20 @@ export function normalizeAssertion(input: unknown, index: number): AssertionSpec
       : { id: `assertion-${index + 1}`, version: 1, classification: "semantic", criterion: value };
   }
   if (!input || typeof input !== "object") throw new Error(`Assertion ${index + 1} must be a string or object`);
-  const item = input as Record<string, any>, id = String(item.id ?? `assertion-${index + 1}`), version = Number(item.version ?? 1);
+  const item = input as Record<string, any>, id = String(item.id ?? `assertion-${index + 1}`), version = Number(item.version ?? 1),critical=item.critical===undefined?true:item.critical;
+  if(typeof critical!=="boolean")throw new Error(`Assertion ${id} critical must be boolean`);
   const criterion = String(item.criterion ?? item.statement ?? item.subject ?? "").trim();
   if (!id || !Number.isInteger(version) || version < 1 || !criterion) throw new Error(`Assertion ${index + 1} has invalid id, version, or criterion`);
   const classification = item.classification ?? (item.deterministic === true || item.checker || item.locator ? "deterministic" : "semantic");
   if (classification !== "deterministic" && classification !== "semantic") throw new Error(`Assertion ${id} classification must be deterministic or semantic`);
   if (classification === "semantic") {
     if (item.checker !== undefined || item.locator !== undefined) throw new Error(`Semantic assertion ${id} cannot define a deterministic checker`);
-    return { id, version, classification, criterion };
+    return { id, version, classification, criterion, ...(item.critical===undefined?{}:{critical}) };
   }
   let checker = item.checker;
   if (!checker && item.locator) checker = { kind: String(item.operator ?? "equals"), pointer: String(item.locator.pointer ?? ""), expected: item.expected };
   if (!checker || typeof checker !== "object" || typeof checker.kind !== "string") throw new Error(`Deterministic assertion ${id} requires a checker`);
-  return { id, version, classification, criterion, checker: { kind: checker.kind, value: checker.value, flags: checker.flags, pointer: checker.pointer, expected: checker.expected } };
+  return { id, version, classification, criterion, ...(item.critical===undefined?{}:{critical}), checker: { kind: checker.kind, value: checker.value, flags: checker.flags, pointer: checker.pointer, expected: checker.expected } };
 }
 export function normalizeAssertions(values: unknown[]): AssertionSpec[] {
   const result = values.map(normalizeAssertion), seen = new Set<string>();
@@ -106,6 +108,7 @@ function streamResponse(stdout: string): { raw: string; usage: Record<string, un
   return { raw, usage: Object.keys(usage).length ? usage : null };
 }
 export class CommandGraderAdapter implements GraderAdapter {
+  readonly retryBehavior="none" as const;
   constructor(private command: string[], private timeoutSeconds = 300) {}
   async grade(input: Parameters<GraderAdapter["grade"]>[0]): Promise<{ raw: string; usage: Record<string, unknown> | null }> {
     const [bin, ...base] = this.command, argv = [...base, "run", "--no-session", "--quiet", "--output-format", "stream-json", "--instructions", "-", "--model", input.identity.model];
@@ -139,7 +142,7 @@ function invalidJudgment(input: { identity: Required<GraderIdentity>; assertionS
   const fields=identityFields(input.identity);
   return { grader_id: input.identity.id, model: input.identity.model, ...fields, grader_invocation_sha256:invocationHash(input,fields), verdict: "inconclusive", evidence_quote: "", rationale, valid_evidence: false, usage, raw_response: raw, assertion_sha256: input.assertionSha256, variant_sha256: input.variantSha256, output_sha256: input.outputSha256 };
 }
-const META_GRADE = /\b(?:pass(?:es|ed|ing)?|fail(?:s|ed|ing)?|score[sd]?|grad(?:e|es|ed|ing)|verdict|criterion|assertion)\b/i;
+export const META_GRADE = /\b(?:pass(?:es|ed|ing)?|fail(?:s|ed|ing)?|score[sd]?|grad(?:e|es|ed|ing)|verdict|criterion|assertion)\b/i;
 const STOP = new Set(["the","and","for","that","this","with","must","should","output","report","adequately"]);
 export function substantiveOverlap(criterion: string, quote: string): boolean {
   const words=(value:string)=>new Set((value.toLowerCase().match(/[\p{L}\p{N}][\p{L}\p{N}_-]*/gu)??[]).filter(x=>x.length>2&&!STOP.has(x)));

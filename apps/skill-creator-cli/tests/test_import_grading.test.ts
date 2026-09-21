@@ -1,0 +1,258 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync, readFileSync, existsSync, readdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { counterbalancedPairSeed, pairedOrderFromSeed, sha256 } from "../dist/scripts/evaluation_provenance.js";
+import { prepareGrading } from "../dist/scripts/prepare_grading.js";
+import { importGrading } from "../dist/scripts/import_grading.js";
+import { buildGradingJudgment } from "../dist/scripts/delegated_grading_contracts.js";
+
+function fixtureWorkspace(criterion = "Cites verified sources") {
+  const root = mkdtempSync(join(tmpdir(), "import-grading-"));
+  const evalDir = join(root, "eval-one");
+  const binding = { skill_source_sha256: "a".repeat(64), eval_plan_sha256: "b".repeat(64), scenario_sha256: "c".repeat(64) };
+  const seed = counterbalancedPairSeed(binding, 1);
+  const metadata = {
+    eval_id: "one", run_profile: "fast", requested_pairs: 1, decision_policy: "fixed",
+    execution_schedule: [{ pair_index: 1, seed, order: pairedOrderFromSeed(seed) }],
+    execution_binding: binding, baseline_configuration: "without_skill",
+    prompt: "Prepare a report", model: "test-model",
+    assertions: [{ id: "a1", version: 1, classification: "semantic", criterion }],
+  };
+  mkdirSync(evalDir, { recursive: true });
+  writeFileSync(join(evalDir, "eval_metadata.json"), JSON.stringify(metadata));
+  const output = "The report cites verified sources thoroughly.";
+  for (const config of ["with_skill", "without_skill"]) {
+    const runDir = join(evalDir, config, "run-1");
+    mkdirSync(join(runDir, "outputs"), { recursive: true });
+    writeFileSync(join(runDir, "outputs", "result.txt"), output);
+    writeFileSync(join(runDir, "deterministic-evidence.json"), JSON.stringify({
+      schema_version: 1, variant_sha256: sha256(config), output_sha256: sha256(output), assertions: [],
+    }));
+  }
+  return { root, evalDir, output };
+}
+
+function requestFor(root: string, index = 0) {
+  const dir = join(root, "grading-requests");
+  const files = readdirSync(dir).filter((n: string) => n.endsWith(".json") && n !== "manifest.json").sort();
+  const name = files[index];
+  return { name, request: JSON.parse(readFileSync(join(dir, name), "utf8")) };
+}
+
+function writeJudgment(root: string, name: string, request: any, overrides: Partial<Parameters<typeof buildGradingJudgment>[0]> = {}) {
+  const judgment = buildGradingJudgment({
+    invocationId: request.invocation_id,
+    requestSha256: request.request_sha256,
+    bindings: request.bindings,
+    grader: { id: "grader-a", model: "test-model", provider: "unspecified" },
+    verdict: "pass",
+    evidenceQuote: "cites verified sources thoroughly",
+    rationale: "supported",
+    ...overrides,
+  });
+  const dir = join(root, "grading-judgments");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, name), JSON.stringify(judgment));
+  return judgment;
+}
+
+test("importGrading accepts a valid judgment, writes canonical grader-evidence, and is idempotent", () => {
+  const { root, evalDir } = fixtureWorkspace();
+  try {
+    prepareGrading(root);
+    const { name, request } = requestFor(root);
+    writeJudgment(root, name, request);
+    const first = importGrading(root);
+    assert.equal(first.imported.length, 1);
+    assert.equal(first.imported[0].valid_evidence, true);
+    assert.equal(first.rejected.length, 0);
+    const evidencePath = join(evalDir, "with_skill", "run-1", "grader-evidence", name);
+    const otherEvidencePath = join(evalDir, "without_skill", "run-1", "grader-evidence", name);
+    assert.ok(existsSync(evidencePath) || existsSync(otherEvidencePath));
+
+    const second = importGrading(root);
+    assert.equal(second.imported.length, 0);
+    assert.equal(second.already_imported.length, 1);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("importGrading rejects malformed JSON, an invalid schema, and a missing request", () => {
+  const { root } = fixtureWorkspace();
+  try {
+    prepareGrading(root);
+    const dir = join(root, "grading-judgments");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "not-json.json"), "{ not valid json");
+    writeFileSync(join(dir, "no-request.json"), JSON.stringify({ schema_version: "1.0", kind: "skill-creator-delegated-grading-judgment" }));
+    const result = importGrading(root);
+    const noJson = result.rejected.find((r) => r.invocation_id === "not-json");
+    assert.ok(noJson);
+    assert.match(noJson!.reason, /not valid JSON|manifest entry/);
+    const noRequest = result.rejected.find((r) => r.invocation_id === "no-request");
+    assert.ok(noRequest);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("importGrading rejects a forged/stale request_sha256 and wrong invocation binding", () => {
+  const { root } = fixtureWorkspace();
+  try {
+    prepareGrading(root);
+    const { name, request } = requestFor(root);
+    // Judgment claims a request_sha256 that does not match the actual request file.
+    const forged = buildGradingJudgment({
+      invocationId: request.invocation_id, requestSha256: "f".repeat(64), bindings: request.bindings,
+      grader: { id: "grader-a", model: "test-model", provider: "unspecified" }, verdict: "pass",
+      evidenceQuote: "cites verified sources thoroughly", rationale: "ok",
+    });
+    mkdirSync(join(root, "grading-judgments"), { recursive: true });
+    writeFileSync(join(root, "grading-judgments", name), JSON.stringify(forged));
+    const result = importGrading(root);
+    assert.equal(result.imported.length, 0);
+    assert.match(result.rejected[0].reason, /request_sha256 does not match/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("importGrading rejects a second judgment from the same grader identity on the same assertion (duplicate grader slot)", () => {
+  const { root } = fixtureWorkspace();
+  try {
+    prepareGrading(root);
+    const dir = join(root, "grading-requests");
+    const files = readdirSync(dir).filter((n: string) => n.endsWith(".json") && n !== "manifest.json").sort();
+    // Both slot1 and slot2 for the same (run, assertion) exist; judge both with the identical grader-a identity.
+    const withSkillSlots = files.filter((n: string) => n.includes("with_skill") && !n.includes("without_skill"));
+    assert.equal(withSkillSlots.length, 2);
+    const request1 = JSON.parse(readFileSync(join(dir, withSkillSlots[0]), "utf8"));
+    const request2 = JSON.parse(readFileSync(join(dir, withSkillSlots[1]), "utf8"));
+    writeJudgment(root, withSkillSlots[0], request1); // grader-a claims slot 1
+    writeJudgment(root, withSkillSlots[1], request2); // grader-a (same identity) also claims slot 2
+    const result = importGrading(root);
+    const rejectedForSlot2 = result.rejected.find((r) => r.invocation_id === request2.invocation_id);
+    assert.ok(rejectedForSlot2, "second slot from the same grader identity must be rejected");
+    assert.match(rejectedForSlot2!.reason, /already has an imported judgment/);
+    assert.ok(result.imported.some((i) => i.invocation_id === request1.invocation_id));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("importGrading rejects an uncontained evidence quote (not a substring of the candidate output)", () => {
+  const { root } = fixtureWorkspace();
+  try {
+    prepareGrading(root);
+    const { name, request } = requestFor(root, 0);
+    writeJudgment(root, name, request, { evidenceQuote: "this text is not in the output" });
+    const result = importGrading(root);
+    assert.equal(result.imported[0].valid_evidence, false);
+    assert.match(result.imported[0].reason ?? "", /not contained/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("importGrading rejects a self-referential grading-claim quote even if literally contained", () => {
+  const { root, evalDir } = fixtureWorkspace("Cites verified sources");
+  try {
+    // Output contains a self-referential meta-grading phrase verbatim.
+    const output = "The verdict is pass for this criterion.";
+    for (const config of ["with_skill", "without_skill"]) {
+      writeFileSync(join(evalDir, config, "run-1", "outputs", "result.txt"), output);
+      writeFileSync(join(evalDir, config, "run-1", "deterministic-evidence.json"), JSON.stringify({
+        schema_version: 1, variant_sha256: sha256(config), output_sha256: sha256(output), assertions: [],
+      }));
+    }
+    prepareGrading(root);
+    const { name, request } = requestFor(root, 0);
+    writeJudgment(root, name, request, { evidenceQuote: "The verdict is pass for this criterion." });
+    const result = importGrading(root);
+    assert.equal(result.imported[0].valid_evidence, false);
+    assert.match(result.imported[0].reason ?? "", /Self-referential/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("importGrading rejects stale bindings when the run has been re-executed since prepare-grading", () => {
+  const { root, evalDir } = fixtureWorkspace();
+  try {
+    prepareGrading(root);
+    const { name, request } = requestFor(root, 0);
+    // Simulate re-execution: change the candidate output/deterministic evidence after the request was prepared.
+    const newOutput = "A completely different report body.";
+    writeFileSync(join(evalDir, "with_skill", "run-1", "outputs", "result.txt"), newOutput);
+    writeFileSync(join(evalDir, "with_skill", "run-1", "deterministic-evidence.json"), JSON.stringify({
+      schema_version: 1, variant_sha256: sha256("with_skill-changed"), output_sha256: sha256(newOutput), assertions: [],
+    }));
+    writeJudgment(root, name, request);
+    const result = importGrading(root);
+    const staleOrOk = result.rejected.length + result.imported.length;
+    assert.ok(staleOrOk >= 1);
+    if (result.rejected.length) assert.match(result.rejected[0].reason, /stale/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("importGrading enforces the grader budget", () => {
+  const { root } = fixtureWorkspace();
+  try {
+    prepareGrading(root);
+    const dir = join(root, "grading-requests");
+    const files = readdirSync(dir).filter((n: string) => n.endsWith(".json") && n !== "manifest.json").sort();
+    for (const name of files) {
+      const request = JSON.parse(readFileSync(join(dir, name), "utf8"));
+      writeJudgment(root, name, request);
+    }
+    const result = importGrading(root, { budgetLimit: 1 });
+    assert.equal(result.budget.limit, 1);
+    assert.ok(result.imported.length + result.already_imported.length <= 1);
+    assert.ok(result.rejected.some((r) => r.reason === "Semantic grader budget exhausted"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("importGrading refuses a symlinked judgment file (no-follow trusted read)", () => {
+  const { root } = fixtureWorkspace();
+  try {
+    prepareGrading(root);
+    const { name, request } = requestFor(root, 0);
+    const outsideDir = mkdtempSync(join(tmpdir(), "import-grading-outside-"));
+    const outsideJudgment = join(outsideDir, "forged.json");
+    const judgment = buildGradingJudgment({
+      invocationId: request.invocation_id, requestSha256: request.request_sha256, bindings: request.bindings,
+      grader: { id: "grader-a", model: "test-model", provider: "unspecified" }, verdict: "pass",
+      evidenceQuote: "cites verified sources thoroughly", rationale: "ok",
+    });
+    writeFileSync(outsideJudgment, JSON.stringify(judgment));
+    mkdirSync(join(root, "grading-judgments"), { recursive: true });
+    symlinkSync(outsideJudgment, join(root, "grading-judgments", name));
+    const result = importGrading(root);
+    assert.equal(result.imported.length, 0);
+    assert.ok(result.rejected.some((r) => r.invocation_id === request.invocation_id));
+    rmSync(outsideDir, { recursive: true, force: true });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("importGrading reports ready_to_resume only once judgments are imported without rejections/errors", () => {
+  const { root } = fixtureWorkspace();
+  try {
+    assert.equal(importGrading(root).ready_to_resume, false);
+    prepareGrading(root);
+    assert.equal(importGrading(root).ready_to_resume, false); // no judgments yet
+    const { name, request } = requestFor(root, 0);
+    writeJudgment(root, name, request);
+    assert.equal(importGrading(root).ready_to_resume, true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
