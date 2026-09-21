@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync, readFileSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { counterbalancedPairSeed, pairedOrderFromSeed, sha256 } from "../dist/scripts/evaluation_provenance.js";
-import { prepareGrading } from "../dist/scripts/prepare_grading.js";
+import { prepareGrading, loadGradingManifest } from "../dist/scripts/prepare_grading.js";
 import { importGrading } from "../dist/scripts/import_grading.js";
 import { buildGradingJudgment } from "../dist/scripts/delegated_grading_contracts.js";
 
@@ -51,12 +51,14 @@ function requestFor(root: string, index = 0) {
 }
 
 /** Resolves which planned grader identity a request's invocation_id was prepared for. */
-function plannedGraderFor(invocationId: string) {
-  return PLANNED_GRADERS.find((g) => invocationId.endsWith("-" + g.id)) ?? PLANNED_GRADERS[0];
+function plannedGraderFor(root: string, invocationId: string) {
+  const manifest = loadGradingManifest(root) as Record<string, { grader_id: string; grader_model: string; grader_provider: string }>;
+  const entry = manifest[invocationId];
+  return entry ? { id: entry.grader_id, model: entry.grader_model, provider: entry.grader_provider } : PLANNED_GRADERS[0];
 }
 
 function writeJudgment(root: string, name: string, request: any, overrides: Partial<Parameters<typeof buildGradingJudgment>[0]> = {}) {
-  const planned = plannedGraderFor(request.invocation_id);
+  const planned = plannedGraderFor(root, request.invocation_id);
   const judgment = buildGradingJudgment({
     invocationId: request.invocation_id,
     requestSha256: request.request_sha256,
@@ -120,7 +122,7 @@ test("importGrading rejects a forged/stale request_sha256 and wrong invocation b
     prepareGrading(root);
     const { name, request } = requestFor(root);
     // Judgment claims a request_sha256 that does not match the actual request file.
-    const grader1 = plannedGraderFor(request.invocation_id);
+    const grader1 = plannedGraderFor(root, request.invocation_id);
     const forged = buildGradingJudgment({
       invocationId: request.invocation_id, requestSha256: "f".repeat(64), bindings: request.bindings,
       grader: { id: grader1.id, model: grader1.model, provider: grader1.provider }, verdict: "pass",
@@ -141,16 +143,20 @@ test("importGrading accepts each planned grader's own slot but rejects one grade
   try {
     prepareGrading(root);
     const dir = join(root, "grading-requests");
+    const manifest = loadGradingManifest(root) as Record<string, { run_directory: string }>;
     const files = readdirSync(dir).filter((n: string) => n.endsWith(".json") && n !== "manifest.json").sort();
-    const withSkillSlots = files.filter((n: string) => n.includes("with_skill") && !n.includes("without_skill"));
+    const withSkillSlots = files.filter((n: string) => manifest[n.replace(/\.json$/, "")]?.run_directory.includes("with_skill") && !manifest[n.replace(/\.json$/, "")]?.run_directory.includes("without_skill"));
     assert.equal(withSkillSlots.length, 2); // one slot per planned grader (grader-a, grader-b)
     const request1 = JSON.parse(readFileSync(join(dir, withSkillSlots[0]), "utf8"));
     const request2 = JSON.parse(readFileSync(join(dir, withSkillSlots[1]), "utf8"));
-    writeJudgment(root, withSkillSlots[0], request1); // grader-a judges its own slot
-    // grader-a's identity is used to answer grader-b's slot (impersonation).
+    writeJudgment(root, withSkillSlots[0], request1); // slot1's own planned grader judges its own slot
+    // slot1's grader identity (necessarily different from slot2's own planned
+    // grader, since two graders never share a slot for the same assertion)
+    // is used to answer request2's slot instead (impersonation).
+    const slot1Grader = plannedGraderFor(root, request1.invocation_id);
     const impersonating = buildGradingJudgment({
       invocationId: request2.invocation_id, requestSha256: request2.request_sha256, bindings: request2.bindings,
-      grader: { id: PLANNED_GRADERS[0].id, model: PLANNED_GRADERS[0].model, provider: PLANNED_GRADERS[0].provider },
+      grader: { id: slot1Grader.id, model: slot1Grader.model, provider: slot1Grader.provider },
       verdict: "pass", evidenceQuote: "cites verified sources thoroughly", rationale: "ok",
     });
     mkdirSync(join(root, "grading-judgments"), { recursive: true });
@@ -248,7 +254,7 @@ test("importGrading refuses a symlinked judgment file (no-follow trusted read)",
     const { name, request } = requestFor(root, 0);
     const outsideDir = mkdtempSync(join(tmpdir(), "import-grading-outside-"));
     const outsideJudgment = join(outsideDir, "forged.json");
-    const grader2 = plannedGraderFor(request.invocation_id);
+    const grader2 = plannedGraderFor(root, request.invocation_id);
     const judgment = buildGradingJudgment({
       invocationId: request.invocation_id, requestSha256: request.request_sha256, bindings: request.bindings,
       grader: { id: grader2.id, model: grader2.model, provider: grader2.provider }, verdict: "pass",

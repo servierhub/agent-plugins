@@ -101,15 +101,21 @@ function relativeRunPath(runDir, workspace) {
     return runDir.slice(resolve(workspace).length + 1).split(/[\\/]/).join("/");
 }
 /**
- * Deterministically derives one request/judgment invocation_id per planned
- * grader for one (run, assertion) pair. IDs are stable across repeated
- * prepare-grading invocations for the same evidence so the operation is
- * idempotent, and are keyed by the grader's own declared id (not a generic
- * slot number) so a request is traceable to exactly the grader identity the
- * scenario's grading_plan assigned to it.
+ * Deterministically derives one opaque request/judgment invocation_id per
+ * planned grader for one (run, assertion) pair. IDs are stable across
+ * repeated prepare-grading invocations for the same evidence (idempotent),
+ * and distinct per grader identity — but, unlike an early implementation of
+ * this function, they are hash-derived rather than built from the run's
+ * directory name: a request's `invocation_id` is also its filename in
+ * `grading-requests/`, which a delegated grader (or anyone listing that
+ * directory) can observe, so it must never contain `with_skill`,
+ * `without_skill`, or any other configuration-revealing literal. The
+ * human-readable run path is preserved only in the manifest, which is never
+ * part of a request payload shown to a grader.
  */
 function invocationIdFor(runDir, workspace, assertion, bindings, graderId) {
-    return requestBaseName(runDir, workspace) + "-" + assertion.id + "-v" + assertion.version + "-" + bindings.output_sha256.slice(0, 16) + "-" + graderId;
+    const material = relativeRunPath(runDir, workspace) + "|" + assertion.id + "|" + assertion.version + "|" + bindings.output_sha256 + "|" + graderId;
+    return "req-" + createHash("sha256").update(material).digest("hex").slice(0, 32);
 }
 /**
  * Scans the workspace for scheduled runs whose candidate output and
