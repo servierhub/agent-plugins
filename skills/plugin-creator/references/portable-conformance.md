@@ -54,7 +54,7 @@ Release builds use strict authoring and may additionally require specialist comp
 | Goose inline/path-based `plugin.json.mcpServers` | portable root `mcp.json` | Review explicitly; an explicit `./mcp.json` path can select a portable stdio-only document because Goose ignores unknown `type` and `$schema` fields |
 | root `hooks/hooks.json` | `extensions/io.github.bioinfornatics.agent-plugins.goose/hooks.json` plus manifest envelope | Validate for the selected Goose target before translating |
 
-Coexistence is allowed only with one governed Goose activation path. Either Goose explicitly selects the canonical stdio-only `mcp.json`, or portable `mcp.json` coexists with a separate host `.mcp.json` that Goose alone selects by default or through an approved `exclusive: true` path. Fail ambiguous duplicate activation—for example, non-exclusive `./mcp.json` beside `.mcp.json`, or inline servers beside another active source. Never merge or invent precedence.
+Coexistence is allowed only with one governed Goose activation path: either Goose explicitly selects the canonical stdio-only `mcp.json`, or portable `mcp.json` coexists with a separate host `.mcp.json` that Goose alone selects by default or through an approved `exclusive: true` path. This replaces, and does not add to, the general no-co-ship default — dual-target coexistence is permitted only under this single governed selection rule, never as an unconditional exception. Fail ambiguous duplicate activation—for example, non-exclusive `./mcp.json` beside `.mcp.json`, or inline servers beside another active source. Never merge or invent precedence.
 
 ## Goose boundary
 
