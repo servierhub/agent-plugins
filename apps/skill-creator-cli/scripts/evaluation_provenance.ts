@@ -294,7 +294,17 @@ function verifyDelegatedGrade(runDir:string,label:string,metadata:any,manifest:a
       if(matches.length!==1){errors.push(label+" semantic assertion "+assertion.id+" requires exactly one judgment from planned grader "+grader.id);continue;}
       const j=matches[0];
       const quote=typeof j.evidence_quote==="string"?j.evidence_quote:"";
-      const evidence=quote.length===0||(output.includes(quote)&&substantiveOverlap(assertion.criterion,quote)&&!/\b(?:pass(?:es|ed|ing)?|fail(?:s|ed|ing)?|score[sd]?|grad(?:e|es|ed|ing)|verdict|criterion|assertion)\b/i.test(quote));
+      // A judgment with valid_evidence===false is a legitimate outcome
+      // import-grading already produced (an uncontained, non-substantive,
+      // or self-referential quote resolves to inconclusive with
+      // valid_evidence:false, not a fabricated pass/fail) — it must not be
+      // re-flagged as invalid provenance here. Only a judgment CLAIMING
+      // valid_evidence:true is re-verified against the same
+      // containment/substantive-overlap/anti-self-reference rule
+      // import-grading itself enforced, so a tampered "true" claim cannot
+      // slip through.
+      const containedAndSubstantive=quote.length>0&&output.includes(quote)&&substantiveOverlap(assertion.criterion,quote)&&!/\b(?:pass(?:es|ed|ing)?|fail(?:s|ed|ing)?|score[sd]?|grad(?:e|es|ed|ing)|verdict|criterion|assertion)\b/i.test(quote);
+      const evidence=j.valid_evidence===true?containedAndSubstantive:j.valid_evidence===false;
       if(j.assertion_sha256!==ah||j.variant_sha256!==variantHash||j.output_sha256!==outputHash||j.blinded!==true||!["pass","fail","inconclusive"].includes(j.verdict)||!evidence)errors.push(label+" invalid bound/blinded/substantive delegated judgment for "+assertion.id+" from "+grader.id);
     }
     const expectation=claimed.find((e:any)=>e.id===assertion.id&&e.version===assertion.version);

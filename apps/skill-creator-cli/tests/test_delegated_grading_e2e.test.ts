@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { buildGradingJudgment } from "../dist/scripts/delegated_grading_contracts.js";
 import { loadGradingManifest } from "../dist/scripts/prepare_grading.js";
+import { validateExecutionEvidence } from "../dist/scripts/evaluation_provenance.js";
 
 /**
  * End-to-end coverage for ap-8di.6: full-eval's optional delegated grading
@@ -175,6 +176,55 @@ test("delegated grading mode: resuming with a different --grading-mode than the 
     // (never silently resumed as if nothing changed) — assert it is not a
     // bare "success" that skipped grading-mode verification.
     assert.notEqual(result.status, "success");
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+  }
+});
+
+test("delegated grading mode: a legitimate low-confidence judgment (valid_evidence:false, verdict:inconclusive because the quote is not substantive) is accepted by validateExecutionEvidence, not treated as invalid provenance", () => {
+  // Regression test for a real bug found during ap-8di.11 dogfooding: a
+  // grader answering honestly with a technically-contained but
+  // non-substantive quote (e.g. quoting an unrelated file-tree line for a
+  // criterion about a completely different property) produces
+  // valid_evidence:false / verdict:"inconclusive" in import-grading — a
+  // legitimate outcome, not tampering. verifyDelegatedGrade previously
+  // re-ran the containment/substantive-overlap check unconditionally and
+  // rejected this run's evidence as "invalid bound/blinded/substantive
+  // delegated judgment", blocking --resume even after 100% of requests
+  // were validly imported.
+  const f = fixture();
+  try {
+    fullEval(f.skill, f.workspace, []);
+    prepareGradingCli(f.workspace);
+    const dir = join(f.workspace, "grading-requests");
+    const manifest = loadGradingManifest(f.workspace) as Record<string, { grader_id: string; grader_model: string; grader_provider: string }>;
+    mkdirSync(join(f.workspace, "grading-judgments"), { recursive: true });
+    for (const name of readdirsyncFiles(dir)) {
+      const request = JSON.parse(readFileSync(join(dir, name), "utf8"));
+      const entry = manifest[request.invocation_id];
+      // A quote that is verbatim-contained in the candidate output but has
+      // no lexical relationship to the assertion criterion at all.
+      const judgment = buildGradingJudgment({
+        invocationId: request.invocation_id, requestSha256: request.request_sha256, bindings: request.bindings,
+        grader: { id: entry.grader_id, model: entry.grader_model, provider: entry.grader_provider },
+        verdict: "inconclusive", evidenceQuote: "Complete the task.", rationale: "Evidence quote does not substantively overlap the criterion",
+      });
+      writeFileSync(join(f.workspace, "grading-judgments", name), JSON.stringify(judgment));
+    }
+    const imported = importGradingCli(f.workspace);
+    assert.equal(imported.rejected.length, 0);
+    assert.ok(imported.imported.every((i: any) => i.valid_evidence === false));
+    assert.equal(imported.ready_to_resume, true);
+
+    const resumed = fullEval(f.skill, f.workspace, ["--resume", "--human-review", "pass", "--tests-status", "pass"]);
+    // The scenario's semantic assertion legitimately resolves to
+    // inconclusive (no valid pass/fail evidence), but the pipeline itself
+    // must advance past paired-runs-and-grading rather than reporting
+    // invalid provenance — assert directly against validateExecutionEvidence.
+    const binding = validateExecutionEvidence(f.workspace);
+    assert.equal(binding.status, "complete", `validateExecutionEvidence must accept a legitimate valid_evidence:false judgment; errors: ${JSON.stringify(binding.errors)}`);
+    const phase = resumed.phases.find((p: any) => p.name === "paired-runs-and-grading");
+    assert.equal(phase.status, "complete");
   } finally {
     rmSync(f.root, { recursive: true, force: true });
   }
