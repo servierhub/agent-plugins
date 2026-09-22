@@ -35,6 +35,31 @@ Reports `pending`, `completed`, and `stale` counts and the exact next command. I
 
 ### 3. Delegate every pending request to an isolated subagent
 
+A scenario with several semantic assertions produces one request per (run, assertion, grader) — dogfooding on plugin-script-packaging (ap-8di.11) produced 112 individual requests for only 12 runs. Delegating one request at a time works but means one delegate call per request. **Prefer batching by (run, grader)** to cut that down to roughly (runs × distinct graders) delegate calls instead, with no change to blinding, verification, or the judgment schema.
+
+#### Recommended: batch by (run, grader)
+
+```bash
+skill-creator group-grading-batches <workspace>
+```
+
+Groups every currently-pending request by `(run_directory, grader_id)` into `<workspace>/grading-batches/<batch-id>.json`. Each batch carries the shared `candidate_output` **once**, plus a `requests` array (one `{invocation_id, assertion_id, assertion_version, criterion}` entry per assertion for that run/grader) — no request field is invented; every value is copied verbatim from its already-prepared `GradingRequest`.
+
+For each batch:
+
+1. Read the batch JSON. It contains `grader_model`/`grader_provider`, `candidate_output`, `instructions`, and the `requests` array of criteria to judge.
+2. Delegate the **entire batch** to one independent subagent, passing the batch's own `grader_model` as the subagent's model. Give the subagent only the batch's `prompt`/`candidate_output`/`instructions` and the list of criteria — nothing else from the workspace, and no other batch's requests.
+3. Instruct the subagent to return **only** a JSON array, one object per request in the batch, each shaped `{"invocation_id": "<copied from the request entry>", "verdict": "pass"|"fail"|"inconclusive", "evidence_quote": "<exact substring of candidate_output>", "rationale": "<short text>"}`.
+4. Apply the batch's results:
+
+```bash
+skill-creator apply-grading-batch <workspace> <batch-id> <results.json>
+```
+
+This builds one canonical judgment file per array entry (via the same `buildGradingJudgment` a single-request judgment would use) and writes them into `grading-judgments/`. An entry whose `invocation_id` is not part of the named batch is rejected (not silently accepted); a request missing from the results array simply stays pending, exactly like a failed single-request delegation. Re-running `group-grading-batches` after applying results only re-groups what is still pending.
+
+#### Alternative: one request at a time
+
 For each file in `<workspace>/grading-requests/*.json` that has no matching file yet in `<workspace>/grading-judgments/<same-name>.json`:
 
 1. Read the request JSON. It contains `prompt`, `candidate.alias`/`candidate.output`, `assertion.criterion`, `instructions`, and `grader.model`/`grader.provider` — never another variant's output, another grader's identity, or a prior verdict.
@@ -59,7 +84,7 @@ For each file in `<workspace>/grading-requests/*.json` that has no matching file
 
 The grader `id` is not in the request file itself (the request is blinded to avoid leaking grader identity into the candidate-facing prompt); read it from `<workspace>/grading-requests/manifest.json`, keyed by the request's own filename (`invocation_id`), field `grader_id`. Copying any other value than the manifest's `grader_id`/`grader_model`/`grader_provider` for that exact `invocation_id` will be rejected on import — a subagent's judgment must match the identity `prepare-grading` planned for that slot, not any other grader's identity.
 
-Bound parallel delegation: delegate no more than a small fixed number of pending requests at once (a handful, not the entire backlog in one burst) to keep cost and failure blast-radius bounded. If a delegated subagent fails, times out, or returns malformed JSON, leave that invocation_id's judgment file unwritten — it remains `pending` in `grading-status` with no fabricated verdict, and can be retried independently on the next pass.
+Bound parallel delegation: delegate no more than a small fixed number of pending requests or batches at once (a handful, not the entire backlog in one burst) to keep cost and failure blast-radius bounded — a typical host limits concurrent background delegations to a small fixed number. If a delegated subagent fails, times out, or returns malformed JSON, leave that invocation_id's (or, in a batch, that entry's) judgment file unwritten — it remains `pending` in `grading-status` with no fabricated verdict, and can be retried independently on the next pass. A subagent's own final-turn report can fail (e.g. an empty response) even after it has already written a correct results file; check the file on disk before assuming a delegation failed.
 
 ### 4. Import and verify (deterministic, no model access)
 

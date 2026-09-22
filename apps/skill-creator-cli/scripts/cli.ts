@@ -4,7 +4,7 @@ import { runEmbedded, type EmbeddedResult } from "./runtime-dispatch.js";
 import { AGGREGATE_HELP, FULL_EVAL_HELP } from "./cli_help.js";
 
 type Format = "text" | "json";
-type Command = "candidate" | "validate" | "audit" | "design-evals" | "freeze-evals" | "analyze" | "evidence-loop" | "trigger-eval" | "aggregate" | "review" | "verify" | "package" | "full-eval" | "migrate-evaluation" | "usability-study" | "screen-reader-acceptance" | "prepare-grading" | "grading-status" | "import-grading";
+type Command = "candidate" | "validate" | "audit" | "design-evals" | "freeze-evals" | "analyze" | "evidence-loop" | "trigger-eval" | "aggregate" | "review" | "verify" | "package" | "full-eval" | "migrate-evaluation" | "usability-study" | "screen-reader-acceptance" | "prepare-grading" | "grading-status" | "import-grading" | "group-grading-batches" | "apply-grading-batch";
 
 const commands: Record<Command, { entry: string; usage: string; required: (args: string[]) => boolean }> = {
   candidate: { entry: "idea_to_candidate.js", usage: "candidate <workspace> [--idea <plain-language idea>] [options]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
@@ -26,6 +26,8 @@ const commands: Record<Command, { entry: string; usage: string; required: (args:
   "prepare-grading": { entry: "prepare_grading.js", usage: "prepare-grading <workspace>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   "grading-status": { entry: "prepare_grading.js", usage: "grading-status <workspace>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
   "import-grading": { entry: "import_grading.js", usage: "import-grading <workspace> [--budget <n>]", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+  "group-grading-batches": { entry: "batch_grading.js", usage: "group-grading-batches <workspace>", required: (a) => Boolean(a[0] && !a[0].startsWith("-")) },
+  "apply-grading-batch": { entry: "batch_grading.js", usage: "apply-grading-batch <workspace> <batch-id> <results.json>", required: (a) => Boolean(a[0] && !a[0].startsWith("-") && a[1] && a[2]) },
 };
 
 function hasValue(args: string[], option: string): boolean {
@@ -64,6 +66,8 @@ Commands:
   prepare-grading Prepare blinded host-delegated semantic grading requests
   grading-status  Report pending/completed/stale delegated grading requests
   import-grading  Import and verify delegated grader judgment envelopes
+  group-grading-batches Group pending grading requests by run/grader for one delegate call each
+  apply-grading-batch   Fan a batch's delegated results out into individual judgment files
 
 Run "skill-creator <command> --help" for command usage.`;
 }
@@ -112,6 +116,8 @@ async function embedded(command: Command, args: string[]): Promise<EmbeddedResul
     case "prepare-grading": return runEmbedded((await import("./prepare_grading.js")).mainPrepare, args);
     case "grading-status": return runEmbedded((await import("./prepare_grading.js")).mainStatus, args);
     case "import-grading": return runEmbedded((await import("./import_grading.js")).main, args);
+    case "group-grading-batches": return runEmbedded((await import("./batch_grading.js")).mainGroup, args);
+    case "apply-grading-batch": return runEmbedded((await import("./batch_grading.js")).mainApply, args);
   }
 }
 
